@@ -1,4 +1,4 @@
-# Claude Code Rules
+# Gemini CLI Rules
 
 This file is generated during init for the selected agent.
 
@@ -208,10 +208,3 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
-
-## Active Technologies
-- Python 3.13+ + Typer (CLI framework), Rich (console formatting), pytest (testing) (001-todo-cli-app)
-- In-memory (list/dict structures during session) (001-todo-cli-app)
-
-## Recent Changes
-- 001-todo-cli-app: Added Python 3.13+ + Typer (CLI framework), Rich (console formatting), pytest (testing)
