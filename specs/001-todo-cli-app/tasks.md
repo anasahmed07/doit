@@ -33,16 +33,16 @@ This document breaks down the Todo Console Application into testable, independen
 
 **Tasks**:
 
-- [ ] T001 Initialize Python project with UV and pyproject.toml in repository root
-- [ ] T002 [P] Create project structure: src/doit/{models,storage,services,cli}/__init__.py
-- [ ] T003 [P] Create test structure: tests/{unit,integration}/__init__.py
-- [ ] T004 [P] Configure pyproject.toml with dependencies (typer, rich, pytest, pytest-cov, ruff, mypy)
-- [ ] T005 [P] Create .gitignore for Python (.venv, __pycache__, *.pyc, .pytest_cache, .mypy_cache, .coverage)
-- [ ] T006 [P] Configure ruff in pyproject.toml (line-length=100, target-version=py313, select E/F/I/N/UP/S/B/A/C4/PT)
-- [ ] T007 [P] Configure mypy in pyproject.toml (python_version=3.13, strict=true, disallow_untyped_defs=true)
-- [ ] T008 [P] Configure pytest in pyproject.toml (testpaths=tests, python_files=test_*.py)
-- [ ] T009 [P] Create pytest conftest.py in tests/ with sample fixtures structure
-- [ ] T010 Verify setup: run `uv sync && ruff check . && mypy src/ && pytest` (should pass with no tests)
+- [X] T001 Initialize Python project with UV and pyproject.toml in repository root
+- [X] T002 [P] Create project structure: src/doit/{models,storage,services,cli}/__init__.py
+- [X] T003 [P] Create test structure: tests/{unit,integration}/__init__.py
+- [X] T004 [P] Configure pyproject.toml with dependencies (typer, rich, pytest, pytest-cov, ruff, mypy)
+- [X] T005 [P] Create .gitignore for Python (.venv, __pycache__, *.pyc, .pytest_cache, .mypy_cache, .coverage)
+- [X] T006 [P] Configure ruff in pyproject.toml (line-length=100, target-version=py313, select E/F/I/N/UP/S/B/A/C4/PT)
+- [X] T007 [P] Configure mypy in pyproject.toml (python_version=3.13, strict=true, disallow_untyped_defs=true)
+- [X] T008 [P] Configure pytest in pyproject.toml (testpaths=tests, python_files=test_*.py)
+- [X] T009 [P] Create pytest conftest.py in tests/ with sample fixtures structure
+- [X] T010 Verify setup: run `uv sync && ruff check . && mypy src/ && pytest` (should pass with no tests)
 
 **Completion Criteria**:
 - ✅ UV environment created and activated
@@ -59,10 +59,10 @@ This document breaks down the Todo Console Application into testable, independen
 
 ### Domain Exceptions
 
-- [ ] T011 Create src/doit/models/exceptions.py with DoitError base class
-- [ ] T012 [P] Add ValidationError(DoitError) to models/exceptions.py
-- [ ] T013 [P] Add TaskNotFoundError(DoitError) to models/exceptions.py
-- [ ] T014 [P] Add StorageError(DoitError) to models/exceptions.py
+- [X] T011 Create src/doit/models/exceptions.py with DoitError base class
+- [X] T012 [P] Add ValidationError(DoitError) to models/exceptions.py
+- [X] T013 [P] Add TaskNotFoundError(DoitError) to models/exceptions.py
+- [X] T014 [P] Add StorageError(DoitError) to models/exceptions.py
 
 **Completion Criteria**:
 - ✅ All 4 exception classes defined with docstrings
@@ -80,49 +80,49 @@ This document breaks down the Todo Console Application into testable, independen
 
 ### Task Model (RED → GREEN → REFACTOR)
 
-- [ ] T015 [US1] RED: Write test_task_creation_with_valid_data in tests/unit/test_task_model.py
-- [ ] T016 [US1] RED: Write test_task_validation_empty_title_raises_error in tests/unit/test_task_model.py
-- [ ] T017 [US1] RED: Write test_task_validation_whitespace_title_raises_error in tests/unit/test_task_model.py
-- [ ] T018 [US1] RED: Write test_task_validation_title_too_long_raises_error in tests/unit/test_task_model.py
-- [ ] T019 [US1] RED: Write test_task_validation_description_too_long_raises_error in tests/unit/test_task_model.py
-- [ ] T020 [US1] RED: Write test_task_unicode_support in tests/unit/test_task_model.py
-- [ ] T021 [US1] GREEN: Implement Task dataclass in src/doit/models/task.py with validation
-- [ ] T022 [US1] REFACTOR: Review Task model for type hints, docstrings, validation logic clarity
+- [X] T015 [US1] RED: Write test_task_creation_with_valid_data in tests/unit/test_task_model.py
+- [X] T016 [US1] RED: Write test_task_validation_empty_title_raises_error in tests/unit/test_task_model.py
+- [X] T017 [US1] RED: Write test_task_validation_whitespace_title_raises_error in tests/unit/test_task_model.py
+- [X] T018 [US1] RED: Write test_task_validation_title_too_long_raises_error in tests/unit/test_task_model.py
+- [X] T019 [US1] RED: Write test_task_validation_description_too_long_raises_error in tests/unit/test_task_model.py
+- [X] T020 [US1] RED: Write test_task_unicode_support in tests/unit/test_task_model.py
+- [X] T021 [US1] GREEN: Implement Task dataclass in src/doit/models/task.py with validation
+- [X] T022 [US1] REFACTOR: Review Task model for type hints, docstrings, validation logic clarity
 
 ### Memory Storage (RED → GREEN → REFACTOR)
 
-- [ ] T023 [US1] RED: Write test_memory_storage_add_task in tests/unit/test_memory_storage.py
-- [ ] T024 [US1] RED: Write test_memory_storage_get_task_by_id in tests/unit/test_memory_storage.py
-- [ ] T025 [US1] RED: Write test_memory_storage_get_all_tasks_sorted in tests/unit/test_memory_storage.py
-- [ ] T026 [US1] RED: Write test_memory_storage_auto_increment_ids in tests/unit/test_memory_storage.py
-- [ ] T027 [US1] GREEN: Implement MemoryStorage class in src/doit/storage/memory.py
-- [ ] T028 [US1] REFACTOR: Review MemoryStorage for type hints, Protocol compliance, edge cases
+- [X] T023 [US1] RED: Write test_memory_storage_add_task in tests/unit/test_memory_storage.py
+- [X] T024 [US1] RED: Write test_memory_storage_get_task_by_id in tests/unit/test_memory_storage.py
+- [X] T025 [US1] RED: Write test_memory_storage_get_all_tasks_sorted in tests/unit/test_memory_storage.py
+- [X] T026 [US1] RED: Write test_memory_storage_auto_increment_ids in tests/unit/test_memory_storage.py
+- [X] T027 [US1] GREEN: Implement MemoryStorage class in src/doit/storage/memory.py
+- [X] T028 [US1] REFACTOR: Review MemoryStorage for type hints, Protocol compliance, edge cases
 
 ### Task Service (RED → GREEN → REFACTOR)
 
-- [ ] T029 [US1] RED: Write test_task_service_create_task in tests/unit/test_task_service.py
-- [ ] T030 [US1] RED: Write test_task_service_get_all_tasks in tests/unit/test_task_service.py
-- [ ] T031 [US1] RED: Write test_task_service_create_validates_title in tests/unit/test_task_service.py
-- [ ] T032 [US1] GREEN: Implement TaskService in src/doit/services/task_service.py with create and get_all methods
-- [ ] T033 [US1] REFACTOR: Review TaskService for separation of concerns and error handling
+- [X] T029 [US1] RED: Write test_task_service_create_task in tests/unit/test_task_service.py
+- [X] T030 [US1] RED: Write test_task_service_get_all_tasks in tests/unit/test_task_service.py
+- [X] T031 [US1] RED: Write test_task_service_create_validates_title in tests/unit/test_task_service.py
+- [X] T032 [US1] GREEN: Implement TaskService in src/doit/services/task_service.py with create and get_all methods
+- [X] T033 [US1] REFACTOR: Review TaskService for separation of concerns and error handling
 
 ### CLI Commands: Add & List (RED → GREEN → REFACTOR)
 
-- [ ] T034 [US1] RED: Write test_cli_add_command_success in tests/integration/test_cli_commands.py
-- [ ] T035 [US1] RED: Write test_cli_add_command_empty_title_error in tests/integration/test_cli_commands.py
-- [ ] T036 [US1] RED: Write test_cli_list_command_with_tasks in tests/integration/test_cli_commands.py
-- [ ] T037 [US1] RED: Write test_cli_list_command_empty in tests/integration/test_cli_commands.py
-- [ ] T038 [US1] GREEN: Create Typer app in src/doit/cli/main.py with entry point
-- [ ] T039 [US1] GREEN: Implement add command in src/doit/cli/commands.py with Rich formatting
-- [ ] T040 [US1] GREEN: Implement list command in src/doit/cli/commands.py with Rich Table
-- [ ] T041 [US1] REFACTOR: Review CLI commands for Rich formatting, error messages, help text
+- [X] T034 [US1] RED: Write test_cli_add_command_success in tests/integration/test_cli_commands.py
+- [X] T035 [US1] RED: Write test_cli_add_command_empty_title_error in tests/integration/test_cli_commands.py
+- [X] T036 [US1] RED: Write test_cli_list_command_with_tasks in tests/integration/test_cli_commands.py
+- [X] T037 [US1] RED: Write test_cli_list_command_empty in tests/integration/test_cli_commands.py
+- [X] T038 [US1] GREEN: Create Typer app in src/doit/cli/main.py with entry point
+- [X] T039 [US1] GREEN: Implement add command in src/doit/cli/commands.py with Rich formatting
+- [X] T040 [US1] GREEN: Implement list command in src/doit/cli/commands.py with Rich Table
+- [X] T041 [US1] REFACTOR: Review CLI commands for Rich formatting, error messages, help text
 
 ### US1 Integration & Verification
 
-- [ ] T042 [US1] Run full test suite for US1: pytest tests/unit tests/integration -k "US1 or task_model or memory_storage or task_service"
-- [ ] T043 [US1] Manual test: Add 3 tasks via CLI and verify list displays correctly
-- [ ] T044 [US1] Verify acceptance scenarios 1-4 from spec.md are satisfied
-- [ ] T045 [US1] Run quality gates: ruff check && ruff format && mypy src/ && pytest --cov=src/doit --cov-report=term-missing
+- [X] T042 [US1] Run full test suite for US1: pytest tests/unit tests/integration -k "US1 or task_model or memory_storage or task_service"
+- [X] T043 [US1] Manual test: Add 3 tasks via CLI and verify list displays correctly
+- [X] T044 [US1] Verify acceptance scenarios 1-4 from spec.md are satisfied
+- [X] T045 [US1] Run quality gates: ruff check && ruff format && mypy src/ && pytest --cov=src/doit --cov-report=term-missing
 
 **US1 Completion Criteria**:
 - ✅ All 31 tasks (T015-T045) completed
@@ -147,42 +147,42 @@ This document breaks down the Todo Console Application into testable, independen
 
 ### Task Model Extensions (RED → GREEN → REFACTOR)
 
-- [ ] T046 [US2] RED: Write test_task_complete_status_toggle in tests/unit/test_task_model.py
-- [ ] T047 [US2] GREEN: Verify Task.completed field works with True/False (should already exist from US1)
-- [ ] T048 [US2] REFACTOR: Add convenience methods if needed (mark_complete, mark_incomplete)
+- [X] T046 [US2] RED: Write test_task_complete_status_toggle in tests/unit/test_task_model.py
+- [X] T047 [US2] GREEN: Verify Task.completed field works with True/False (should already exist from US1)
+- [X] T048 [US2] REFACTOR: Add convenience methods if needed (mark_complete, mark_incomplete)
 
 ### Storage Extensions (RED → GREEN → REFACTOR)
 
-- [ ] T049 [US2] RED: Write test_memory_storage_update_task in tests/unit/test_memory_storage.py
-- [ ] T050 [US2] RED: Write test_memory_storage_update_nonexistent_raises_error in tests/unit/test_memory_storage.py
-- [ ] T051 [US2] GREEN: Implement update method in src/doit/storage/memory.py
-- [ ] T052 [US2] REFACTOR: Review update method for error handling and type safety
+- [X] T049 [US2] RED: Write test_memory_storage_update_task in tests/unit/test_memory_storage.py
+- [X] T050 [US2] RED: Write test_memory_storage_update_nonexistent_raises_error in tests/unit/test_memory_storage.py
+- [X] T051 [US2] GREEN: Implement update method in src/doit/storage/memory.py
+- [X] T052 [US2] REFACTOR: Review update method for error handling and type safety
 
 ### Service Extensions (RED → GREEN → REFACTOR)
 
-- [ ] T053 [US2] RED: Write test_task_service_complete_task in tests/unit/test_task_service.py
-- [ ] T054 [US2] RED: Write test_task_service_uncomplete_task in tests/unit/test_task_service.py
-- [ ] T055 [US2] RED: Write test_task_service_complete_nonexistent_raises_error in tests/unit/test_task_service.py
-- [ ] T056 [US2] GREEN: Implement complete_task and uncomplete_task in src/doit/services/task_service.py
-- [ ] T057 [US2] REFACTOR: Review service methods for DRY principle and error messages
+- [X] T053 [US2] RED: Write test_task_service_complete_task in tests/unit/test_task_service.py
+- [X] T054 [US2] RED: Write test_task_service_uncomplete_task in tests/unit/test_task_service.py
+- [X] T055 [US2] RED: Write test_task_service_complete_nonexistent_raises_error in tests/unit/test_task_service.py
+- [X] T056 [US2] GREEN: Implement complete_task and uncomplete_task in src/doit/services/task_service.py
+- [X] T057 [US2] REFACTOR: Review service methods for DRY principle and error messages
 
 ### CLI Commands: Complete & Uncomplete (RED → GREEN → REFACTOR)
 
-- [ ] T058 [US2] RED: Write test_cli_complete_command_success in tests/integration/test_cli_commands.py
-- [ ] T059 [US2] RED: Write test_cli_complete_command_not_found in tests/integration/test_cli_commands.py
-- [ ] T060 [US2] RED: Write test_cli_uncomplete_command_success in tests/integration/test_cli_commands.py
-- [ ] T061 [US2] RED: Write test_cli_list_shows_completed_status in tests/integration/test_cli_commands.py
-- [ ] T062 [US2] GREEN: Implement complete command in src/doit/cli/commands.py
-- [ ] T063 [US2] GREEN: Implement uncomplete command in src/doit/cli/commands.py
-- [ ] T064 [US2] GREEN: Update list command to show ✓ Done vs ○ Pending status
-- [ ] T065 [US2] REFACTOR: Review complete/uncomplete commands for consistent formatting and messages
+- [X] T058 [US2] RED: Write test_cli_complete_command_success in tests/integration/test_cli_commands.py
+- [X] T059 [US2] RED: Write test_cli_complete_command_not_found in tests/integration/test_cli_commands.py
+- [X] T060 [US2] RED: Write test_cli_uncomplete_command_success in tests/integration/test_cli_commands.py
+- [X] T061 [US2] RED: Write test_cli_list_shows_completed_status in tests/integration/test_cli_commands.py
+- [X] T062 [US2] GREEN: Implement complete command in src/doit/cli/commands.py
+- [X] T063 [US2] GREEN: Implement uncomplete command in src/doit/cli/commands.py
+- [X] T064 [US2] GREEN: Update list command to show ✓ Done vs ○ Pending status
+- [X] T065 [US2] REFACTOR: Review complete/uncomplete commands for consistent formatting and messages
 
 ### US2 Integration & Verification
 
-- [ ] T066 [US2] Run test suite for US2: pytest -k "US2"
-- [ ] T067 [US2] Manual test: Add tasks, mark complete/incomplete, verify display
-- [ ] T068 [US2] Verify acceptance scenarios 1-4 from spec.md User Story 2 are satisfied
-- [ ] T069 [US2] Run quality gates: ruff check && ruff format && mypy src/ && pytest --cov
+- [X] T066 [US2] Run test suite for US2: pytest -k "US2"
+- [X] T067 [US2] Manual test: Add tasks, mark complete/incomplete, verify display
+- [X] T068 [US2] Verify acceptance scenarios 1-4 from spec.md User Story 2 are satisfied
+- [X] T069 [US2] Run quality gates: ruff check && ruff format && mypy src/ && pytest --cov
 
 **US2 Completion Criteria**:
 - ✅ All 24 tasks (T046-T069) completed
@@ -207,30 +207,30 @@ This document breaks down the Todo Console Application into testable, independen
 
 ### Service Extensions (RED → GREEN → REFACTOR)
 
-- [ ] T070 [US3] RED: Write test_task_service_update_task_title in tests/unit/test_task_service.py
-- [ ] T071 [US3] RED: Write test_task_service_update_task_description in tests/unit/test_task_service.py
-- [ ] T072 [US3] RED: Write test_task_service_update_task_both_fields in tests/unit/test_task_service.py
-- [ ] T073 [US3] RED: Write test_task_service_update_validates_title in tests/unit/test_task_service.py
-- [ ] T074 [US3] RED: Write test_task_service_update_nonexistent_raises_error in tests/unit/test_task_service.py
-- [ ] T075 [US3] GREEN: Implement update_task method in src/doit/services/task_service.py
-- [ ] T076 [US3] REFACTOR: Review update logic for validation and partial updates
+- [X] T070 [US3] RED: Write test_task_service_update_task_title in tests/unit/test_task_service.py
+- [X] T071 [US3] RED: Write test_task_service_update_task_description in tests/unit/test_task_service.py
+- [X] T072 [US3] RED: Write test_task_service_update_task_both_fields in tests/unit/test_task_service.py
+- [X] T073 [US3] RED: Write test_task_service_update_validates_title in tests/unit/test_task_service.py
+- [X] T074 [US3] RED: Write test_task_service_update_nonexistent_raises_error in tests/unit/test_task_service.py
+- [X] T075 [US3] GREEN: Implement update_task method in src/doit/services/task_service.py
+- [X] T076 [US3] REFACTOR: Review update logic for validation and partial updates
 
 ### CLI Command: Update (RED → GREEN → REFACTOR)
 
-- [ ] T077 [US3] RED: Write test_cli_update_command_title_only in tests/integration/test_cli_commands.py
-- [ ] T078 [US3] RED: Write test_cli_update_command_description_only in tests/integration/test_cli_commands.py
-- [ ] T079 [US3] RED: Write test_cli_update_command_both_fields in tests/integration/test_cli_commands.py
-- [ ] T080 [US3] RED: Write test_cli_update_command_not_found in tests/integration/test_cli_commands.py
-- [ ] T081 [US3] RED: Write test_cli_update_command_no_changes in tests/integration/test_cli_commands.py
-- [ ] T082 [US3] GREEN: Implement update command in src/doit/cli/commands.py with --title and --description options
-- [ ] T083 [US3] REFACTOR: Review update command for option validation and error messages
+- [X] T077 [US3] RED: Write test_cli_update_command_title_only in tests/integration/test_cli_commands.py
+- [X] T078 [US3] RED: Write test_cli_update_command_description_only in tests/integration/test_cli_commands.py
+- [X] T079 [US3] RED: Write test_cli_update_command_both_fields in tests/integration/test_cli_commands.py
+- [X] T080 [US3] RED: Write test_cli_update_command_not_found in tests/integration/test_cli_commands.py
+- [X] T081 [US3] RED: Write test_cli_update_command_no_changes in tests/integration/test_cli_commands.py
+- [X] T082 [US3] GREEN: Implement update command in src/doit/cli/commands.py with --title and --description options
+- [X] T083 [US3] REFACTOR: Review update command for option validation and error messages
 
 ### US3 Integration & Verification
 
-- [ ] T084 [US3] Run test suite for US3: pytest -k "US3"
-- [ ] T085 [US3] Manual test: Update title, description, and both; verify changes persist
-- [ ] T086 [US3] Verify acceptance scenarios 1-4 from spec.md User Story 3 are satisfied
-- [ ] T087 [US3] Run quality gates: ruff check && ruff format && mypy src/ && pytest --cov
+- [X] T084 [US3] Run test suite for US3: pytest -k "US3"
+- [X] T085 [US3] Manual test: Update title, description, and both; verify changes persist
+- [X] T086 [US3] Verify acceptance scenarios 1-4 from spec.md User Story 3 are satisfied
+- [X] T087 [US3] Run quality gates: ruff check && ruff format && mypy src/ && pytest --cov
 
 **US3 Completion Criteria**:
 - ✅ All 18 tasks (T070-T087) completed
@@ -256,32 +256,32 @@ This document breaks down the Todo Console Application into testable, independen
 
 ### Storage Extensions (RED → GREEN → REFACTOR)
 
-- [ ] T088 [US4] RED: Write test_memory_storage_delete_task in tests/unit/test_memory_storage.py
-- [ ] T089 [US4] RED: Write test_memory_storage_delete_nonexistent_returns_false in tests/unit/test_memory_storage.py
-- [ ] T090 [US4] GREEN: Verify delete method in src/doit/storage/memory.py (should already exist from data model)
-- [ ] T091 [US4] REFACTOR: Review delete method for return value semantics
+- [X] T088 [US4] RED: Write test_memory_storage_delete_task in tests/unit/test_memory_storage.py
+- [X] T089 [US4] RED: Write test_memory_storage_delete_nonexistent_returns_false in tests/unit/test_memory_storage.py
+- [X] T090 [US4] GREEN: Verify delete method in src/doit/storage/memory.py (should already exist from data model)
+- [X] T091 [US4] REFACTOR: Review delete method for return value semantics
 
 ### Service Extensions (RED → GREEN → REFACTOR)
 
-- [ ] T092 [US4] RED: Write test_task_service_delete_task in tests/unit/test_task_service.py
-- [ ] T093 [US4] RED: Write test_task_service_delete_nonexistent_raises_error in tests/unit/test_task_service.py
-- [ ] T094 [US4] GREEN: Implement delete_task method in src/doit/services/task_service.py
-- [ ] T095 [US4] REFACTOR: Review delete logic for error handling
+- [X] T092 [US4] RED: Write test_task_service_delete_task in tests/unit/test_task_service.py
+- [X] T093 [US4] RED: Write test_task_service_delete_nonexistent_raises_error in tests/unit/test_task_service.py
+- [X] T094 [US4] GREEN: Implement delete_task method in src/doit/services/task_service.py
+- [X] T095 [US4] REFACTOR: Review delete logic for error handling
 
 ### CLI Command: Delete (RED → GREEN → REFACTOR)
 
-- [ ] T096 [US4] RED: Write test_cli_delete_command_success in tests/integration/test_cli_commands.py
-- [ ] T097 [US4] RED: Write test_cli_delete_command_not_found in tests/integration/test_cli_commands.py
-- [ ] T098 [US4] RED: Write test_cli_delete_preserves_other_tasks in tests/integration/test_cli_commands.py
-- [ ] T099 [US4] GREEN: Implement delete command in src/doit/cli/commands.py
-- [ ] T100 [US4] REFACTOR: Review delete command for confirmation message
+- [X] T096 [US4] RED: Write test_cli_delete_command_success in tests/integration/test_cli_commands.py
+- [X] T097 [US4] RED: Write test_cli_delete_command_not_found in tests/integration/test_cli_commands.py
+- [X] T098 [US4] RED: Write test_cli_delete_preserves_other_tasks in tests/integration/test_cli_commands.py
+- [X] T099 [US4] GREEN: Implement delete command in src/doit/cli/commands.py
+- [X] T100 [US4] REFACTOR: Review delete command for confirmation message
 
 ### US4 Integration & Verification
 
-- [ ] T101 [US4] Run test suite for US4: pytest -k "US4"
-- [ ] T102 [US4] Manual test: Delete tasks by ID, verify removal and list accuracy
-- [ ] T103 [US4] Verify acceptance scenarios 1-4 from spec.md User Story 4 are satisfied
-- [ ] T104 [US4] Run quality gates: ruff check && ruff format && mypy src/ && pytest --cov
+- [X] T101 [US4] Run test suite for US4: pytest -k "US4"
+- [X] T102 [US4] Manual test: Delete tasks by ID, verify removal and list accuracy
+- [X] T103 [US4] Verify acceptance scenarios 1-4 from spec.md User Story 4 are satisfied
+- [X] T104 [US4] Run quality gates: ruff check && ruff format && mypy src/ && pytest --cov
 
 **US4 Completion Criteria**:
 - ✅ All 17 tasks (T088-T104) completed
@@ -302,29 +302,29 @@ This document breaks down the Todo Console Application into testable, independen
 
 ### Documentation
 
-- [ ] T105 [P] Create README.md with project overview, installation, and usage examples
-- [ ] T106 [P] Add docstrings to all public functions/classes that are missing them
-- [ ] T107 [P] Update quickstart.md with actual installation steps if needed
+- [X] T105 [P] Create README.md with project overview, installation, and usage examples
+- [X] T106 [P] Add docstrings to all public functions/classes that are missing them
+- [X] T107 [P] Update quickstart.md with actual installation steps if needed
 
 ### Edge Cases & Error Handling
 
-- [ ] T108 Test and handle task ID edge cases (negative, zero, very large numbers)
-- [ ] T109 Test and handle very long titles (exactly 500 chars, 501 chars)
-- [ ] T110 Test and handle unicode edge cases (emoji, RTL text, combining characters)
-- [ ] T111 Add --help text improvements based on manual testing feedback
+- [X] T108 Test and handle task ID edge cases (negative, zero, very large numbers)
+- [X] T109 Test and handle very long titles (exactly 500 chars, 501 chars)
+- [X] T110 Test and handle unicode edge cases (emoji, RTL text, combining characters)
+- [X] T111 Add --help text improvements based on manual testing feedback
 
 ### Performance & Scale
 
-- [ ] T112 Performance test: Add 1,000 tasks and verify list command completes in <2 seconds
-- [ ] T113 Verify all operations complete in <10 seconds per success criterion SC-001
+- [X] T112 Performance test: Add 1,000 tasks and verify list command completes in <2 seconds
+- [X] T113 Verify all operations complete in <10 seconds per success criterion SC-001
 
 ### Final Verification
 
-- [ ] T114 Run full test suite: pytest tests/ -v
-- [ ] T115 Verify test coverage ≥90%: pytest --cov=src/doit --cov-report=term-missing --cov-fail-under=90
-- [ ] T116 Run all quality gates: ruff check . && ruff format . && mypy src/
-- [ ] T117 Manual acceptance test: Walk through all 4 user stories end-to-end
-- [ ] T118 Verify all 8 success criteria from spec.md are met (SC-001 through SC-008)
+- [X] T114 Run full test suite: pytest tests/ -v
+- [X] T115 Verify test coverage ≥90%: pytest --cov=src/doit --cov-report=term-missing --cov-fail-under=90
+- [X] T116 Run all quality gates: ruff check . && ruff format . && mypy src/
+- [X] T117 Manual acceptance test: Walk through all 4 user stories end-to-end
+- [X] T118 Verify all 8 success criteria from spec.md are met (SC-001 through SC-008)
 
 **Phase 7 Completion Criteria**:
 - ✅ All 14 tasks (T105-T118) completed
