@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config:*)",
+      "Bash(\".specify/scripts/bash/create-phr.sh\" --title \"Create DoIt Todo App Constitution\" --stage constitution --json)",
+      "Bash(git fetch:*)",
+      "Bash(if [ -d \"specs\" ])",
+      "Bash(then ls -d specs/*-todo-cli-app)",
+      "Bash(else echo \"No specs directory found\")",
+      "Bash(fi)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh --json \"# Todo Console Application\n\nA modern, efficient command-line task management application built with Python 3.13+ and Typer. This in-memory todo app provides a clean, intuitive interface for managing your daily tasks directly from the terminal.\n\n## Overview\n\nThis application demonstrates clean code principles and modern Python development practices, offering a lightweight solution for personal task management without the overhead of database dependencies. All tasks are stored in memory during the session, making it perfect for quick task organization and learning purposes.\n\n## Features\n\n### Core Functionality\n\n- **Add Tasks**: Create new tasks with a title and detailed description to capture all relevant information\n- **View Tasks**: Display all tasks in a clean, organized list with clear status indicators showing completion state\n- **Update Tasks**: Modify existing task titles and descriptions to keep your todo list current\n- **Delete Tasks**: Remove tasks by their unique ID when they''re no longer needed\n- **Mark Complete/Incomplete**: Toggle task completion status to track your progress\n\n### User Experience\n\n- **Intuitive CLI Interface**: Built with Typer for a user-friendly command-line experience with helpful prompts and feedback\n- **Status Indicators**: Visual indicators clearly distinguish between completed and pending tasks\n- **Task Identification**: Each task receives a unique ID for precise operations\n- **Clean Output**: Well-formatted terminal output that''s easy to read and navigate\n\n## Technology Stack\n\n- **Python 3.13+**: Leveraging the latest Python features and performance improvements\n- **UV**: Modern, fast Python package manager for dependency management\n- **Typer**: Contemporary CLI framework providing elegant command-line interfaces with automatic help generation\n\n## Use Cases\n\n- Quick daily task management without database setup\n- Learning clean code principles and Python project structure\n- Rapid prototyping of task management workflows\n- Foundation for building more complex todo applications with persistence\n\n## Design Philosophy\n\nThis application prioritizes simplicity, code quality, and developer experience. It serves as both a functional tool and an educational example of well-structured Python applications, making it ideal for developers looking to understand clean code practices in a real-world context.\" --number 1 --short-name \"todo-cli-app\")",
+      "Bash(.specify/scripts/bash/create-phr.sh:*)",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(uv init:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv pip install:*)",
+      "Bash(.venv/Scripts/python:*)",
+      "Bash(uv run:*)",
+      "Bash(cat:*)",
+      "Bash(if [ -f README.md ])",
+      "Bash(then echo \"EXISTS\")",
+      "Bash(else echo \"NOT_EXISTS\")",
+      "Bash(python:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(if [ -d \"D:/Anas/doit/specs/001-todo-cli-app/checklists\" ])",
+      "Bash(if [ -f .gitignore ])",
+      "Bash(if [ -f pyproject.toml ])",
+      "Bash(if [ -f uv.lock ])",
+      "Bash(if [ -d src ])"
+    ]
+  }
+}
