@@ -37,7 +37,10 @@
       "Bash(ls:*)",
       "Bash(git commit:*)",
       "Bash(gh release:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Skill(pdf)",
+      "Bash(findstr:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)"
     ]
   }
 }
