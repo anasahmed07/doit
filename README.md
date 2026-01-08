@@ -276,8 +276,6 @@ uv run ruff check . && uv run mypy src/doit && uv run pytest
 **Runtime:**
 - `rich>=13.7.0` - Terminal formatting and colors
 - `prompt-toolkit>=3.0.43` - Interactive prompts and autocomplete
-- `typer>=0.9.0` - CLI framework (for future extensions)
-- `textual>=0.47.0` - TUI framework (for future extensions)
 
 **Development:**
 - `pytest>=8.0.0` - Testing framework
