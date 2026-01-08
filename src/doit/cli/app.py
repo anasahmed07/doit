@@ -88,16 +88,20 @@ class CommandCompleter(Completer):
         else:
             current_text = text_before_cursor
 
-        # Filter commands that start with what user has typed
-        for command, info in self.COMMANDS.items():
-            if command.startswith(current_text):
-                # Insert just the command, with a trailing space for convenience
-                yield Completion(
-                    command + " ",
-                    start_position=-len(current_text),
-                    display=command,
-                    display_meta=info["desc"],
-                )
+        # Filter commands that start with what user has typed and sort them
+        matching_commands = sorted([
+            (command, info) for command, info in self.COMMANDS.items()
+            if command.startswith(current_text)
+        ])
+
+        for command, info in matching_commands:
+            # Insert just the command, with a trailing space for convenience
+            yield Completion(
+                command + " ",
+                start_position=-len(current_text),
+                display=command,
+                display_meta=info["desc"],
+            )
 
 
 class DoItApp:
@@ -873,8 +877,27 @@ class DoItApp:
         elif cmd == "/update":
             self.handle_update_command(args)
         else:
-            self.console.print(f"[red]Unknown command:[/red] {cmd}")
-            self.console.print("[dim]Try /help for available commands[/dim]")
+            # Try to find matching commands
+            matching_commands = sorted([
+                command for command in CommandCompleter.COMMANDS.keys()
+                if command.startswith(cmd)
+            ])
+
+            if matching_commands:
+                # Execute the first matching command
+                matched_cmd = matching_commands[0]
+                self.console.print(f"[dim]Assuming command:[/dim] [cyan]{matched_cmd}[/cyan]")
+
+                # Reconstruct the full command with the matched command and original args
+                full_command = matched_cmd
+                if args:
+                    full_command += " " + args
+
+                # Recursively process the matched command
+                self.process_command(full_command)
+            else:
+                self.console.print(f"[red]Unknown command:[/red] {cmd}")
+                self.console.print("[dim]Try /help for available commands[/dim]")
 
     def show_footer(self) -> None:
         """Show status bar footer like Gemini CLI."""
