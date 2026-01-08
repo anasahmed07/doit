@@ -28,7 +28,14 @@
       "Bash(if [ -f .gitignore ])",
       "Bash(if [ -f pyproject.toml ])",
       "Bash(if [ -f uv.lock ])",
-      "Bash(if [ -d src ])"
+      "Bash(if [ -d src ])",
+      "Bash(pytest:*)",
+      "Bash(git rm:*)",
+      "Bash(git mv:*)",
+      "Bash(git add:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
