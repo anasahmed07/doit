@@ -1,8 +1,8 @@
 """Business logic for task operations."""
 
-from doit.models.exceptions import TaskNotFoundError
-from doit.models.task import Task
-from doit.storage.memory import MemoryStorage
+from doit.cli.models.exceptions import TaskNotFoundError
+from doit.cli.models.task import Task
+from doit.cli.storage.memory import MemoryStorage
 
 
 class TaskService:

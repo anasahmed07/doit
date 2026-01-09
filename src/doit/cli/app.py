@@ -24,9 +24,9 @@ from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
 
-from doit.models.exceptions import TaskNotFoundError, ValidationError
-from doit.services.task_service import TaskService
-from doit.storage.memory import MemoryStorage
+from doit.cli.models.exceptions import TaskNotFoundError, ValidationError
+from doit.cli.services.task_service import TaskService
+from doit.cli.storage.memory import MemoryStorage
 
 
 class CommandCompleter(Completer):

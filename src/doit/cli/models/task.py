@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from doit.models.exceptions import ValidationError
+from doit.cli.models.exceptions import ValidationError
 
 
 @dataclass

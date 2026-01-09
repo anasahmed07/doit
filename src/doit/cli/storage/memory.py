@@ -1,7 +1,7 @@
 """In-memory storage implementation for tasks."""
 
-from doit.models.exceptions import TaskNotFoundError
-from doit.models.task import Task
+from doit.cli.models.exceptions import TaskNotFoundError
+from doit.cli.models.task import Task
 
 
 class MemoryStorage:
