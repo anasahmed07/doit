@@ -1,0 +1,199 @@
+openapi: 3.0.3
+info:
+  title: DoIt Todo API
+  version: 2.0.0
+  description: API for the Phase II Full-Stack Todo Application.
+servers:
+  - url: http://localhost:8000
+    description: Local Development Server
+paths:
+  /api/tasks:
+    get:
+      summary: List Tasks
+      description: Retrieve all tasks belonging to the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskRead'
+    post:
+      summary: Create Task
+      description: Create a new task for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: The created task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRead'
+
+  /api/tasks/{id}:
+    get:
+      summary: Get Task
+      description: Retrieve a specific task by ID (must belong to user).
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Task ID
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRead'
+        '404':
+          description: Task not found or access denied
+    put:
+      summary: Update Task
+      description: Update details of an existing task.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRead'
+    delete:
+      summary: Delete Task
+      description: Permanently remove a task.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '204':
+          description: Task deleted successfully
+
+  /api/tasks/{id}/complete:
+    patch:
+      summary: Toggle Completion
+      description: Mark a task as complete or incomplete.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_completed:
+                  type: boolean
+              required:
+                - is_completed
+      responses:
+        '200':
+          description: Updated task status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRead'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 1000
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 1000
+        is_completed:
+          type: boolean
+    TaskRead:
+      type: object
+      required:
+        - id
+        - title
+        - is_completed
+        - created_at
+        - user_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        is_completed:
+          type: boolean
+        user_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
