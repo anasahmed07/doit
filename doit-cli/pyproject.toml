@@ -18,7 +18,7 @@ dev = [
 ]
 
 [project.scripts]
-doit = "doit.cli.app:main"
+doit = "doit.app:main"
 
 
 

@@ -14,13 +14,11 @@ class CommandCompleter(Completer):
         "/add": {"desc": "Add a new task", "template": "/add "},
         "/list": {"desc": "List all tasks", "template": "/list "},
         "/complete": {"desc": "Mark a task as complete", "template": "/complete "},
-        "/uncomplete": {"desc": "Mark a task as incomplete", "template": "/uncomplete "},
         "/delete": {"desc": "Delete a task", "template": "/delete "},
         "/update": {"desc": "Update a task", "template": "/update "},
         "/help": {"desc": "Show help", "template": "/help"},
         "/clear": {"desc": "Clear screen", "template": "/clear"},
         "/quit": {"desc": "Exit application", "template": "/quit"},
-        "/exit": {"desc": "Exit application", "template": "/exit"},
     }
 
     def get_completions(self, document: Any, complete_event: Any) -> Any:
@@ -84,7 +82,7 @@ def main():
         while True:
             result = session.prompt("test> ")
             print(f"You entered: {result}")
-            if result in ["/quit", "/exit"]:
+            if result == "/quit":
                 break
     except KeyboardInterrupt:
         print("\nExiting...")
