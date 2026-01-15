@@ -24,9 +24,9 @@ from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
 
-from doit.cli.models.exceptions import TaskNotFoundError, ValidationError
-from doit.cli.services.task_service import TaskService
-from doit.cli.storage.memory import MemoryStorage
+from doit.models.exceptions import TaskNotFoundError, ValidationError
+from doit.services.task_service import TaskService
+from doit.storage.sqlite import SqliteStorage
 
 
 class CommandCompleter(Completer):
@@ -42,14 +42,11 @@ class CommandCompleter(Completer):
         "/complete": {
             "desc": "Toggle task status - /complete [id] (no id = toggle all)",
         },
-        "/uncomplete": {
-            "desc": "Mark a task as incomplete - /uncomplete <id>",
-        },
         "/delete": {
-            "desc": "Delete a task - /delete <id>",
+            "desc": "Delete a task - /delete [id] (no id = select to delete)",
         },
         "/update": {
-            "desc": 'Update a task - /update <id> -t "<new title>" -d "<new description>"',
+            "desc": 'Update a task - /update [id] -t "<new title>" -d "<new description>"',
         },
         "/help": {
             "desc": "Show help",
@@ -58,9 +55,6 @@ class CommandCompleter(Completer):
             "desc": "Clear screen",
         },
         "/quit": {
-            "desc": "Exit application",
-        },
-        "/exit": {
             "desc": "Exit application",
         },
     }
@@ -110,7 +104,7 @@ class DoItApp:
     def __init__(self) -> None:
         """Initialize the application."""
         self.console = Console()
-        self.storage = MemoryStorage()
+        self.storage = SqliteStorage()
         self.service = TaskService(self.storage)
         self.running = True
         self.last_interrupt_time = 0.0  # Track last Ctrl+C time
@@ -122,6 +116,7 @@ class DoItApp:
             complete_while_typing=True,
             complete_in_thread=True,
             bottom_toolbar=self.get_bottom_toolbar,
+            key_bindings=self.get_main_bindings(),
             style=Style.from_dict(
                 {
                     "completion-menu.completion": "bg:#1e1e1e #cccccc",
@@ -154,6 +149,31 @@ class DoItApp:
             ("", " | "),
             ("class:info", "Type /help for commands"),
         ])
+
+    def get_cancel_bindings(self) -> KeyBindings:
+        """Get key bindings for cancelling input with Escape."""
+        kb = KeyBindings()
+
+        @kb.add("escape")
+        def _(event):
+            event.app.exit(result="__cancel__")
+        
+        return kb
+
+    def get_main_bindings(self) -> KeyBindings:
+        """Get key bindings for the main prompt."""
+        kb = KeyBindings()
+
+        @kb.add("escape")
+        def _(event):
+            # If prompt is empty, Escape refreshes the screen (clears output area)
+            if not event.app.current_buffer.text:
+                event.app.exit(result="/clear")
+            else:
+                # If typing, Escape clears the current line
+                event.app.current_buffer.text = ""
+        
+        return kb
 
     def clear_screen(self) -> None:
         """Clear the terminal screen."""
@@ -318,12 +338,11 @@ class DoItApp:
             ("/add --multi", "Add multiple tasks at once", "/add --multi"),
             ("/list [filter]", "List tasks (all/pending/completed)", "/list pending"),
             ("/complete [id]", "Toggle task status (interactive)", "/complete"),
-            ("/uncomplete <id>", "Mark task as incomplete", "/uncomplete 1"),
-            ('/update <id> -t "<title>"', "Update task title/description", '/update 1 -t "New title"'),
-            ("/delete <id>", "Delete a task", "/delete 1"),
+            ('/update [id]', "Update task (interactive)", '/update'),
+            ("/delete [id]", "Delete task (interactive)", "/delete"),
             ("/clear", "Clear the screen", "/clear"),
             ("/help", "Show this help", "/help"),
-            ("/quit or /exit", "Exit the application", "/quit"),
+            ("/quit", "Exit the application", "/quit"),
         ]
 
         for cmd, desc, example in commands:
@@ -358,40 +377,64 @@ class DoItApp:
             self.handle_add_multiple_tasks()
             return
 
+        # If no args provided, start interactive mode
         if not args.strip():
-            self.console.print("[red]Error:[/red] Please provide a task title")
-            self.console.print('[dim]Usage: /add "<title>" -d "<description>"[/dim]')
-            self.console.print('[dim]   or: /add <title>[/dim]')
-            self.console.print('[dim]   or: /add --multi (for multiple tasks)[/dim]')
-            return
-
-        # Parse arguments - check for -d flag
-        # Try to match: /add "title" -d "description" or /add title -d description
-        match_quoted = re.match(r'^["\']([^"\']+)["\'](?:\s+-d\s+["\']([^"\']*)["\'])?', args)
-        match_with_flag = re.match(r'^(.+?)\s+-d\s+(.+)$', args)
-
-        if match_quoted:
-            # Matched quoted format: "title" -d "description"
-            title = match_quoted.group(1)
-            description = match_quoted.group(2) if match_quoted.group(2) else ""
-        elif match_with_flag:
-            # Matched unquoted format with flag: title -d description
-            title = match_with_flag.group(1).strip()
-            description = match_with_flag.group(2).strip()
-        else:
-            # No flag, treat entire args as title
-            title = args.strip().strip('"\'')
-
-            # Ask for description interactively
-            self.console.print()
-            self.console.print("[dim]Enter description (optional, press Enter to skip):[/dim]")
+            self.console.print("[dim]Interactive Mode (Esc to cancel)[/dim]")
             try:
-                description = self.session.prompt(
-                    HTML("<orange>Description:</orange> "),
+                title = self.session.prompt(
+                    HTML("<orange>Title:</orange> "),
+                    key_bindings=self.get_cancel_bindings(),
                 )
+                if title == "__cancel__":
+                    self.console.print("[yellow]Cancelled[/yellow]")
+                    return
+                
+                if not title.strip():
+                    self.console.print("[yellow]Cancelled (empty title)[/yellow]")
+                    return
+
+                description = self.session.prompt(
+                    HTML("<orange>Description (optional):</orange> "),
+                    key_bindings=self.get_cancel_bindings(),
+                )
+                if description == "__cancel__":
+                    self.console.print("[yellow]Cancelled[/yellow]")
+                    return
+
             except (KeyboardInterrupt, EOFError):
                 self.console.print("[yellow]Cancelled[/yellow]")
                 return
+        else:
+            # Parse arguments - check for -d flag
+            # Try to match: /add "title" -d "description" or /add title -d description
+            match_quoted = re.match(r'^["\']([^"\']+)["\'](?:\s+-d\s+["\']([^"\']*)["\'])?', args)
+            match_with_flag = re.match(r'^(.+?)\s+-d\s+(.+)$', args)
+
+            if match_quoted:
+                # Matched quoted format: "title" -d "description"
+                title = match_quoted.group(1)
+                description = match_quoted.group(2) if match_quoted.group(2) else ""
+            elif match_with_flag:
+                # Matched unquoted format with flag: title -d description
+                title = match_with_flag.group(1).strip()
+                description = match_with_flag.group(2).strip()
+            else:
+                # No flag, treat entire args as title
+                title = args.strip().strip('"\'')
+
+                self.console.print()
+                self.console.print("[dim]Enter description (optional, press Enter to skip):[/dim]")
+                try:
+                    description = self.session.prompt(
+                        HTML("<orange>Description:</orange> "),
+                        key_bindings=self.get_cancel_bindings(),
+                    )
+                    if description == "__cancel__":
+                        self.console.print("[yellow]Cancelled[/yellow]")
+                        return
+                except (KeyboardInterrupt, EOFError):
+                    self.console.print("[yellow]Cancelled[/yellow]")
+                    return
 
         try:
             # Show loading animation with minimum visible duration
@@ -435,7 +478,11 @@ class DoItApp:
                 self.console.print("[bold orange1]New Task[/bold orange1]")
                 title = self.session.prompt(
                     HTML("<cyan>Title:</cyan> "),
+                    key_bindings=self.get_cancel_bindings(),
                 )
+
+                if title == "__cancel__":
+                    break
 
                 if not title.strip():
                     self.console.print("[yellow]Skipping empty task[/yellow]")
@@ -445,7 +492,11 @@ class DoItApp:
                 # Get task description
                 description = self.session.prompt(
                     HTML("<cyan>Description (optional):</cyan> "),
+                    key_bindings=self.get_cancel_bindings(),
                 )
+
+                if description == "__cancel__":
+                    break
 
                 # Create the task
                 try:
@@ -695,82 +746,287 @@ class DoItApp:
             self.console.print()
             self.console.print("[dim]Cancelled[/dim]")
 
-    def handle_uncomplete_command(self, args: str) -> None:
-        """Handle /uncomplete command."""
-        if not args.strip().isdigit():
-            self.console.print("[red]Error:[/red] Please provide a valid task ID")
-            self.console.print("[dim]Usage: /uncomplete <id>[/dim]")
-            return
-
-        task_id = int(args.strip())
-
-        try:
-            task = self.service.uncomplete_task(task_id)
-            self.console.print()
-            self.console.print(
-                Panel(
-                    f"[yellow][ ][/yellow] Task [bold cyan]#{task.id}[/bold cyan] marked as incomplete!",
-                    border_style="yellow",
-                )
-            )
-        except TaskNotFoundError:
-            self.console.print()
-            self.console.print(f"[red]Error:[/red] Task {task_id} not found")
-
     def handle_delete_command(self, args: str) -> None:
-        """Handle /delete command."""
-        if not args.strip().isdigit():
-            self.console.print("[red]Error:[/red] Please provide a valid task ID")
-            self.console.print("[dim]Usage: /delete <id>[/dim]")
+        """Handle /delete command with interactive selection if no ID provided."""
+        # If ID provided, delete specific task
+        if args.strip().isdigit():
+            task_id = int(args.strip())
+            try:
+                task = self.service.get_task(task_id)
+                self.console.print()
+                self.console.print(f"[yellow]Delete task #{task_id}:[/yellow] {task.title}")
+                confirm = self.session.prompt(
+                    HTML("<red>Are you sure? (y/N):</red> "),
+                )
+
+                if confirm.lower() == "y":
+                    self.service.delete_task(task_id)
+                    self.console.print()
+                    self.console.print(
+                        Panel(
+                            f"[red][X][/red] Task [bold cyan]#{task_id}[/bold cyan] deleted",
+                            border_style="red",
+                        )
+                    )
+                else:
+                    self.console.print()
+                    self.console.print("[dim]Cancelled[/dim]")
+                return
+
+            except (TaskNotFoundError, KeyboardInterrupt, EOFError):
+                self.console.print()
+                self.console.print(f"[red]Error:[/red] Task {task_id} not found")
+                return
+
+        # No ID - interactive selection
+        tasks = self.service.get_all_tasks()
+        if not tasks:
+            self.console.print()
+            self.console.print("[yellow]No tasks available![/yellow]")
             return
 
-        task_id = int(args.strip())
+        # State
+        current_index = [0]
+        selected_ids = set()
+        should_exit = [False]
+        should_delete = [False]
 
-        try:
-            task = self.service.get_task(task_id)
+        # Key bindings
+        kb = KeyBindings()
+
+        @kb.add("up")
+        def move_up(event):
+            if current_index[0] > 0:
+                current_index[0] -= 1
+
+        @kb.add("down")
+        def move_down(event):
+            if current_index[0] < len(tasks) - 1:
+                current_index[0] += 1
+
+        @kb.add("space")
+        def toggle_selection(event):
+            task_id = tasks[current_index[0]].id
+            if task_id in selected_ids:
+                selected_ids.remove(task_id)
+            else:
+                selected_ids.add(task_id)
+
+        @kb.add("enter")
+        def confirm_selection(event):
+            if not selected_ids:
+                return
+            should_delete[0] = True
+            event.app.exit()
+
+        @kb.add("c-c")
+        @kb.add("escape")
+        def cancel(event):
+            should_exit[0] = True
+            event.app.exit()
+
+        # Display text
+        def get_formatted_text():
+            lines = []
+            lines.append(("class:header", "Select Tasks to Delete\n"))
+            lines.append(("class:info", "↑↓: navigate | Space: select | Enter: delete selected | Esc: cancel\n\n"))
+
+            for i, task in enumerate(tasks):
+                is_selected = task.id in selected_ids
+                is_current = i == current_index[0]
+
+                if is_current:
+                    prefix = "> "
+                    style = "class:selected"
+                else:
+                    prefix = "  "
+                    style = "class:normal"
+
+                checkbox = "[X]" if is_selected else "[ ]"
+                title = task.title[:40]
+                desc = f" - {task.description[:30]}..." if task.description and len(task.description) > 30 else f" - {task.description}" if task.description else ""
+
+                if is_selected:
+                    line = f"{prefix}{checkbox} #{task.id} {title}{desc} (will delete)\n"
+                    style = "class:danger" if not is_current else "class:selected_danger"
+                else:
+                    line = f"{prefix}{checkbox} #{task.id} {title}{desc}\n"
+
+                lines.append((style, line))
+
+            count = len(selected_ids)
+            if count > 0:
+                lines.append(("", "\n"))
+                lines.append(("class:danger", f"Selected {count} tasks for deletion"))
+
+            return lines
+
+        # Layout
+        text_control = FormattedTextControl(
+            text=get_formatted_text,
+            focusable=True,
+        )
+        window = Window(content=text_control, always_hide_cursor=True)
+        app_layout = PTLayout(HSplit([window]))
+
+        style = Style.from_dict({
+            "header": "bold red",
+            "info": "dim",
+            "selected": "bg:#ff6b35 #000000 bold",
+            "normal": "",
+            "danger": "red",
+            "selected_danger": "bg:#ff6b35 #000000 bold red",
+        })
+
+        app = Application(
+            layout=app_layout,
+            key_bindings=kb,
+            style=style,
+            full_screen=False,
+            mouse_support=False,
+        )
+
+        self.console.print()
+        app.run()
+
+        if should_delete[0] and selected_ids:
+            # Final confirmation
+            count = len(selected_ids)
             self.console.print()
-            self.console.print(f"[yellow]Delete task #{task_id}:[/yellow] {task.title}")
+            self.console.print(f"[bold red]WARNING:[/bold red] About to delete {count} tasks.")
             confirm = self.session.prompt(
-                HTML("<red>Are you sure? (y/N):</red> "),
+                HTML("<red>Are you sure? (type 'delete' to confirm):</red> "),
             )
 
-            if confirm.lower() == "y":
-                self.service.delete_task(task_id)
+            if confirm.lower() == "delete":
+                deleted_count = 0
+                for task_id in selected_ids:
+                    try:
+                        self.service.delete_task(task_id)
+                        deleted_count += 1
+                    except TaskNotFoundError:
+                        pass
+                
                 self.console.print()
                 self.console.print(
                     Panel(
-                        f"[red][X][/red] Task [bold cyan]#{task_id}[/bold cyan] deleted",
+                        f"[red][X][/red] Deleted {deleted_count} tasks",
                         border_style="red",
                     )
                 )
             else:
                 self.console.print()
                 self.console.print("[dim]Cancelled[/dim]")
-
-        except (TaskNotFoundError, KeyboardInterrupt, EOFError):
+        else:
             self.console.print()
-            self.console.print(f"[red]Error:[/red] Task {task_id} not found")
+            self.console.print("[dim]No tasks deleted[/dim]")
 
     def handle_update_command(self, args: str) -> None:
         """Handle /update command with optional -t and -d flags."""
-        if not args.strip():
-            self.console.print("[red]Error:[/red] Please provide a task ID")
-            self.console.print('[dim]Usage: /update <id> -t "<new title>" -d "<new description>"[/dim]')
-            self.console.print('[dim]   or: /update <id>[/dim]')
-            return
+        task_id = None
+        
+        # Check if first arg is an ID
+        parts = args.strip().split(maxsplit=1)
+        if parts and parts[0].isdigit():
+            task_id = int(parts[0])
+            remaining_args = parts[1] if len(parts) > 1 else ""
+        else:
+            remaining_args = args
+
+        # If no ID, select interactively
+        if task_id is None:
+            tasks = self.service.get_all_tasks()
+            if not tasks:
+                self.console.print()
+                self.console.print("[yellow]No tasks available![/yellow]")
+                return
+
+            # Interactive selection (single select)
+            current_index = [0]
+            should_exit = [False]
+            selected_task = [None]
+
+            kb = KeyBindings()
+
+            @kb.add("up")
+            def move_up(event):
+                if current_index[0] > 0:
+                    current_index[0] -= 1
+
+            @kb.add("down")
+            def move_down(event):
+                if current_index[0] < len(tasks) - 1:
+                    current_index[0] += 1
+
+            @kb.add("enter")
+            def select_current(event):
+                selected_task[0] = tasks[current_index[0]]
+                event.app.exit()
+
+            @kb.add("c-c")
+            @kb.add("escape")
+            def cancel(event):
+                should_exit[0] = True
+                event.app.exit()
+
+            def get_formatted_text():
+                lines = []
+                lines.append(("class:header", "Select Task to Update\n"))
+                lines.append(("class:info", "↑↓: navigate | Enter: select | Esc: cancel\n\n"))
+
+                for i, task in enumerate(tasks):
+                    is_current = i == current_index[0]
+                    
+                    if is_current:
+                        prefix = "> "
+                        style = "class:selected"
+                    else:
+                        prefix = "  "
+                        style = "class:normal"
+
+                    status = "[✓]" if task.completed else "[ ]"
+                    title = task.title[:40]
+                    desc = f" - {task.description[:30]}..." if task.description and len(task.description) > 30 else f" - {task.description}" if task.description else ""
+
+                    line = f"{prefix}{status} #{task.id} {title}{desc}\n"
+                    lines.append((style, line))
+
+                return lines
+
+            text_control = FormattedTextControl(
+                text=get_formatted_text,
+                focusable=True,
+            )
+            window = Window(content=text_control, always_hide_cursor=True)
+            app_layout = PTLayout(HSplit([window]))
+
+            style = Style.from_dict({
+                "header": "bold cyan",
+                "info": "dim",
+                "selected": "bg:#ff6b35 #000000 bold",
+                "normal": "",
+            })
+
+            app = Application(
+                layout=app_layout,
+                key_bindings=kb,
+                style=style,
+                full_screen=False,
+                mouse_support=False,
+            )
+
+            self.console.print()
+            app.run()
+
+            if should_exit[0] or not selected_task[0]:
+                self.console.print()
+                self.console.print("[dim]Cancelled[/dim]")
+                return
+            
+            task_id = selected_task[0].id
+            # Continue to update logic...
 
         import re
-
-        # Try to parse: /update <id> -t "title" -d "description"
-        # Extract the task ID first
-        parts = args.strip().split(maxsplit=1)
-        if not parts[0].isdigit():
-            self.console.print("[red]Error:[/red] First argument must be a task ID")
-            self.console.print('[dim]Usage: /update <id> -t "<new title>" -d "<new description>"[/dim]')
-            return
-
-        task_id = int(parts[0])
-        remaining_args = parts[1] if len(parts) > 1 else ""
 
         # Parse flags
         title = None
@@ -799,11 +1055,21 @@ class DoItApp:
 
                 new_title = self.session.prompt(
                     HTML("<orange>New title:</orange> "),
+                    key_bindings=self.get_cancel_bindings(),
                 )
+
+                if new_title == "__cancel__":
+                    self.console.print("[yellow]Cancelled[/yellow]")
+                    return
 
                 new_description = self.session.prompt(
                     HTML("<orange>New description:</orange> "),
+                    key_bindings=self.get_cancel_bindings(),
                 )
+
+                if new_description == "__cancel__":
+                    self.console.print("[yellow]Cancelled[/yellow]")
+                    return
 
                 title = new_title.strip() or None
                 description = new_description.strip() or None
@@ -842,10 +1108,52 @@ class DoItApp:
         if not command:
             return
 
-        # Handle non-slash commands
+        # Handle non-slash commands as implicit task creation (description first)
         if not command.startswith("/"):
-            self.console.print("[yellow]Commands must start with /[/yellow]")
-            self.console.print("[dim]Try /help for available commands[/dim]")
+            description = command
+            self.console.print(f"[dim]Description:[/dim] {description}")
+            self.console.print("[dim]Enter title to save (Esc to cancel):[/dim]")
+            
+            try:
+                title = self.session.prompt(
+                    HTML("<cyan>Title:</cyan> "),
+                    key_bindings=self.get_cancel_bindings(),
+                )
+                
+                if title == "__cancel__":
+                    self.console.print("[yellow]Cancelled[/yellow]")
+                    return
+                    
+                if not title.strip():
+                    self.console.print("[yellow]Cancelled (empty title)[/yellow]")
+                    return
+
+                # Create the task
+                import time
+                with self.console.status("[bold orange1]Creating task...", spinner="dots"):
+                    task = self.service.create_task(title.strip(), description)
+                    time.sleep(0.5)
+
+                # Show success
+                self.console.print()
+                success_text = Text()
+                success_text.append("[x] ", style="bold green")
+                success_text.append(f"Task #{task.id} created: ", style="bold white")
+                success_text.append(task.title, style="cyan")
+
+                success_panel = Panel(
+                    success_text,
+                    border_style="green",
+                    width=self.console.width,
+                    padding=(0, 1),
+                )
+                self.console.print(success_panel)
+
+            except (KeyboardInterrupt, EOFError):
+                self.console.print("[yellow]Cancelled[/yellow]")
+            except ValidationError as e:
+                self.console.print(f"[red]Error:[/red] {e}")
+            
             return
 
         # Parse command and arguments
@@ -854,7 +1162,7 @@ class DoItApp:
         args = parts[1] if len(parts) > 1 else ""
 
         # Route to appropriate handler
-        if cmd in ["/quit", "/exit"]:
+        if cmd == "/quit":
             self.running = False
             self.console.print()
             self.console.print("[dim]Goodbye! 👋[/dim]")
@@ -870,8 +1178,6 @@ class DoItApp:
             self.handle_list_command(args)
         elif cmd == "/complete":
             self.handle_complete_command(args)
-        elif cmd == "/uncomplete":
-            self.handle_uncomplete_command(args)
         elif cmd == "/delete":
             self.handle_delete_command(args)
         elif cmd == "/update":
@@ -936,7 +1242,7 @@ class DoItApp:
 
                 # Process command
                 if command.strip():  # Only process non-empty commands
-                    self.console.print()  # Spacing before output
+                    self.show_hero()
                     self.process_command(command)
                     self.console.print()  # Spacing after output
 
