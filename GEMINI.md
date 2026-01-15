@@ -198,6 +198,7 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Basic Project Structure
 
+- `doit-cli/` — CLI application code and tests
 - `.specify/memory/constitution.md` — Project principles
 - `specs/<feature>/spec.md` — Feature requirements
 - `specs/<feature>/plan.md` — Architecture decisions
