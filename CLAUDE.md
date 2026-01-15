@@ -213,6 +213,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 ## Active Technologies
 - Python 3.13+ + Typer (CLI framework), Rich (console formatting), pytest (testing) (001-todo-cli-app)
 - In-memory (list/dict structures during session) (001-todo-cli-app)
+- Python 3.13+ (Backend), TypeScript 5.0+ (Frontend) + FastAPI, SQLModel (Backend); Next.js 15+, Tailwind CSS, Better Auth, Dnd-kit (Frontend) (002-fullstack-app)
+- Neon Serverless PostgreSQL (Data + Media BLOBs) (002-fullstack-app)
 
 ## Recent Changes
 - 001-todo-cli-app: Added Python 3.13+ + Typer (CLI framework), Rich (console formatting), pytest (testing)

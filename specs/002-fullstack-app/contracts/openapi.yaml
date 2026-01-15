@@ -1,0 +1,260 @@
+openapi: 3.0.0
+info:
+  title: DoIt API
+  version: 2.0.0
+  description: Backend API for DoIt Full-Stack Application
+servers:
+  - url: http://localhost:8000/api/v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /me:
+    get:
+      summary: Get current user
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /categories:
+    get:
+      summary: List categories
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+    post:
+      summary: Create category
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreate'
+      responses:
+        '201':
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+
+  /notes:
+    get:
+      summary: List notes
+      parameters:
+        - name: category_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+    post:
+      summary: Create note
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteCreate'
+      responses:
+        '201':
+          description: Created note
+
+  /notes/{id}:
+    patch:
+      summary: Update note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteUpdate'
+      responses:
+        '200':
+          description: Updated note
+    delete:
+      summary: Delete note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Note deleted
+
+  /notes/reorder:
+    post:
+      summary: Update note order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  order_index:
+                    type: number
+      responses:
+        '200':
+          description: Order updated
+
+  /projects:
+    get:
+      summary: List projects
+      responses:
+        '200':
+          description: List of projects
+    post:
+      summary: Create project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Created project
+
+  /projects/{id}/tasks:
+    get:
+      summary: Get project tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Project tasks
+    post:
+      summary: Create task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Created task
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          type: string
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        color:
+          type: string
+    CategoryCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+    Note:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        category_id:
+          type: string
+          format: uuid
+    NoteCreate:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+        category_id:
+          type: string
+          format: uuid
+    NoteUpdate:
+      type: object
+      properties:
+        content:
+          type: string
+        category_id:
+          type: string
+          format: uuid
+    ProjectCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+    TaskCreate:
+      type: object
+      required:
+        - content
+        - status
+      properties:
+        content:
+          type: string
+        status:
+          type: string
+          enum: [TODO, IN_PROGRESS, DONE]
