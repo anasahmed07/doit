@@ -40,7 +40,8 @@
       "Bash(find:*)",
       "Skill(pdf)",
       "Bash(findstr:*)",
-      "Bash(.specify/scripts/bash/create-new-feature.sh:*)"
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "WebSearch"
     ]
   }
 }
