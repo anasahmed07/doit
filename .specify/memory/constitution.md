@@ -1,247 +1,176 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: [Initial] → 1.0.0
+Version change: 1.0.0 → 2.0.0
 Principles defined:
-  - I. Test-First Development (TDD) - NON-NEGOTIABLE
-  - II. CLI-First Interface
-  - III. Data Persistence & Integrity
-  - IV. User Experience Excellence
-  - V. Code Quality & Maintainability
-  - VI. Simple & Incremental
+  - I. Spec-Driven Development (SDD) - NON-NEGOTIABLE (New)
+  - II. API-First & Type-Safe Architecture (Replaces CLI-First)
+  - III. Cloud-Native Data Persistence (Replaces Data Persistence & Integrity)
+  - IV. Modern Web User Experience (Replaces User Experience Excellence)
+  - V. Code Quality & Full-Stack Standards (Updated)
+  - VI. Security & User Isolation (New)
 
 Added sections:
-  - Core Principles (6 principles)
-  - Technology Stack Standards
-  - Development Workflow
-  - Governance
+  - Monorepo Structure
+  - Technology Stack (Full-Stack)
+  - Deployment Standards
+
+Removed sections:
+  - CLI-specific guidelines (Typer/Rich specifics moved to legacy or secondary)
 
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md - reviewed, aligns with TDD and single-project structure
-  ✅ .specify/templates/spec-template.md - reviewed, aligns with user story priority approach
-  ✅ .specify/templates/tasks-template.md - reviewed, aligns with TDD test-first workflow
+  ✅ .specify/templates/plan-template.md - Aligns with new monorepo structure option.
+  ✅ .specify/templates/spec-template.md - Aligns with user stories.
+  ✅ .specify/templates/tasks-template.md - Aligns with monorepo paths.
 
-Follow-up TODOs: None
+Follow-up TODOs: 
+  - Migrate existing CLI code to consume API (if CLI is to be retained) or move to `legacy/`.
 -->
 
 # DoIt Todo Application Constitution
 
 ## Core Principles
 
-### I. Test-First Development (TDD) - NON-NEGOTIABLE
+### I. Test-Driven Development (TDD)
 
-**TDD is mandatory for all implementation work:**
+**No implementation code is written until a failing test exists:**
 
-- Tests MUST be written BEFORE implementation code
-- Tests MUST fail initially (Red phase)
-- Implementation MUST make tests pass (Green phase)
-- Code MUST be refactored after tests pass (Refactor phase)
-- No feature code without corresponding tests
-- User must approve test cases before implementation begins
+- **Red**: Write a test that defines the expected behavior and verify it fails.
+- **Green**: Write the minimum amount of code to make the test pass.
+- **Refactor**: Clean up the code while ensuring tests still pass.
+- **Coverage**: New features must include comprehensive test coverage.
 
-**Rationale**: TDD ensures correctness, prevents regressions, creates living documentation, and enforces clear requirements before coding. For a todo application where data integrity is critical, TDD provides confidence that tasks are correctly created, updated, listed, and deleted.
+**Rationale**: TDD ensures that code does exactly what is intended, catches regressions immediately, and results in modular, testable architecture. It serves as a living specification of the system's behavior.
 
-### II. CLI-First Interface
+### II. API-First & Type-Safe Architecture
 
-**Every feature must be accessible via command-line interface:**
+**The backend and frontend must communicate via strict contracts:**
 
-- All functionality exposed through Typer-based CLI commands
-- Commands must follow standard CLI conventions (flags, arguments, subcommands)
-- Human-readable output with rich formatting (colors, tables, status indicators)
-- Support for both interactive and scriptable modes
-- Stdin/stdout protocol for composability with other tools
-- Errors and warnings go to stderr; data output to stdout
+- **Backend**: FastAPI exposing RESTful endpoints.
+- **Frontend**: Next.js (App Router) consuming the API.
+- **Strict Typing**: Pydantic models (Backend) and TypeScript interfaces (Frontend) must mirror each other.
+- **Statelessness**: The backend must be stateless; all state resides in the database.
 
-**Rationale**: CLI applications must be consistent, predictable, and scriptable. Typer provides excellent developer experience while ensuring professional CLI behavior. Rich formatting improves usability without sacrificing composability.
+**Rationale**: Decoupling the frontend and backend allows for independent scaling and development. Strong typing across the stack prevents integration bugs and enables "Evolution of Todo" from a simple web app to future microservices.
 
-### III. Data Persistence & Integrity
+### III. Cloud-Native Data Persistence
 
-**Task data must be reliably stored and retrievable:**
+**Data must be durable, consistent, and user-isolated:**
 
-- JSON file-based storage for simplicity and portability
-- Atomic writes to prevent data corruption
-- Data validation on all mutations (create, update, delete)
-- Unique task IDs for unambiguous operations
-- Schema versioning for future migrations
-- Backup mechanism before destructive operations
+- **Database**: PostgreSQL (Neon Serverless) via SQLModel.
+- **Schema**: Defined in code (Python models), managed via migrations (if applicable).
+- **Integrity**: Foreign keys and constraints must enforce data validity at the database level.
+- **Persistence**: No local file storage for domain data; all user data lives in the cloud DB.
 
-**Rationale**: Users trust todo applications with important task data. Data loss or corruption is unacceptable. File-based JSON storage balances simplicity with reliability, avoiding database dependencies while maintaining data integrity.
+**Rationale**: Moving from local JSON to Postgres is essential for multi-user support, concurrency, and reliability. SQLModel bridges the gap between Python objects and the relational database, simplifying database interactions.
 
-### IV. User Experience Excellence
+### IV. Modern Web User Experience
 
-**The application must be delightful and intuitive to use:**
+**The application must be responsive, accessible, and polished:**
 
-- Clear, actionable feedback for every operation
-- Visual status indicators (✓ complete, ○ incomplete)
-- Color-coded output for different task states
-- Sensible defaults to minimize required input
-- Helpful error messages with suggestions
-- Consistent command naming and argument patterns
+- **Framework**: Next.js 14+ with App Router.
+- **Styling**: Tailwind CSS for utility-first, responsive design.
+- **Interactivity**: Client Components for rich interactions; Server Components for performance.
+- **Visuals**: Clean, modern UI with clear feedback states (loading, success, error).
 
-**Rationale**: A todo application is used daily. Poor UX leads to abandonment. Typer and Rich enable professional terminal interfaces that feel polished and modern, matching user expectations from quality CLI tools.
+**Rationale**: Users expect a seamless experience across devices. Next.js and Tailwind provide the best balance of performance, developer experience, and maintainability for modern web applications.
 
-### V. Code Quality & Maintainability
+### V. Code Quality & Full-Stack Standards
 
-**Code must be clean, well-structured, and maintainable:**
+**Code must be maintainable, tested, and standard-compliant:**
 
-- Type hints required for all functions (Python 3.13+ features encouraged)
-- Modular architecture: models, storage, CLI, services
-- Single Responsibility Principle for all classes/functions
-- Comprehensive docstrings for public APIs
-- Linting (ruff) and formatting (ruff format) enforced
-- Test coverage minimum: 90% for core logic
+- **Backend**: Python 3.13+, fully type-hinted, tested with pytest.
+- **Frontend**: TypeScript, strict mode, component-based architecture.
+- **Linting**: `ruff` (Python), `eslint` + `prettier` (TS/JS).
+- **Testing**:
+    - Backend: Unit tests for services, integration tests for API endpoints.
+    - Frontend: Component tests where critical.
 
-**Rationale**: Small applications become large over time. Poor structure early makes future features expensive. Type hints catch errors before runtime. Modular design enables testing and reuse.
+**Rationale**: A full-stack codebase requires rigorous standards to prevent "spaghetti code." Consistent tooling and strict typing are the best defense against technical debt in a growing monorepo.
 
-### VI. Simple & Incremental
+### VI. Security & User Isolation
 
-**Start with the simplest solution that works:**
+**Security is foundational, not an afterthought:**
 
-- YAGNI: Don't add features speculatively
-- Implement complete vertical slices (end-to-end features)
-- Prefer composition over inheritance
-- Avoid premature abstraction
-- No external database until file storage proves insufficient
-- No authentication/multi-user until single-user is proven
+- **Authentication**: Better Auth with JWT (JSON Web Tokens).
+- **Authorization**: Resources must be scoped to the authenticated user (User Isolation).
+- **Secrets**: API keys and DB credentials must be managed via environment variables (`.env`), never committed.
+- **Validation**: All inputs must be validated on both client and server.
 
-**Rationale**: Over-engineering wastes time and creates maintenance burden. Build incrementally, validating each feature before adding the next. File-based JSON storage is sufficient for personal todo lists; don't add PostgreSQL on day one.
+**Rationale**: In a multi-user web application, data leaks are unacceptable. Every database query and API endpoint must enforce ownership checks to ensure users only see and modify their own data.
 
 ## Technology Stack Standards
 
-**Language**: Python 3.13+ (leveraging latest type system improvements)
+### Backend
+- **Language**: Python 3.13+
+- **Framework**: FastAPI
+- **ORM**: SQLModel
+- **Database**: Neon Serverless PostgreSQL
+- **Package Manager**: `uv`
+- **Testing**: `pytest`, `pytest-cov`
+- **Linting**: `ruff`
 
-**Package Management**: UV (fast, reliable Python package installer and resolver)
+### Frontend
+- **Framework**: Next.js 14+ (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Authentication**: Better Auth
+- **HTTP Client**: `fetch` or `axios` (typed wrappers)
 
-**CLI Framework**: Typer (modern, type-hint-based CLI builder)
-
-**Console Formatting**: Rich (beautiful terminal output, tables, colors)
-
-**Testing Framework**: pytest (standard Python testing tool)
-
-**Test Coverage**: pytest-cov (measure and enforce coverage)
-
-**Code Quality**:
-- **Linting**: ruff (fast, comprehensive Python linter)
-- **Formatting**: ruff format (opinionated code formatter)
-- **Type Checking**: mypy (static type analysis)
-
-**Storage Format**: JSON (human-readable, version-controllable, no external dependencies)
-
-**Project Structure**:
-```
-src/
-  doit/
-    models/      # Task data models
-    storage/     # File I/O and persistence
-    cli/         # Typer command definitions
-    services/    # Business logic
-
-tests/
-  unit/          # Unit tests (isolated logic)
-  integration/   # Integration tests (CLI + storage)
-```
-
-**Rationale**: This stack balances modern Python capabilities (3.13 type system), developer productivity (UV, Typer, Rich), code quality (ruff, mypy, pytest), and simplicity (JSON storage, no external services).
+### Infrastructure & Tools
+- **Monorepo Structure**:
+    ```text
+    /
+    ├── specs/              # Design & Requirements
+    ├── backend/            # FastAPI Application
+    │   ├── src/
+    │   └── tests/
+    ├── frontend/           # Next.js Application
+    │   ├── src/
+    │   │   ├── app/
+    │   │   └── components/
+    │   └── public/
+    ├── .specify/           # Agent Templates
+    └── CLAUDE.md           # Agent Instructions
+    ```
 
 ## Development Workflow
 
-### 1. Feature Specification
-- Create feature spec in `specs/<feature>/spec.md`
-- Define user stories with acceptance criteria
-- Prioritize stories (P1 = MVP, P2+ = enhancements)
-- Get user approval before planning
+### 1. Specification (The Architect)
+- Create/Update `specs/<feature>/spec.md`: Define user stories and requirements.
+- Create/Update `specs/<feature>/plan.md`: Define data models, API endpoints, and component structure.
+- **Review**: Ensure alignment with Constitution (Cloud-Native, Security).
 
-### 2. Planning
-- Create implementation plan in `specs/<feature>/plan.md`
-- Document technical approach and architecture
-- Identify affected modules and data models
-- Get user approval before task breakdown
+### 2. Tasking (The Manager)
+- Generate `specs/<feature>/tasks.md`: Break work into frontend and backend tasks.
+- **Order**: Generally Backend (API/DB) -> Frontend (UI/Integration).
 
-### 3. Task Breakdown
-- Generate task list in `specs/<feature>/tasks.md`
-- Organize by user story for independent delivery
-- Mark parallel tasks with [P]
-- Include test tasks BEFORE implementation tasks
+### 3. Implementation (The Builder)
+- **Backend**:
+    1. Define SQLModel entities.
+    2. Implement API endpoints (TDD: Write test -> Fail -> Implement).
+    3. Verify via Swagger UI (`/docs`) or `pytest`.
+- **Frontend**:
+    1. Define TS interfaces matching API.
+    2. Build UI components.
+    3. Integrate with API.
 
-### 4. TDD Implementation Cycle
-
-**For EVERY task:**
-
-a) **Red Phase**:
-   - Write test(s) that verify the desired behavior
-   - Run tests → MUST fail (no implementation yet)
-   - User approves test cases
-
-b) **Green Phase**:
-   - Write minimal code to make tests pass
-   - Run tests → MUST pass
-   - No refactoring yet, just pass the tests
-
-c) **Refactor Phase**:
-   - Improve code structure, naming, clarity
-   - Run tests → MUST still pass
-   - Commit when tests green and code clean
-
-**Testing Requirements**:
-- Unit tests for models, storage, services
-- Integration tests for CLI commands (invoke via Typer's test utilities)
-- Use pytest fixtures for test data and temporary files
-- Mock file I/O where appropriate, but also test real file operations
-
-### 5. Quality Gates
-
-**Before committing**:
-- [ ] All tests pass (pytest)
-- [ ] Linting passes (ruff check)
-- [ ] Formatting applied (ruff format)
-- [ ] Type checking passes (mypy)
-- [ ] Test coverage ≥90% for modified code
-
-**Before PR**:
-- [ ] Feature tested end-to-end manually
-- [ ] All acceptance criteria met
-- [ ] Documentation updated
-- [ ] No commented-out code or TODOs
-
-### 6. Git Workflow
-- Feature branches: `###-feature-name` format
-- Atomic commits: one logical change per commit
-- Descriptive commit messages
-- PR to main after quality gates pass
+### 4. Verification
+- Run backend tests: `pytest`
+- Run linting: `ruff check`, `npm run lint`
+- Manual E2E check: Verify user story flow in browser.
 
 ## Governance
 
 ### Amendment Process
-
-This constitution supersedes all other development practices. To amend:
-
-1. Propose change with rationale
-2. Document impact on existing code/tests
-3. Get user approval
-4. Update constitution with version bump:
-   - **MAJOR**: Incompatible changes (remove/redefine principles)
-   - **MINOR**: New principles or expanded guidance
-   - **PATCH**: Clarifications, typos, wording
-
-### Compliance
-
-- All PRs MUST verify compliance with constitution principles
-- Violations MUST be justified in `plan.md` Complexity Tracking section
-- Automated checks enforce quality gates (tests, linting, formatting)
-
-### Versioning Policy
-
-- Constitution version controls governance evolution
-- Breaking changes to principles require MAJOR bump
-- New principles or standards require MINOR bump
-- Clarifications and fixes require PATCH bump
+- **MAJOR**: Architecture shifts (e.g., CLI to Web, Monolith to Microservices).
+- **MINOR**: New tool adoption or workflow adjustment.
+- **PATCH**: Clarifications.
 
 ### Enforcement
-
-- Claude Code agents must reference this constitution when planning and implementing
-- `/sp.plan` command verifies Constitution Check before proceeding
-- Quality gates automated via pre-commit hooks or CI
+- All `plan.md` files must pass the **Constitution Check**.
+- Code reviews (self or peer) must verify adherence to API-First and Security principles.
 
 ---
 
-**Version**: 1.0.0 | **Ratified**: 2026-01-02 | **Last Amended**: 2026-01-02
+**Version**: 2.0.0 | **Ratified**: 2026-01-14 | **Last Amended**: 2026-01-14

@@ -1,4 +1,4 @@
-# DoIt
+# DoIt - CLI
 
 > A modern, beautiful command-line task manager built with Python 3.13+
 
