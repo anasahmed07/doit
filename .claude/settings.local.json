@@ -41,7 +41,9 @@
       "Skill(pdf)",
       "Bash(findstr:*)",
       "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npm install:*)",
+      "Bash(bash .specify/scripts/bash/create-phr.sh --title \"Implemented Phase 2 Foundational Components\" --stage misc --feature 002-fullstack-app --json)"
     ]
   }
 }

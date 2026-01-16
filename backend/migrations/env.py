@@ -17,7 +17,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import models to register metadata
-# from backend.models import *  # Ensure models are imported
+from backend.models import *  # Ensure models are imported
 from backend.core.database import DATABASE_URL
 
 # Set DB URL from env

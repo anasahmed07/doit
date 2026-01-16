@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter
 from backend.core.config import settings
+from .categories import router as categories_router
 
 main_router = APIRouter()
 
@@ -13,3 +14,4 @@ def root():
 
 def include_routes(app: FastAPI):
     app.include_router(main_router)
+    app.include_router(categories_router, prefix=f"{settings.API_PREFIX}/categories", tags=["categories"])
