@@ -23,16 +23,16 @@ Goal: Initialize the full-stack monorepo environment with Next.js, FastAPI, and 
 
 Goal: Implement Authentication and Base Data Models required by all features.
 
-- [ ] T011 [P] Define User model in backend/src/models/user.py
-- [ ] T012 Run migration to create User table in Postgres
-- [ ] T013 Implement Shared Secret Auth Dependency in backend/src/core/security.py
-- [ ] T014 [P] Configure Better-Auth client in frontend/src/lib/auth.ts
-- [ ] T015 Create Auth API route handler in frontend/src/app/api/auth/[...all]/route.ts
-- [ ] T016 Implement Sign-in/Sign-up pages in frontend/src/app/(auth)/
-- [ ] T017 Create authenticated API client wrapper (axios/fetch interceptor) in frontend/src/lib/api.ts
-- [ ] T018 Define Category model in backend/src/models/category.py
-- [ ] T019 Implement CategoryService (CRUD) in backend/src/services/category_service.py
-- [ ] T020 [P] Create Category API endpoints (GET, POST) in backend/src/api/categories.py
+- [X] T011 [P] Define User model in backend/src/backend/models/user.py
+- [X] T012 Run migration to create User table in Postgres
+- [X] T013 Implement Shared Secret Auth Dependency in backend/src/backend/core/security.py
+- [X] T014 [P] Configure Better-Auth client in frontend/src/lib/auth.ts
+- [X] T015 Create Auth API route handler in frontend/src/app/api/auth/[...all]/route.ts
+- [X] T016 Implement Sign-in/Sign-up pages in frontend/src/app/(auth)/
+- [X] T017 Create authenticated API client wrapper (axios/fetch interceptor) in frontend/src/lib/api.ts
+- [X] T018 Define Category model in backend/src/backend/models/category.py
+- [X] T019 Implement CategoryService (CRUD) in backend/src/backend/services/category_service.py
+- [X] T020 [P] Create Category API endpoints (GET, POST) in backend/src/backend/routes/categories.py
 
 ## Phase 3: User Story 1 - Unified Onboarding & Access (T021-T030)
 
