@@ -48,7 +48,6 @@ The application offers a lightweight, in-memory task management solution with an
 | `/add --multi` | Add multiple tasks in one session with guided prompts | `/add --multi` |
 | `/list [filter]` | List all tasks with optional filter (all/pending/completed) | `/list pending` |
 | `/complete [id]` | Toggle task completion status (interactive if no ID provided) | `/complete 1` |
-| `/uncomplete <id>` | Mark a task as incomplete | `/uncomplete 1` |
 | `/update <id>` | Update task title and/or description (interactive mode) | `/update 1 -t "New title"` |
 | `/delete <id>` | Delete a task with confirmation prompt | `/delete 1` |
 | `/clear` | Clear screen and show hero screen | `/clear` |
@@ -61,14 +60,13 @@ The application offers a lightweight, in-memory task management solution with an
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/anasahmed07/doit.git
 cd doit/doit-cli
 
 # Install dependencies (using uv - recommended)
 uv sync
-
-# Or install with pip
-pip install -e .
+# Install the applicaation
+uv tool install .
 ```
 
 ### Running the Application
