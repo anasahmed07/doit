@@ -8,16 +8,16 @@
 
 Goal: Initialize the full-stack monorepo environment with Next.js, FastAPI, and Database connectivity.
 
-- [ ] T001 Initialize backend with `uv init --package backend`
-- [ ] T002 [P] Configure FastAPI project structure (src, tests) in backend/
-- [ ] T003 [P] Initialize frontend with `npx create-next-app@latest frontend` (TS, Tailwind, ESLint, App Router, src dir)
-- [ ] T004 [P] Configure SQLModel and Alembic in backend/src/core/database.py
-- [ ] T005 [P] Create docker-compose.yml for local Postgres DB (dev environment)
-- [ ] T006 Configure environment variables (.env.example) for both services
-- [ ] T007 Implement CORS middleware in backend/src/main.py
-- [ ] T008 [P] Install Better-Auth and Dnd-kit dependencies in frontend/
-- [ ] T009 Verify backend health endpoint (GET /health)
-- [ ] T010 Verify frontend build and local server launch
+- [X] T001 Initialize backend with `uv init --package backend`
+- [X] T002 [P] Configure FastAPI project structure (src, tests) in backend/
+- [X] T003 [P] Initialize frontend with `npx create-next-app@latest frontend` (TS, Tailwind, ESLint, App Router, src dir)
+- [X] T004 [P] Configure SQLModel and Alembic in backend/src/core/database.py
+- [X] T005 [P] Create docker-compose.yml for local Postgres DB (dev environment)
+- [X] T006 Configure environment variables (.env.example) for both services
+- [X] T007 Implement CORS middleware in backend/src/main.py
+- [X] T008 [P] Install Better-Auth and Dnd-kit dependencies in frontend/
+- [X] T009 Verify backend health endpoint (GET /health)
+- [X] T010 Verify frontend build and local server launch
 
 ## Phase 2: Foundational Components (T011-T020)
 
