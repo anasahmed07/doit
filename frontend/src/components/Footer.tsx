@@ -23,10 +23,7 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-6">
-              <div className="h-8 w-8 bg-white rounded-sm flex items-center justify-center">
-                <div className="h-3 w-3 bg-black rounded-full" />
-              </div>
-              <span className="text-2xl font-bold tracking-tight">DoIt</span>
+              <span className="font-pixel text-2xl font-bold tracking-tighter uppercase text-white">DOIT</span>
             </Link>
           </div>
 
