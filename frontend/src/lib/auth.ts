@@ -18,6 +18,7 @@ export const auth = betterAuth({
   plugins: [nextCookies()],
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins: [process.env.BETTER_AUTH_URL || "http://localhost:3000"],
+  debug: true,
   advanced: {
     database: {
       generateId: "uuid",
