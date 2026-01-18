@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
-import { LogIn, Loader2, ArrowRight, Zap, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, CheckCircle2, Mail, Lock, Github } from "lucide-react";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -34,107 +34,161 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 font-sans">
-       <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-lg font-bold tracking-tighter">
-          <div className="flex h-8 w-8 items-center justify-center bg-primary text-white border-2 border-foreground shadow-hard-sm">
-             <Zap className="h-5 w-5" fill="currentColor" />
-          </div>
-          DoIt.
-       </Link>
-
-      <div className="w-full max-w-sm border-2 border-foreground bg-white p-8 shadow-hard">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-black uppercase tracking-tighter">
-            Access Terminal
-          </h1>
-          <p className="font-mono text-xs text-muted-foreground">
-            // Authenticate to continue
-          </p>
-        </div>
-
-        <form onSubmit={handleSignIn} className="space-y-6" autoComplete="off">
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-xs font-mono font-bold uppercase tracking-widest text-muted-foreground"
-            >
-              Email Address
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-none border-2 border-input bg-transparent px-3 py-2 text-sm font-bold placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:shadow-hard-sm"
-              placeholder="Enter your email"
-              required
-            />
+    <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
+      {/* Left Column: Form */}
+      <div className="flex items-center justify-center py-12 px-6">
+        <div className="mx-auto w-full max-w-[400px] space-y-8">
+          <div className="flex flex-col space-y-2 text-center">
+            <h1 className="text-3xl font-black uppercase tracking-tight">
+              Welcome back
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Enter your credentials to access your account
+            </p>
           </div>
 
-          <div className="space-y-2 relative">
-            <label
-              htmlFor="password"
-              className="text-xs font-mono font-bold uppercase tracking-widest text-muted-foreground"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-none border-2 border-input bg-transparent px-3 py-2 text-sm font-bold placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:shadow-hard-sm pr-10"
-              placeholder="Enter your password"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+          <div className="grid grid-cols-2 gap-4">
+            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2">
+              <Github className="h-4 w-4" />
+              GitHub
+            </button>
+            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2">
+              <svg role="img" viewBox="0 0 24 24" className="h-4 w-4 fill-current">
+                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-1.928 4.176-1.02 1.024-2.6 2.052-5.912 2.052-5.452 0-9.872-4.448-9.872-9.9s4.42-9.9 9.872-9.9c2.952 0 5.16 1.152 6.708 2.592l2.304-2.304C19.464 1.14 16.488 0 12.48 0 5.58 0 0 5.58 0 12.48s5.58 12.48 12.48 12.48c3.756 0 6.6-1.224 8.76-3.492 2.22-2.22 2.928-5.328 2.928-7.788 0-.756-.06-1.488-.18-2.22h-11.52z" />
+              </svg>
+              Google
             </button>
           </div>
 
-          {error && (
-            <div className="border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
-              {error}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
             </div>
-          )}
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground font-bold tracking-widest">
+                Or continue with email
+              </span>
+            </div>
+          </div>
 
-          <div>
+          <form onSubmit={handleSignIn} className="space-y-4" autoComplete="off">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all focus:border-primary"
+                  placeholder="name@example.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between ml-1">
+                <label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs underline font-bold text-primary"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-10 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all focus:border-primary"
+                  placeholder="••••••••"
+                  required
+                />
+                 <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="rounded-md bg-destructive/10 p-3 text-xs text-destructive font-bold border border-destructive/20">
+                {error}
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full h-12 items-center justify-center gap-2 border-2 border-foreground bg-primary px-6 text-sm font-bold text-white shadow-hard-sm transition-transform hover:-translate-y-0.5 hover:shadow-hard active:translate-y-0 active:shadow-hard-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-bold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black text-white hover:bg-zinc-800 h-11 w-full uppercase tracking-widest shadow-lg hover:shadow-black/20"
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <LogIn className="h-4 w-4" />
+                "Login"
               )}
-              Authenticate
             </button>
-          </div>
-        </form>
+          </form>
 
-        <div className="mt-8 border-t-2 border-dashed border-foreground/20 pt-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            No account?{" "}
-            <Link
-              href="/sign-up"
-              className="font-bold text-primary hover:underline underline-offset-2"
-            >
-              Create one
+          <div className="text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <Link href="/sign-up" className="underline font-black hover:text-primary transition-colors">
+              Sign up
             </Link>
-          </p>
+          </div>
         </div>
       </div>
-       <p className="mt-8 font-mono text-xs text-muted-foreground">© 2026 DoIt Systems. All rights reserved.</p>
+
+      {/* Right Column: Decorative */}
+      <div className="hidden bg-muted lg:block relative">
+        <div className="absolute inset-0 bg-zinc-900 text-white">
+           <div className="absolute inset-0 opacity-20" 
+                style={{
+                    backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)',
+                    backgroundSize: '32px 32px'
+                }}
+           />
+           <div className="relative h-full flex flex-col justify-between p-12">
+              <div className="flex items-center gap-2">
+                 <div className="h-8 w-8 bg-white text-black flex items-center justify-center rounded font-bold">D.</div>
+                 <span className="font-mono tracking-widest uppercase text-sm">System Access</span>
+              </div>
+              
+              <div className="space-y-6">
+                <blockquote className="space-y-2">
+                  <p className="text-lg font-medium leading-relaxed">
+                    &ldquo;DoIt has revolutionized how we track our sprint velocity. It&apos;s the only tool that actually makes us faster.&rdquo;
+                  </p>
+                  <footer className="text-sm text-white/60">Marcus Chen, Product Lead</footer>
+                </blockquote>
+                <div className="flex gap-4">
+                   <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40">
+                      <CheckCircle2 className="h-4 w-4" /> Secure
+                   </div>
+                   <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40">
+                      <CheckCircle2 className="h-4 w-4" /> Encrypted
+                   </div>
+                </div>
+              </div>
+           </div>
+        </div>
+      </div>
     </div>
   );
 }

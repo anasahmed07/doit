@@ -43,32 +43,35 @@ export function Sidebar() {
   }, []);
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r-2 border-foreground bg-background">
+    <aside className="flex h-screen w-72 flex-col border-r border-foreground/10 bg-background/50 backdrop-blur-xl">
       {/* Header */}
-      <div className="flex h-16 items-center border-b-2 border-foreground px-6">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center bg-primary text-white border-2 border-foreground shadow-hard-sm">
-            <Zap className="h-5 w-5" fill="currentColor" />
+      <div className="flex h-20 items-center px-6 border-b border-foreground/10">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="flex h-9 w-9 items-center justify-center bg-foreground text-background rounded-lg shadow-sm transition-transform group-hover:scale-105">
+            <Zap className="h-5 w-5 fill-current" />
           </div>
-          <span className="text-xl font-bold tracking-tighter">DoIt.</span>
-        </div>
+          <div className="flex flex-col">
+            <span className="text-lg font-black tracking-tight uppercase leading-none">DoIt.</span>
+            <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider">Workspace</span>
+          </div>
+        </Link>
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-8">
+      <nav className="flex-1 overflow-y-auto px-4 py-8 space-y-10">
 
         {/* Workspace Section */}
-        <div className="space-y-2">
-          <h3 className="px-2 text-xs font-mono font-bold uppercase tracking-widest text-muted-foreground">
-            Workspace
+        <div className="space-y-3">
+          <h3 className="px-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
+            Main Menu
           </h3>
           <div className="space-y-1">
             <Link
               href="/dashboard"
-              className={`flex items-center gap-3 rounded-none border border-transparent px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary hover:text-foreground ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                 pathname === "/dashboard"
-                  ? "bg-secondary text-foreground border-foreground font-bold shadow-hard-sm"
-                  : "text-muted-foreground"
+                  ? "bg-primary/10 text-primary shadow-sm"
+                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
               }`}
             >
               <Grid className="h-4 w-4" />
@@ -76,10 +79,10 @@ export function Sidebar() {
             </Link>
             <Link
               href="/projects"
-              className={`flex items-center gap-3 rounded-none border border-transparent px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary hover:text-foreground ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                 pathname === "/projects"
-                  ? "bg-secondary text-foreground border-foreground font-bold shadow-hard-sm"
-                  : "text-muted-foreground"
+                  ? "bg-primary/10 text-primary shadow-sm"
+                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
               }`}
             >
               <Layout className="h-4 w-4" />
@@ -89,17 +92,17 @@ export function Sidebar() {
         </div>
 
         {/* Categories Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-muted-foreground">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-3">
+            <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
               Categories
             </h3>
             <button
-              className="text-muted-foreground hover:text-primary transition-colors"
+              className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
               onClick={() => setIsCreateCategoryOpen(true)}
               aria-label="Create Category"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3 w-3" />
             </button>
           </div>
 
@@ -109,9 +112,9 @@ export function Sidebar() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               </div>
             ) : error ? (
-              <div className="px-2 text-xs text-destructive">{error}</div>
+              <div className="px-3 text-xs text-destructive">{error}</div>
             ) : categories.length === 0 ? (
-              <div className="px-2 text-xs text-muted-foreground italic">
+              <div className="px-3 text-xs text-muted-foreground italic">
                 No categories yet
               </div>
             ) : (
@@ -119,13 +122,16 @@ export function Sidebar() {
                 <Link
                   key={category.id}
                   href={`/dashboard?category=${category.id}`}
-                  className="group flex items-center justify-between rounded-none border border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground hover:border-foreground hover:shadow-hard-sm"
+                  className="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary/50 hover:text-foreground"
                 >
                   <div className="flex items-center gap-3">
-                    <FolderOpen className="h-4 w-4" style={{ color: category.color }} />
+                    <span 
+                      className="h-2 w-2 rounded-full ring-2 ring-opacity-20 ring-current" 
+                      style={{ color: category.color, backgroundColor: category.color }} 
+                    />
                     <span>{category.name}</span>
                   </div>
-                  <ChevronRight className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <ChevronRight className="h-3 w-3 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
                 </Link>
               ))
             )}
@@ -135,7 +141,9 @@ export function Sidebar() {
       </nav>
 
       {/* Footer / User Profile */}
-      <UserProfile />
+      <div className="p-4 border-t border-foreground/10">
+         <UserProfile />
+      </div>
 
       <CreateCategoryDialog
         isOpen={isCreateCategoryOpen}
