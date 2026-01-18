@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { Navbar } from "@/components/Navbar";
+import { Testimonials } from "@/components/Testimonials";
+import { FAQ } from "@/components/FAQ";
+import { Footer } from "@/components/Footer";
 import {
   Layers,
   Mic,
@@ -15,34 +19,9 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans selection:bg-accent selection:text-white">
       {/* Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center bg-primary text-white border-2 border-foreground shadow-hard-sm">
-              <Zap className="h-5 w-5" fill="currentColor" />
-            </div>
-            <span className="text-xl font-bold tracking-tighter">DoIt.</span>
-          </div>
+      <Navbar />
 
-          <nav className="flex items-center gap-6">
-            <Link
-              href="/signin"
-              className="text-sm font-medium hover:text-primary transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/signup"
-              className="group relative flex items-center gap-2 border-2 border-foreground bg-foreground px-4 py-2 text-sm font-bold text-background transition-transform hover:-translate-y-1 hover:shadow-hard-sm active:translate-y-0 active:shadow-none"
-            >
-              Get Started
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-24">
         {/* Hero Section */}
         <section className="relative overflow-hidden border-b-2 border-foreground bg-background">
           {/* Decorative Grid Background (CSS generated) */}
@@ -162,7 +141,7 @@ export default function Home() {
         </div>
 
         {/* Features Grid */}
-        <section id="features" className="mx-auto max-w-7xl px-6 py-24">
+        <section id="features" className="mx-auto max-w-7xl px-6 py-24 border-b-2 border-foreground">
           <div className="mb-16 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <h2 className="text-4xl font-black uppercase tracking-tighter text-foreground md:text-5xl">
               System <br />Modules
@@ -233,8 +212,14 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Testimonials Section */}
+        <Testimonials />
+
+        {/* FAQ Section */}
+        <FAQ />
+
         {/* CTA Section */}
-        <section className="border-t-2 border-foreground bg-accent text-white">
+        <section className="bg-accent text-white">
           <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 px-6 py-24 text-center">
             <h2 className="text-5xl font-black uppercase tracking-tighter md:text-7xl">
               Ready to <br />Execute?
@@ -252,22 +237,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t-2 border-foreground bg-background py-12">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 md:flex-row">
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            <span className="text-lg font-bold tracking-tighter">DoIt. Inc</span>
-          </div>
-          <p className="font-mono text-sm text-muted-foreground">
-            © 2026 DoIt Systems. All rights reserved.
-          </p>
-          <div className="flex gap-6">
-             <a href="#" className="text-sm font-bold hover:underline">Privacy</a>
-             <a href="#" className="text-sm font-bold hover:underline">Terms</a>
-             <a href="#" className="text-sm font-bold hover:underline">Twitter</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
