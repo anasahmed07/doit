@@ -38,22 +38,22 @@ Goal: Implement Authentication and Base Data Models required by all features.
 
 Goal: Users can sign up, log in, and land on a personalized dashboard.
 
-- [ ] T021 [US1] Create Landing Page (Public) in frontend/src/app/page.tsx
-- [ ] T022 [P] [US1] Create Dashboard Layout (Sidebar + Main) in frontend/src/app/(dashboard)/layout.tsx
-- [ ] T023 [P] [US1] Implement Sidebar component fetching Categories in frontend/src/components/Sidebar.tsx
-- [ ] T024 [US1] Create "New Category" modal/form in frontend/src/components/CreateCategoryDialog.tsx
-- [ ] T025 [US1] Integrate "New Category" form with API
-- [ ] T026 [US1] Implement "Get Current User" endpoint (/me) in backend/src/api/auth.py
-- [ ] T027 [US1] Create User Profile component in Sidebar footer
-- [ ] T028 [US1] Add protected route middleware in Next.js (middleware.ts)
-- [ ] T029 [US1] Verify redirect flow (Guest -> Login -> Dashboard)
-- [ ] T030 [US1] Verify data isolation (User A cannot see User B's categories)
+- [X] T021 [US1] Create Landing Page (Public) in frontend/src/app/page.tsx
+- [X] T022 [P] [US1] Create Dashboard Layout (Sidebar + Main) in frontend/src/app/(dashboard)/layout.tsx
+- [X] T023 [P] [US1] Implement Sidebar component fetching Categories in frontend/src/components/Sidebar.tsx
+- [X] T024 [US1] Create "New Category" modal/form in frontend/src/components/CreateCategoryDialog.tsx
+- [X] T025 [US1] Integrate "New Category" form with API
+- [X] T026 [US1] Implement "Get Current User" endpoint (/me) in backend/src/api/auth.py
+- [X] T027 [US1] Create User Profile component in Sidebar footer
+- [X] T028 [US1] Add protected route logic (implemented in src/proxy.ts)
+- [X] T029 [US1] Verify redirect flow (Guest -> Login -> Dashboard)
+- [X] T030 [US1] Verify data isolation (User A cannot see User B's categories)
 
 ## Phase 4: User Story 2 - Multimedia Note Capture (T031-T045)
 
 Goal: Users can create rich notes with text, images, and audio.
 
-- [ ] T031 [P] [US2] Define Note and MediaAsset models in backend/src/models/note.py
+- [X] T031 [P] [US2] Define Note and MediaAsset models in backend/src/models/note.py
 - [ ] T032 [US2] Run migration for Note and MediaAsset tables
 - [ ] T033 [US2] Implement NoteService with BLOB handling in backend/src/services/note_service.py
 - [ ] T034 [P] [US2] Create Note API endpoints (CRUD + Upload) in backend/src/api/notes.py
