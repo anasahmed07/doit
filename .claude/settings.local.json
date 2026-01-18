@@ -40,7 +40,14 @@
       "Bash(find:*)",
       "Skill(pdf)",
       "Bash(findstr:*)",
-      "Bash(.specify/scripts/bash/create-new-feature.sh:*)"
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "WebSearch",
+      "Bash(npm install:*)",
+      "Bash(bash .specify/scripts/bash/create-phr.sh --title \"Implemented Phase 2 Foundational Components\" --stage misc --feature 002-fullstack-app --json)",
+      "Skill(document-skills:frontend-design)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(npm run auth:generate)"
     ]
   }
 }

@@ -1,0 +1,32 @@
+# Git
+.git/
+.gitignore
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose.override.yml
+
+# Environment
+.env*
+!.env.example
+
+# Node/JS
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# IDE/System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
