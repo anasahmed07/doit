@@ -8,11 +8,8 @@ import {
   Plus,
   Grid,
   Layout,
-  Settings,
-  LogOut,
   ChevronRight,
-  Loader2,
-  FolderOpen
+  Loader2
 } from "lucide-react";
 import api from "@/lib/api";
 import { Category } from "@/lib/types";
@@ -23,7 +20,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
 
   const fetchCategories = async () => {
@@ -32,7 +28,6 @@ export function Sidebar() {
       setCategories(response.data);
     } catch (err) {
       console.error("Failed to fetch categories", err);
-      // setError("Failed to load categories"); // Optional: suppress error for cleaner UI if empty
     } finally {
       setIsLoading(false);
     }
@@ -47,20 +42,12 @@ export function Sidebar() {
       {/* Header */}
       <div className="flex h-20 items-center px-6 border-b border-foreground/10">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-9 w-9 items-center justify-center bg-foreground text-background rounded-lg shadow-sm transition-transform group-hover:scale-105">
-            <Zap className="h-5 w-5 fill-current" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-black tracking-tight uppercase leading-none">DoIt.</span>
-            <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider">Workspace</span>
-          </div>
+          <span className="font-pixel text-xl font-bold tracking-tighter uppercase group-hover:scale-105 transition-transform">DOIT</span>
         </Link>
       </div>
 
       {/* Main Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 py-8 space-y-10">
-
-        {/* Workspace Section */}
         <div className="space-y-3">
           <h3 className="px-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
             Main Menu
@@ -91,7 +78,6 @@ export function Sidebar() {
           </div>
         </div>
 
-        {/* Categories Section */}
         <div className="space-y-3">
           <div className="flex items-center justify-between px-3">
             <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
@@ -100,7 +86,6 @@ export function Sidebar() {
             <button
               className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
               onClick={() => setIsCreateCategoryOpen(true)}
-              aria-label="Create Category"
             >
               <Plus className="h-3 w-3" />
             </button>
@@ -111,33 +96,24 @@ export function Sidebar() {
               <div className="flex items-center justify-center py-4 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
               </div>
-            ) : error ? (
-              <div className="px-3 text-xs text-destructive">{error}</div>
-            ) : categories.length === 0 ? (
-              <div className="px-3 text-xs text-muted-foreground italic">
-                No categories yet
-              </div>
-            ) : (
-              categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/dashboard?category=${category.id}`}
-                  className="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary/50 hover:text-foreground"
-                >
-                  <div className="flex items-center gap-3">
-                    <span 
-                      className="h-2 w-2 rounded-full ring-2 ring-opacity-20 ring-current" 
-                      style={{ color: category.color, backgroundColor: category.color }} 
-                    />
-                    <span>{category.name}</span>
-                  </div>
-                  <ChevronRight className="h-3 w-3 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
-                </Link>
-              ))
-            )}
+            ) : categories.map((category) => (
+              <Link
+                key={category.id}
+                href={`/dashboard?category=${category.id}`}
+                className="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary/50 hover:text-foreground"
+              >
+                <div className="flex items-center gap-3">
+                  <span 
+                    className="h-2 w-2 rounded-full ring-2 ring-opacity-20 ring-current" 
+                    style={{ color: category.color, backgroundColor: category.color }} 
+                  />
+                  <span>{category.name}</span>
+                </div>
+                <ChevronRight className="h-3 w-3 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+              </Link>
+            ))}
           </div>
         </div>
-
       </nav>
 
       {/* Footer / User Profile */}

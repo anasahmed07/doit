@@ -15,10 +15,7 @@ export function Navbar() {
         {/* Left: Logo & Tagline */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-             <div className="flex h-8 w-8 items-center justify-center bg-foreground text-background rounded-md">
-                <Zap className="h-5 w-5 fill-current" />
-             </div>
-             <span className="text-xl font-black tracking-tighter uppercase">DoIt.</span>
+             <span className="font-pixel text-xl font-bold tracking-tighter uppercase">DOIT</span>
           </Link>
           
           <div className="hidden h-6 w-[2px] bg-foreground/10 lg:block"></div>
