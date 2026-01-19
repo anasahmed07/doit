@@ -54,35 +54,35 @@ Goal: Users can sign up, log in, and land on a personalized dashboard.
 Goal: Users can create rich notes with text, images, and audio.
 
 - [X] T031 [P] [US2] Define Note and MediaAsset models in backend/src/models/note.py
-- [ ] T032 [US2] Run migration for Note and MediaAsset tables
-- [ ] T033 [US2] Implement NoteService with BLOB handling in backend/src/services/note_service.py
-- [ ] T034 [P] [US2] Create Note API endpoints (CRUD + Upload) in backend/src/api/notes.py
-- [ ] T035 [P] [US2] Implement Note Card component in frontend/src/components/NoteCard.tsx
-- [ ] T036 [US2] Create DraggableNoteGrid component (Client) in frontend/src/components/DraggableNoteGrid.tsx
-- [ ] T037 [US2] Implement Note Creation Form (Text/Image/Audio inputs) in frontend/src/components/CreateNoteForm.tsx
-- [ ] T038 [US2] Integrate Dnd-kit for drag-and-drop reordering
-- [ ] T039 [US2] Implement Reorder API endpoint in backend/src/api/notes.py
-- [ ] T040 [US2] Connect frontend drag end event to Reorder API
-- [ ] T041 [US2] Implement Category filtering on Dashboard page
-- [ ] T042 [US2] Optimize BLOB loading (Lazy load images)
-- [ ] T043 [US2] Verify independent test: Create note -> Drag -> Refresh -> Persisted
-- [ ] T044 [P] [US2] Add audio playback support in Note Card
-- [ ] T045 [P] [US2] Add image preview modal
+- [X] T032 [US2] Run migration for Note and MediaAsset tables
+- [X] T033 [US2] Implement NoteService with BLOB handling in backend/src/services/note_service.py
+- [X] T034 [P] [US2] Create Note API endpoints (CRUD + Upload) in backend/src/api/notes.py
+- [X] T035 [P] [US2] Implement Note Card component in frontend/src/components/NoteCard.tsx
+- [X] T036 [US2] Create DraggableNoteGrid component (Client) in frontend/src/components/DraggableNoteGrid.tsx
+- [X] T037 [US2] Implement Note Creation Form (Text/Image/Audio inputs) in frontend/src/components/CreateNoteForm.tsx
+- [X] T038 [US2] Integrate Dnd-kit for drag-and-drop reordering
+- [X] T039 [US2] Implement Reorder API endpoint in backend/src/api/notes.py
+- [X] T040 [US2] Connect frontend drag end event to Reorder API
+- [X] T041 [US2] Implement Category filtering on Dashboard page
+- [X] T042 [US2] Optimize BLOB loading (Lazy load images)
+- [X] T043 [US2] Verify independent test: Create note -> Drag -> Refresh -> Persisted
+- [X] T044 [P] [US2] Add audio playback support in Note Card
+- [X] T045 [P] [US2] Add image preview modal
 
 ## Phase 5: User Story 3 - Professional Project Management (T046-T055)
 
 Goal: Users can manage projects with a fixed Kanban workflow.
 
-- [ ] T046 [P] [US3] Define Project and ProjectTask models in backend/src/models/project.py
-- [ ] T047 [US3] Run migration for Project tables
-- [ ] T048 [P] [US3] Implement Project API endpoints in backend/src/api/projects.py
-- [ ] T049 [US3] Create Project List view in frontend/src/app/(dashboard)/projects/page.tsx
-- [ ] T050 [US3] Create Kanban Board component in frontend/src/components/KanbanBoard.tsx
-- [ ] T051 [US3] Implement Drag-and-Drop for Kanban columns (To Do -> Done)
-- [ ] T052 [US3] Connect Kanban moves to Task Status Update API
-- [ ] T053 [US3] Implement Project Creation Dialog
-- [ ] T054 [US3] Verify independent test: Move task -> Refresh -> Status persisted
-- [ ] T055 [US3] Add Project navigation to Sidebar
+- [X] T046 [P] [US3] Define Project and ProjectTask models in backend/src/models/project.py
+- [X] T047 [US3] Run migration for Project tables
+- [X] T048 [P] [US3] Implement Project API endpoints in backend/src/api/projects.py
+- [X] T049 [US3] Create Project List view in frontend/src/app/(dashboard)/projects/page.tsx
+- [X] T050 [US3] Create Kanban Board component in frontend/src/components/KanbanBoard.tsx
+- [X] T051 [US3] Implement Drag-and-Drop for Kanban columns (To Do -> Done)
+- [X] T052 [US3] Connect Kanban moves to Task Status Update API
+- [X] T053 [US3] Implement Project Creation Dialog
+- [X] T054 [US3] Verify independent test: Move task -> Refresh -> Status persisted
+- [X] T055 [US3] Add Project navigation to Sidebar
 
 ## Phase 6: Polish & Cross-Cutting (T056-T060)
 
