@@ -43,6 +43,7 @@ export function UserProfile({ minimal = false }: UserProfileProps) {
   const handleSignOut = async () => {
     try {
       await authClient.signOut();
+      localStorage.removeItem('bearer_token'); // Explicitly remove the token
       window.location.href = "/sign-in";
     } catch (error) {
       console.error("Sign out failed:", error);

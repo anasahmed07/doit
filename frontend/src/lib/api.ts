@@ -7,6 +7,12 @@ const api = axios.create({
 
 // Request interceptor to add headers if needed (though cookies are automatic)
 api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('bearer_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
   return config;
 }, (error) => {
   return Promise.reject(error);

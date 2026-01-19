@@ -1,13 +1,20 @@
+import logging
+
+logging.basicConfig(filename='security.log', level=logging.INFO)
+
 from fastapi import Depends, HTTPException, status
-from fastapi.security import APIKeyCookie
-from sqlmodel import Session as DbSession, select
+from fastapi.security import OAuth2PasswordBearer
+from sqlmodel import Session as DbSession
 from backend.core.database import get_session
 from backend.core.config import settings
 from backend.models.user import User
-from backend.models.better_auth import Session
-from datetime import datetime
+from jose import JWTError, jwt
+from pydantic import BaseModel
 
-oauth2_scheme = APIKeyCookie(name="better-auth.session_token")
+class TokenData(BaseModel):
+    sub: str | None = None
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -18,22 +25,17 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
-    # 1. Lookup session in DB
-    statement = select(Session).where(Session.token == token)
-    result = session.exec(statement)
-    db_session = result.first()
-
-    if not db_session:
+    try:
+        payload = jwt.decode(token, settings.BETTER_AUTH_SECRET, algorithms=["HS256"])
+        logging.info(f"Decoded JWT payload: {payload}")
+        user_id: str | None = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+        token_data = TokenData(sub=user_id)
+    except JWTError:
         raise credentials_exception
 
-    # 2. Check expiration
-    if db_session.expiresAt < datetime.utcnow():
-        raise credentials_exception
-
-    # 3. Get User
-    user = session.get(User, db_session.userId)
+    user = session.get(User, token_data.sub)
     if user is None:
         raise credentials_exception
-
     return user

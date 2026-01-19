@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "auth:generate": "dotenv -e .env.local -- npx @better-auth/cli generate",
-    "auth:migrate": "dotenv -e .env.local -- npx @better-auth/cli migrate"
+    "auth:migrate": "dotenv -e .env.local -- npx @better-auth/cli migrate",
+    "test": "vitest",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
