@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { authClient } from './auth-client';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -6,11 +7,16 @@ const api = axios.create({
 });
 
 // Request interceptor to add headers if needed (though cookies are automatic)
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('bearer_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+        // @ts-ignore - plugin method
+        const { data } = await authClient.token(); 
+        if (data?.token) {
+            config.headers.Authorization = `Bearer ${data.token}`;
+        }
+    } catch (e) {
+        // Ignore errors (user might not be logged in)
     }
   }
   return config;

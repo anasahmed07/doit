@@ -7,8 +7,6 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="Backend for DoIt Full-Stack Productivity App",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc"
 )
 
 # Include Middlewares
@@ -16,7 +14,3 @@ include_middlewares(app)
 
 # Include Routes
 include_routes(app)
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
