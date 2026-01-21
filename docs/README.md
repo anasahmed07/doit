@@ -1,6 +1,6 @@
 # DoIt - Terminal Task Manager
 
-![DoIt CLI Interface](images/doit-cli-screenshot.png)
+![DoIt CLI Interface](../frontend/public/images/doit-cli-screenshot.png)
 
 ## Overview
 
