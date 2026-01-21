@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { Loader2, Image as ImageIcon, X } from "lucide-react";
-import api from "@/lib/api";
 import { Note } from "@/lib/types";
 
 interface CreateNoteFormProps {
@@ -24,22 +23,38 @@ export function CreateNoteForm({ categoryId, onSuccess, onCancel }: CreateNoteFo
     setIsSubmitting(true);
     try {
       // 1. Create Note
-      const noteResponse = await api.post<Note>("/notes/", {
-        content: content,
-        category_id: categoryId,
+      const response = await fetch("/api/notes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: content,
+          category_id: categoryId,
+        }),
       });
-      
-      const noteId = noteResponse.data.id;
+
+      if (!response.ok) {
+        throw new Error("Failed to create note");
+      }
+
+      const noteData = await response.json();
+      const noteId = noteData.id;
 
       // 2. Upload Files
       if (files.length > 0) {
         await Promise.all(
-          files.map((file) => {
+          files.map(async (file) => {
             const formData = new FormData();
             formData.append("file", file);
-            return api.post(`/notes/${noteId}/media`, formData, {
-              headers: { "Content-Type": "multipart/form-data" },
+            const mediaResponse = await fetch(`/api/notes/${noteId}/media`, {
+              method: "POST",
+              body: formData,
             });
+            if (!mediaResponse.ok) {
+               throw new Error("Failed to upload media");
+            }
+            return mediaResponse.json();
           })
         );
       }

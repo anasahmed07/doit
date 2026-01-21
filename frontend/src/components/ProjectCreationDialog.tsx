@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { X, Loader2 } from "lucide-react";
-import api from "@/lib/api";
 
 interface ProjectCreationDialogProps {
   isOpen: boolean;
@@ -29,9 +28,13 @@ export function ProjectCreationDialog({
     setError(null);
 
     try {
-      await api.post("/projects/", {
-        name: name.trim(),
-        framework: "KANBAN_FIXED",
+      await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          framework: "KANBAN_FIXED",
+        }),
       });
       setName("");
       onSuccess();

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Loader2, Plus, Layout, Trash2, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import api from "@/lib/api";
 import { Project } from "@/lib/types";
 import { ProjectCreationDialog } from "@/components/ProjectCreationDialog";
 
@@ -15,8 +14,10 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get<Project[]>("/projects/");
-      setProjects(response.data);
+      const response = await fetch("/api/projects");
+      if (!response.ok) throw new Error("Failed to fetch");
+      const data = await response.json();
+      setProjects(data);
     } catch (error) {
       console.error("Failed to fetch projects", error);
     } finally {
@@ -34,7 +35,7 @@ export default function ProjectsPage() {
     if (!confirm("Are you sure you want to delete this project?")) return;
     
     try {
-      await api.delete(`/projects/${id}`);
+      await fetch(`/api/projects/${id}`, { method: "DELETE" });
       setProjects((prev) => prev.filter((p) => p.id !== id));
     } catch (error) {
       console.error("Failed to delete project", error);

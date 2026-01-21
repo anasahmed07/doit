@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Settings, LogOut, User as UserIcon, Loader2 } from "lucide-react";
-import api from "@/lib/api";
 import { User } from "@/lib/types";
 import { authClient } from "@/lib/auth-client";
 
@@ -19,8 +18,11 @@ export function UserProfile({ minimal = false }: UserProfileProps) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await api.get("/auth/me");
-        setUser(response.data);
+        // @ts-ignore
+        const { data } = await authClient.session();
+        if (data && data.session && data.session.user) {
+          setUser(data.session.user);
+        }
       } catch (error) {
         console.error("Failed to fetch user:", error);
       } finally {

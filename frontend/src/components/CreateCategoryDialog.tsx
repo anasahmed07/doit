@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { X, Loader2 } from "lucide-react";
-import api from "@/lib/api";
 
 interface CreateCategoryDialogProps {
   isOpen: boolean;
@@ -39,10 +38,21 @@ export function CreateCategoryDialog({
     setError(null);
 
     try {
-      await api.post("/categories/", {
-        name: name.trim(),
-        color: selectedColor,
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          color: selectedColor,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to create category");
+      }
+
       setName("");
       setSelectedColor(COLORS[0].value);
       onSuccess();

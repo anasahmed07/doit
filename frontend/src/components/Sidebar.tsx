@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Loader2
 } from "lucide-react";
-import api from "@/lib/api";
 import { Category } from "@/lib/types";
 import { CreateCategoryDialog } from "@/components/CreateCategoryDialog";
 import { UserProfile } from "@/components/UserProfile";
@@ -24,8 +23,10 @@ export function Sidebar() {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get("/categories/");
-      setCategories(response.data);
+      const response = await fetch("/api/categories");
+      if (!response.ok) throw new Error("Failed to fetch");
+      const data = await response.json();
+      setCategories(data);
     } catch (err) {
       console.error("Failed to fetch categories", err);
     } finally {

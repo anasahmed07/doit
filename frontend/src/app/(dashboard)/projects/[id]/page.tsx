@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, use } from "react";
 import { Loader2, Layout, Plus, ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import api from "@/lib/api";
 import { Project, ProjectTask } from "@/lib/types";
 import { KanbanBoard } from "@/components/KanbanBoard";
 
@@ -21,11 +20,17 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     try {
       setIsLoading(true);
       const [projectRes, tasksRes] = await Promise.all([
-        api.get<Project>(`/projects/${id}`),
-        api.get<ProjectTask[]>(`/projects/${id}/tasks`),
+        fetch(`/api/projects/${id}`),
+        fetch(`/api/projects/${id}/tasks`),
       ]);
-      setProject(projectRes.data);
-      setTasks(tasksRes.data);
+
+      if (!projectRes.ok || !tasksRes.ok) throw new Error("Failed to fetch data");
+
+      const projectData = await projectRes.json();
+      const tasksData = await tasksRes.json();
+
+      setProject(projectData);
+      setTasks(tasksData);
     } catch (error) {
       console.error("Failed to fetch project data", error);
     } finally {
@@ -44,7 +49,11 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     );
     
     try {
-      await api.patch(`/projects/tasks/${taskId}`, updates);
+      await fetch(`/api/projects/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
     } catch (error) {
       console.error("Failed to update task", error);
       fetchData(); // Revert
@@ -53,11 +62,16 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
 
   const handleAddTask = async (content: string, status: string) => {
     try {
-      const response = await api.post<ProjectTask>(`/projects/${id}/tasks`, {
-        content,
-        status,
+      const response = await fetch(`/api/projects/${id}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, status }),
       });
-      setTasks((prev) => [...prev, response.data]);
+
+      if (!response.ok) throw new Error("Failed to add task");
+
+      const newTask = await response.json();
+      setTasks((prev) => [...prev, newTask]);
     } catch (error) {
       console.error("Failed to add task", error);
     }
@@ -65,7 +79,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-      await api.delete(`/projects/tasks/${taskId}`);
+      await fetch(`/api/projects/tasks/${taskId}`, { method: "DELETE" });
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
     } catch (error) {
       console.error("Failed to delete task", error);

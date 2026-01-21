@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2, Plus } from "lucide-react";
-import api from "@/lib/api";
 import { Note } from "@/lib/types";
 import { DraggableNoteGrid } from "@/components/DraggableNoteGrid";
 import { CreateNoteForm } from "@/components/CreateNoteForm";
@@ -19,9 +18,11 @@ function DashboardContent() {
   const fetchNotes = useCallback(async () => {
     try {
       setIsLoading(true);
-      const url = categoryId ? `/notes/?category_id=${categoryId}` : "/notes/";
-      const response = await api.get<Note[]>(url);
-      setNotes(response.data);
+      const url = categoryId ? `/api/notes?category_id=${categoryId}` : "/api/notes";
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch notes");
+      const data = await response.json();
+      setNotes(data);
     } catch (error) {
       console.error("Failed to fetch notes", error);
     } finally {
@@ -38,8 +39,10 @@ function DashboardContent() {
     setNotes(newNotes);
     
     try {
-      await api.post("/notes/reorder", {
-        note_ids: newNotes.map((n) => n.id),
+      await fetch("/api/notes/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note_ids: newNotes.map((n) => n.id) }),
       });
     } catch (error) {
       console.error("Failed to reorder notes", error);
@@ -49,9 +52,9 @@ function DashboardContent() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this note?")) return;
-    
+
     try {
-      await api.delete(`/notes/${id}`);
+      await fetch(`/api/notes/${id}`, { method: "DELETE" });
       setNotes((prev) => prev.filter((n) => n.id !== id));
     } catch (error) {
       console.error("Failed to delete note", error);
