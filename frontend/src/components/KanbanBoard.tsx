@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -32,6 +32,7 @@ interface KanbanBoardProps {
   onTaskUpdate: (id: string, updates: Partial<ProjectTask>) => void;
   onAddTask: (content: string, status: string) => void;
   onDeleteTask: (id: string) => void;
+  onTasksReorder?: (reorderedTasks: { id: string; order_index: number; status: string }[]) => void;
 }
 
 const COLUMNS = [
@@ -207,13 +208,20 @@ function KanbanColumn({
   );
 }
 
-export function KanbanBoard({ 
-  tasks, 
-  onTaskUpdate, 
+export function KanbanBoard({
+  tasks,
+  onTaskUpdate,
   onAddTask,
-  onDeleteTask 
+  onDeleteTask,
+  onTasksReorder
 }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<ProjectTask | null>(null);
+  const [localTasks, setLocalTasks] = useState<ProjectTask[]>(tasks);
+
+  // Keep local tasks in sync with props when tasks array changes
+  useEffect(() => {
+    setLocalTasks(tasks);
+  }, [tasks]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -228,7 +236,7 @@ export function KanbanBoard({
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const task = tasks.find((t) => t.id === active.id);
+    const task = localTasks.find((t) => t.id === active.id);
     if (task) setActiveTask(task);
   };
 
@@ -253,17 +261,17 @@ export function KanbanBoard({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) {
-        setActiveTask(null);
-        return;
+      setActiveTask(null);
+      return;
     }
 
-    const activeId = active.id;
-    const overId = over.id;
+    const activeId = active.id as string;
+    const overId = over.id as string;
 
-    const activeTaskObj = tasks.find((t) => t.id === activeId);
+    const activeTaskObj = localTasks.find((t) => t.id === activeId);
     if (!activeTaskObj) {
-        setActiveTask(null);
-        return;
+      setActiveTask(null);
+      return;
     }
 
     // Determine target status
@@ -271,25 +279,67 @@ export function KanbanBoard({
 
     // Check if dropped on a column
     if (over.data.current?.type === "Column") {
-        targetStatus = over.data.current.column;
+      targetStatus = over.data.current.column;
     } else {
-        // Check if dropped on another task
-        const overTask = tasks.find((t) => t.id === overId);
-        if (overTask) {
-            targetStatus = overTask.status;
-        } else {
-            // Fallback: If overId is a column ID string
-            const column = COLUMNS.find(c => c.id === overId);
-            if (column) targetStatus = column.id;
-        }
+      // Check if dropped on another task
+      const overTask = localTasks.find((t) => t.id === overId);
+      if (overTask) {
+        targetStatus = overTask.status;
+      } else {
+        // Fallback: If overId is a column ID string
+        const column = COLUMNS.find((c) => c.id === overId);
+        if (column) targetStatus = column.id;
+      }
     }
 
+    // Get tasks in the target column
+    const columnTasks = localTasks
+      .filter((t) => t.status === targetStatus)
+      .sort((a, b) => a.order_index - b.order_index);
+
+    // Find position of over task
+    const overTaskIndex = columnTasks.findIndex((t) => t.id === overId);
+    const activeTaskIndex = columnTasks.findIndex((t) => t.id === activeId);
+
+    // If moving to a different column or reordering within same column
     if (activeTaskObj.status !== targetStatus) {
-        onTaskUpdate(activeId as string, { status: targetStatus });
-    } else if (activeId !== overId) {
-        // Just reordering within same column
-        // We'd need to implement order_index updates here if we wanted full persistence of order
-        // For MVP, we'll just handle status changes.
+      // Moving to different column - add at the end or at over position
+      const newOrderIndex =
+        overTaskIndex >= 0
+          ? columnTasks[overTaskIndex].order_index
+          : columnTasks.length > 0
+          ? columnTasks[columnTasks.length - 1].order_index + 1
+          : 0;
+
+      onTaskUpdate(activeId, { status: targetStatus, order_index: newOrderIndex });
+    } else if (activeId !== overId && overTaskIndex >= 0) {
+      // Reordering within same column
+      const newColumnTasks = arrayMove(columnTasks, activeTaskIndex, overTaskIndex);
+
+      // Update local state immediately for visual feedback
+      const reorderedTasks = newColumnTasks.map((task, index) => ({
+        ...task,
+        order_index: index,
+      }));
+
+      setLocalTasks((prev) => {
+        const otherTasks = prev.filter((t) => t.status !== targetStatus);
+        return [...otherTasks, ...reorderedTasks].sort((a, b) => {
+          if (a.status !== b.status) return a.status.localeCompare(b.status);
+          return a.order_index - b.order_index;
+        });
+      });
+
+      // Notify parent of reorder
+      if (onTasksReorder) {
+        onTasksReorder(
+          reorderedTasks.map((t) => ({
+            id: t.id,
+            order_index: t.order_index,
+            status: t.status,
+          }))
+        );
+      }
     }
 
     setActiveTask(null);
@@ -308,7 +358,9 @@ export function KanbanBoard({
             key={column.id}
             id={column.id}
             title={column.title}
-            tasks={tasks.filter((t) => t.status === column.id)}
+            tasks={localTasks
+              .filter((t) => t.status === column.id)
+              .sort((a, b) => a.order_index - b.order_index)}
             onAddTask={onAddTask}
             onDeleteTask={onDeleteTask}
           />

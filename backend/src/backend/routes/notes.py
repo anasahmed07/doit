@@ -54,7 +54,7 @@ def read_notes(
             assets.append(MediaAssetRead(
                 id=asset.id,
                 mime_type=asset.mime_type,
-                url=f"/api/notes/media/{asset.id}"
+                url=f"/api/v1/notes/media/{asset.id}"
             ))
         
         result.append(NoteRead(
@@ -138,7 +138,7 @@ def update_note(
         assets.append(MediaAssetRead(
             id=asset.id,
             mime_type=asset.mime_type,
-            url=f"/api/notes/media/{asset.id}"
+            url=f"/api/v1/notes/media/{asset.id}"
         ))
 
     return NoteRead(
@@ -183,7 +183,7 @@ async def upload_media(
     return MediaAssetRead(
         id=asset.id,
         mime_type=asset.mime_type,
-        url=f"/api/notes/media/{asset.id}"
+        url=f"/api/v1/notes/media/{asset.id}"
     )
 
 @router.get("/media/{asset_id}")

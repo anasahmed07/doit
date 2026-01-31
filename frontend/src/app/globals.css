@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for dark: variants */
+@variant dark (&:where(.dark, .dark *));
+
 /* Light mode colors */
 :root {
   --background: 244 244 245; /* Zinc 100 - RGB values */

@@ -6,19 +6,27 @@ import { Trash2, Edit2, GripVertical, Image as ImageIcon, X, Play } from "lucide
 import Image from "next/image";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface NoteCardProps {
   note: Note;
   onDelete: (id: string) => void;
   onEdit: (note: Note) => void;
+  onToggleTodo?: (note: Note, lineIndex: number) => void;
   isOverlay?: boolean; // For drag overlay
 }
 
-export function NoteCard({ note, onDelete, onEdit, isOverlay = false }: NoteCardProps) {
+export function NoteCard({ note, onDelete, onEdit, onToggleTodo, isOverlay = false }: NoteCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const getAssetUrl = (url: string) => `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${url}`;
+
+  // Toggle todo item in markdown content
+  const handleTodoToggle = (lineIndex: number) => {
+    if (!note.content || !onToggleTodo) return;
+    onToggleTodo(note, lineIndex);
+  };
 
   return (
     <>
@@ -61,8 +69,23 @@ export function NoteCard({ note, onDelete, onEdit, isOverlay = false }: NoteCard
         {/* Content */}
         <div className="space-y-3">
             {note.content && (
-                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-p:text-sm prose-p:leading-relaxed prose-a:text-primary prose-code:bg-secondary prose-code:px-1 prose-code:rounded prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border">
-                    <ReactMarkdown>{note.content}</ReactMarkdown>
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-p:text-sm prose-p:leading-relaxed prose-a:text-primary prose-code:bg-secondary prose-code:px-1 prose-code:rounded prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border prose-li:marker:text-muted-foreground">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        input: ({ checked, ...props }) => (
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            readOnly
+                            className="mr-2 h-4 w-4 accent-primary cursor-pointer"
+                            {...props}
+                          />
+                        ),
+                      }}
+                    >
+                      {note.content}
+                    </ReactMarkdown>
                 </div>
             )}
 

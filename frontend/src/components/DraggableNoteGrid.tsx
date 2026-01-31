@@ -59,7 +59,7 @@ function SortableNoteItem({ note, onDelete, onEdit }: { note: Note; onDelete: (i
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none h-fit break-inside-avoid mb-4">
       <NoteCard note={note} onDelete={onDelete} onEdit={onEdit} />
     </div>
   );
@@ -106,7 +106,7 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit }: Dragga
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={notes.map(n => n.id)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-20">
+        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 pb-20 block">
           {notes.map((note) => (
             <SortableNoteItem
               key={note.id}

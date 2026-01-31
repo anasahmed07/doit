@@ -2,8 +2,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  image?: string;
-  createdAt: string;
+  image?: string | null;
+  createdAt: string | Date;
 }
 
 export interface Category {

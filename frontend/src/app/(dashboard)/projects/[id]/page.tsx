@@ -86,6 +86,34 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     }
   };
 
+  const handleTasksReorder = async (
+    reorderedTasks: { id: string; order_index: number; status: string }[]
+  ) => {
+    // Optimistic update is already done in KanbanBoard
+    // Persist the changes to the backend
+    try {
+      await Promise.all(
+        reorderedTasks.map((task) =>
+          fetch(`/api/projects/tasks/${task.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order_index: task.order_index }),
+          })
+        )
+      );
+      // Update local state to match
+      setTasks((prev) =>
+        prev.map((t) => {
+          const reordered = reorderedTasks.find((r) => r.id === t.id);
+          return reordered ? { ...t, order_index: reordered.order_index } : t;
+        })
+      );
+    } catch (error) {
+      console.error("Failed to reorder tasks", error);
+      fetchData(); // Revert on error
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -125,11 +153,12 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
       {/* Board Area */}
       <div className="flex-1 overflow-x-auto bg-muted/20">
          <div className="container mx-auto h-full p-6 min-w-max">
-            <KanbanBoard 
-              tasks={tasks} 
+            <KanbanBoard
+              tasks={tasks}
               onTaskUpdate={handleTaskUpdate}
               onAddTask={handleAddTask}
               onDeleteTask={handleDeleteTask}
+              onTasksReorder={handleTasksReorder}
             />
          </div>
       </div>
