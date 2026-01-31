@@ -2,27 +2,32 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
   Plus,
   Grid,
   Layout,
   ChevronRight,
+  ChevronDown,
   Loader2,
   Sun,
   Moon
 } from "lucide-react";
-import { Category } from "@/lib/types";
+import { Category, Project } from "@/lib/types";
 import { CreateCategoryDialog } from "@/components/CreateCategoryDialog";
 import { UserProfile } from "@/components/UserProfile";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
+  const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -45,14 +50,28 @@ export function Sidebar() {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch("/api/projects");
+      if (!response.ok) throw new Error("Failed to fetch");
+      const data = await response.json();
+      setProjects(data);
+    } catch (err) {
+      console.error("Failed to fetch projects", err);
+    } finally {
+      setIsProjectsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchCategories();
+    fetchProjects();
   }, []);
 
   return (
-    <aside className="flex h-screen w-72 flex-col border-r border-foreground/10 bg-background/50 backdrop-blur-xl">
+    <aside className="flex h-screen w-72 flex-col border-r border-border bg-card">
       {/* Header */}
-      <div className="flex h-20 items-center px-6 border-b border-foreground/10">
+      <div className="flex h-20 items-center px-6 border-b border-border">
         <Link href="/" className="flex items-center gap-3 group">
           <span className="font-pixel text-xl font-bold tracking-tighter uppercase group-hover:scale-105 transition-transform">DOIT</span>
         </Link>
@@ -76,17 +95,61 @@ export function Sidebar() {
               <Grid className="h-4 w-4" />
               Dashboard
             </Link>
-            <Link
-              href="/projects"
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                pathname === "/projects"
-                  ? "bg-primary/10 text-primary shadow-sm"
-                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-              }`}
-            >
-              <Layout className="h-4 w-4" />
-              Projects
-            </Link>
+            <div className="space-y-1">
+              <button
+                onClick={() => {
+                  router.push("/projects");
+                  setIsProjectsOpen(!isProjectsOpen);
+                }}
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                  pathname.startsWith("/projects")
+                    ? "bg-primary/10 text-primary shadow-sm"
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Layout className="h-4 w-4" />
+                  Projects
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${
+                    isProjectsOpen ? "" : "-rotate-90"
+                  }`}
+                />
+              </button>
+              {isProjectsOpen && (
+                <div className="ml-4 space-y-1 border-l border-border pl-3">
+                  {isProjectsLoading ? (
+                    <div className="flex items-center justify-center py-2">
+                      <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    projects.slice(0, 5).map((project) => (
+                      <Link
+                        key={project.id}
+                        href={`/projects/${project.id}`}
+                        className={`group flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition-all ${
+                          pathname === `/projects/${project.id}`
+                            ? "text-primary"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <span className="truncate">{project.name}</span>
+                        <ChevronRight className="h-3 w-3 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+                      </Link>
+                    ))
+                  )}
+                  {projects.length > 5 && (
+                    <Link
+                      href="/projects"
+                      className="block px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-colors"
+                    >
+                      View all ({projects.length})
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -129,7 +192,7 @@ export function Sidebar() {
       </nav>
 
       {/* Theme Toggle */}
-      <div className="px-4 py-3 border-t border-foreground/10">
+      <div className="px-4 py-3 border-t border-border">
         <div className="flex items-center justify-center bg-secondary/50 border border-border rounded-md p-1">
           <button
             onClick={() => setTheme("light")}
@@ -151,7 +214,7 @@ export function Sidebar() {
       </div>
 
       {/* Footer / User Profile */}
-      <div className="p-4 border-t border-foreground/10">
+      <div className="p-4 border-t border-border">
          <UserProfile />
       </div>
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
-import { UserPlus, Loader2, Zap, Eye, EyeOff, CheckCircle2, Mail, Lock, User, Github } from "lucide-react";
+import { Loader2, Eye, EyeOff, CheckCircle2, Mail, Lock, User, Github } from "lucide-react";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
@@ -34,10 +34,34 @@ export default function SignUpPage() {
     );
   };
 
+  const handleSocialSignUp = async (provider: "github" | "google") => {
+    setIsLoading(true);
+    setError(null);
+    await authClient.signIn.social(
+      {
+        provider,
+        callbackURL: "/dashboard",
+      },
+      {
+        onSuccess: (ctx) => {
+          const authToken = ctx.response.headers.get("set-auth-token");
+          if (authToken) {
+            localStorage.setItem("bearer_token", authToken);
+          }
+          router.push("/dashboard");
+        },
+        onError: (ctx) => {
+          setError(ctx.error.message);
+          setIsLoading(false);
+        },
+      }
+    );
+  };
+
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
       {/* Left Column: Form */}
-      <div className="flex items-center justify-center py-12 px-6">
+      <div className="flex items-center justify-center py-12 px-6 bg-background">
         <div className="mx-auto w-full max-w-[400px] space-y-8">
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-3xl font-black uppercase tracking-tight">
@@ -49,11 +73,19 @@ export default function SignUpPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2">
+            <button
+              onClick={() => handleSocialSignUp("github")}
+              disabled={isLoading}
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Github className="h-4 w-4" />
               GitHub
             </button>
-            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2">
+            <button
+              onClick={() => handleSocialSignUp("google")}
+              disabled={isLoading}
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <svg role="img" viewBox="0 0 24 24" className="h-4 w-4 fill-current">
                 <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-1.928 4.176-1.02 1.024-2.6 2.052-5.912 2.052-5.452 0-9.872-4.448-9.872-9.9s4.42-9.9 9.872-9.9c2.952 0 5.16 1.152 6.708 2.592l2.304-2.304C19.464 1.14 16.488 0 12.48 0 5.58 0 0 5.58 0 12.48s5.58 12.48 12.48 12.48c3.756 0 6.6-1.224 8.76-3.492 2.22-2.22 2.928-5.328 2.928-7.788 0-.756-.06-1.488-.18-2.22h-11.52z" />
               </svg>
@@ -147,7 +179,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-bold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black text-white hover:bg-zinc-800 h-11 w-full uppercase tracking-widest shadow-lg hover:shadow-black/20"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-bold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 h-11 w-full uppercase tracking-widest shadow-lg"
             >
               {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -178,39 +210,37 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Right Column: Decorative */}
-      <div className="hidden bg-muted lg:block relative">
-        <div className="absolute inset-0 bg-zinc-900 text-white">
-           <div className="absolute inset-0 opacity-20" 
-                style={{
-                    backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)',
-                    backgroundSize: '32px 32px'
-                }}
-           />
-           <div className="relative h-full flex flex-col justify-between p-12">
-              <div className="flex items-center gap-2">
-                 <div className="h-8 w-8 bg-white text-black flex items-center justify-center rounded font-bold">D.</div>
-                 <span className="font-mono tracking-widest uppercase text-sm">System Access</span>
-              </div>
-              
-              <div className="space-y-6">
-                <blockquote className="space-y-2">
-                  <p className="text-lg font-medium leading-relaxed">
-                    &ldquo;This library has saved me countless hours of work and
-                    helped me deliver stunning designs to my clients faster than
-                    ever before.&rdquo;
-                  </p>
-                  <footer className="text-sm text-white/60">Sofia Davis, Architect</footer>
-                </blockquote>
-                <div className="flex gap-4">
-                   <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40">
-                      <CheckCircle2 className="h-4 w-4" /> Secure
-                   </div>
-                   <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40">
-                      <CheckCircle2 className="h-4 w-4" /> Encrypted
-                   </div>
+      {/* Right Column: Decorative - dark in light mode, light in dark mode */}
+      <div className="hidden lg:block relative bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900">
+        <div className="absolute inset-0 opacity-20"
+             style={{
+                 backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)',
+                 backgroundSize: '32px 32px'
+             }}
+        />
+        <div className="relative h-full flex flex-col justify-between p-12">
+           <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white flex items-center justify-center rounded font-bold">D.</div>
+              <span className="font-mono tracking-widest uppercase text-sm">System Access</span>
+           </div>
+
+           <div className="space-y-6">
+             <blockquote className="space-y-2">
+               <p className="text-lg font-medium leading-relaxed">
+                 &ldquo;This library has saved me countless hours of work and
+                 helped me deliver stunning designs to my clients faster than
+                 ever before.&rdquo;
+               </p>
+               <footer className="text-sm opacity-60">Sofia Davis, Architect</footer>
+             </blockquote>
+             <div className="flex gap-4">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase opacity-40">
+                   <CheckCircle2 className="h-4 w-4" /> Secure
                 </div>
-              </div>
+                <div className="flex items-center gap-2 text-xs font-mono uppercase opacity-40">
+                   <CheckCircle2 className="h-4 w-4" /> Encrypted
+                </div>
+             </div>
            </div>
         </div>
       </div>

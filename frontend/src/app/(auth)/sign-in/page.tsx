@@ -64,7 +64,7 @@ export default function SignInPage() {
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
       {/* Left Column: Form */}
-      <div className="flex items-center justify-center py-12 px-6">
+      <div className="flex items-center justify-center py-12 px-6 bg-background">
         <div className="mx-auto w-full max-w-[400px] space-y-8">
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-3xl font-black uppercase tracking-tight">
@@ -172,7 +172,7 @@ export default function SignInPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-bold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black text-white hover:bg-zinc-800 h-11 w-full uppercase tracking-widest shadow-lg hover:shadow-black/20"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-bold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-foreground text-background hover:bg-foreground/90 h-11 w-full uppercase tracking-widest shadow-lg"
             >
               {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -191,37 +191,35 @@ export default function SignInPage() {
         </div>
       </div>
 
-      {/* Right Column: Decorative */}
-      <div className="hidden bg-muted lg:block relative">
-        <div className="absolute inset-0 bg-zinc-900 text-white">
-           <div className="absolute inset-0 opacity-20" 
-                style={{
-                    backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)',
-                    backgroundSize: '32px 32px'
-                }}
-           />
-           <div className="relative h-full flex flex-col justify-between p-12">
-              <div className="flex items-center gap-2">
-                 <div className="h-8 w-8 bg-white text-black flex items-center justify-center rounded font-bold">D.</div>
-                 <span className="font-mono tracking-widest uppercase text-sm">System Access</span>
-              </div>
-              
-              <div className="space-y-6">
-                <blockquote className="space-y-2">
-                  <p className="text-lg font-medium leading-relaxed">
-                    &ldquo;DoIt has revolutionized how we track our sprint velocity. It&apos;s the only tool that actually makes us faster.&rdquo;
-                  </p>
-                  <footer className="text-sm text-white/60">Marcus Chen, Product Lead</footer>
-                </blockquote>
-                <div className="flex gap-4">
-                   <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40">
-                      <CheckCircle2 className="h-4 w-4" /> Secure
-                   </div>
-                   <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40">
-                      <CheckCircle2 className="h-4 w-4" /> Encrypted
-                   </div>
+      {/* Right Column: Decorative - dark in light mode, light in dark mode */}
+      <div className="hidden lg:block relative bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900">
+        <div className="absolute inset-0 opacity-20"
+             style={{
+                 backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)',
+                 backgroundSize: '32px 32px'
+             }}
+        />
+        <div className="relative h-full flex flex-col justify-between p-12">
+           <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white flex items-center justify-center rounded font-bold">D.</div>
+              <span className="font-mono tracking-widest uppercase text-sm">System Access</span>
+           </div>
+
+           <div className="space-y-6">
+             <blockquote className="space-y-2">
+               <p className="text-lg font-medium leading-relaxed">
+                 &ldquo;DoIt has revolutionized how we track our sprint velocity. It&apos;s the only tool that actually makes us faster.&rdquo;
+               </p>
+               <footer className="text-sm opacity-60">Marcus Chen, Product Lead</footer>
+             </blockquote>
+             <div className="flex gap-4">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase opacity-40">
+                   <CheckCircle2 className="h-4 w-4" /> Secure
                 </div>
-              </div>
+                <div className="flex items-center gap-2 text-xs font-mono uppercase opacity-40">
+                   <CheckCircle2 className="h-4 w-4" /> Encrypted
+                </div>
+             </div>
            </div>
         </div>
       </div>

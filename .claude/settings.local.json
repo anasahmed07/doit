@@ -49,7 +49,8 @@
       "mcp__plugin_context7_context7__query-docs",
       "Bash(npm run auth:generate)",
       "Bash(npm run dev)",
-      "mcp__Neon__list_projects"
+      "mcp__Neon__list_projects",
+      "Bash(dir:*)"
     ]
   }
 }
