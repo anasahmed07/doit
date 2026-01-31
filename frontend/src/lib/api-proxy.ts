@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_PREFIX = "/api/v1";
 
 export async function proxyRequest(
   request: NextRequest,
@@ -20,12 +21,17 @@ export async function proxyRequest(
   const token = cookieStore.get("better-auth.session_token")?.value ||
                 cookieStore.get("session_token")?.value;
 
+  // Debug: log all available cookies (names only)
+  const allCookies = cookieStore.getAll();
+  console.log("[api-proxy] Available cookies:", allCookies.map(c => c.name));
+  console.log("[api-proxy] Token found:", token ? `${token.substring(0, 10)}...` : "NONE");
+
   const path = pathParts.join("/");
-  // Construct URL: BACKEND_URL/endpoint/path
+  // Construct URL: BACKEND_URL/api/v1/endpoint/path
   // Avoid double slashes if path is empty
   const url = path
-    ? `${BACKEND_URL}/${endpoint}/${path}`
-    : `${BACKEND_URL}/${endpoint}/`;
+    ? `${BACKEND_URL}${API_PREFIX}/${endpoint}/${path}`
+    : `${BACKEND_URL}${API_PREFIX}/${endpoint}/`;
 
   // Copy search params
   const searchParams = request.nextUrl.searchParams.toString();
@@ -43,6 +49,8 @@ export async function proxyRequest(
   }
 
   // Forward the request
+  console.log(`[api-proxy] ${request.method} ${finalUrl} (auth: ${token ? "yes" : "no"})`);
+
   try {
     const body = request.method !== "GET" && request.method !== "HEAD"
       ? await request.blob()
@@ -54,6 +62,8 @@ export async function proxyRequest(
       body: body,
       // redirect: "manual", // Don't follow redirects automatically if not desired
     });
+
+    console.log(`[api-proxy] Response: ${response.status} ${response.statusText}`);
 
     // Create response to return to frontend
     const responseBody = await response.blob();

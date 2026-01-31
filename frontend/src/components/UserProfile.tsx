@@ -18,10 +18,9 @@ export function UserProfile({ minimal = false }: UserProfileProps) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // @ts-ignore
-        const { data } = await authClient.session();
-        if (data && data.session && data.session.user) {
-          setUser(data.session.user);
+        const { data } = await authClient.getSession();
+        if (data && data.user) {
+          setUser(data.user);
         }
       } catch (error) {
         console.error("Failed to fetch user:", error);
@@ -99,7 +98,7 @@ export function UserProfile({ minimal = false }: UserProfileProps) {
     <div className="border-t-2 border-foreground bg-secondary/30 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 flex items-center justify-center rounded-none border-2 border-foreground bg-white">
+          <div className="h-9 w-9 flex items-center justify-center rounded-none border-2 border-foreground bg-card">
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : user?.image ? (

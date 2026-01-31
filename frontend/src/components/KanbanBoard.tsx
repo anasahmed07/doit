@@ -22,6 +22,7 @@ import {
   verticalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { ProjectTask } from "@/lib/types";
 import { Plus, Trash2, GripVertical, MoreHorizontal } from "lucide-react";
@@ -101,21 +102,30 @@ function KanbanTaskItem({
   );
 }
 
-function KanbanColumn({ 
-  id, 
-  title, 
-  tasks, 
+function KanbanColumn({
+  id,
+  title,
+  tasks,
   onAddTask,
-  onDeleteTask 
-}: { 
-  id: string; 
-  title: string; 
+  onDeleteTask
+}: {
+  id: string;
+  title: string;
   tasks: ProjectTask[];
   onAddTask: (content: string, status: string) => void;
   onDeleteTask: (id: string) => void;
 }) {
   const [isAdding, setIsAdding] = useState(false);
   const [content, setContent] = useState("");
+
+  // Make column droppable
+  const { setNodeRef, isOver } = useDroppable({
+    id: id,
+    data: {
+      type: "Column",
+      column: id,
+    },
+  });
 
   const handleAdd = () => {
     if (content.trim()) {
@@ -126,7 +136,12 @@ function KanbanColumn({
   };
 
   return (
-    <div className="flex flex-col w-80 min-h-[500px] bg-secondary/10 border-x border-foreground/5 p-4 rounded-lg">
+    <div
+      ref={setNodeRef}
+      className={`flex flex-col w-80 min-h-[500px] bg-secondary/10 border-x border-foreground/5 p-4 rounded-lg transition-colors ${
+        isOver ? "bg-primary/10 ring-2 ring-primary/30" : ""
+      }`}
+    >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
            <h3 className="font-black uppercase tracking-widest text-xs">{title}</h3>
@@ -140,7 +155,7 @@ function KanbanColumn({
       </div>
 
       <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-4 min-h-[100px]">
           {tasks.map((task) => (
             <KanbanTaskItem key={task.id} task={task} onDelete={onDeleteTask} />
           ))}
@@ -253,15 +268,20 @@ export function KanbanBoard({
 
     // Determine target status
     let targetStatus = activeTaskObj.status;
-    
-    // Check if over a column or a task
-    const overTask = tasks.find((t) => t.id === overId);
-    if (overTask) {
-        targetStatus = overTask.status;
+
+    // Check if dropped on a column
+    if (over.data.current?.type === "Column") {
+        targetStatus = over.data.current.column;
     } else {
-        // If overId is a column ID
-        const column = COLUMNS.find(c => c.id === overId);
-        if (column) targetStatus = column.id;
+        // Check if dropped on another task
+        const overTask = tasks.find((t) => t.id === overId);
+        if (overTask) {
+            targetStatus = overTask.status;
+        } else {
+            // Fallback: If overId is a column ID string
+            const column = COLUMNS.find(c => c.id === overId);
+            if (column) targetStatus = column.id;
+        }
     }
 
     if (activeTaskObj.status !== targetStatus) {

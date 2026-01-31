@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { UserProfile } from "@/components/UserProfile";
 
@@ -10,7 +10,7 @@ export function Navbar() {
 
   return (
     <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
-      <header className="flex h-16 w-full max-w-7xl items-center justify-between rounded-2xl border-2 border-foreground/10 bg-white/80 px-6 backdrop-blur-xl shadow-hard-sm transition-all hover:shadow-hard hover:-translate-y-0.5">
+      <header className="flex h-16 w-full max-w-7xl items-center justify-between rounded-2xl border-2 border-foreground/10 bg-background/80 px-6 backdrop-blur-xl shadow-hard-sm transition-all hover:shadow-hard hover:-translate-y-0.5">
         
         {/* Left: Logo & Tagline */}
         <div className="flex items-center gap-6">
@@ -36,7 +36,7 @@ export function Navbar() {
         </nav>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           {session ? (
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="text-xs font-bold uppercase tracking-wide hover:underline">

@@ -39,11 +39,12 @@ class NoteRead(BaseModel):
 @router.get("/", response_model=List[NoteRead])
 def read_notes(
     category_id: Optional[uuid.UUID] = None,
+    uncategorized: Optional[bool] = None,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     service = NoteService(session)
-    notes = service.get_notes(current_user.id, category_id)
+    notes = service.get_notes(current_user.id, category_id, uncategorized_only=uncategorized or False)
     
     # Transform to Read model with media URLs
     result = []

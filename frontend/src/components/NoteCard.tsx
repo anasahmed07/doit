@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Trash2, Edit2, GripVertical, Image as ImageIcon, X, Play } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface NoteCardProps {
   note: Note;
@@ -60,9 +61,9 @@ export function NoteCard({ note, onDelete, onEdit, isOverlay = false }: NoteCard
         {/* Content */}
         <div className="space-y-3">
             {note.content && (
-                <p className="whitespace-pre-wrap text-sm font-medium leading-relaxed break-words">
-                    {note.content}
-                </p>
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-p:text-sm prose-p:leading-relaxed prose-a:text-primary prose-code:bg-secondary prose-code:px-1 prose-code:rounded prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border">
+                    <ReactMarkdown>{note.content}</ReactMarkdown>
+                </div>
             )}
 
             {/* Media Grid */}

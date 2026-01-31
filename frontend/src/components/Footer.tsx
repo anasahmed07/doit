@@ -1,19 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { 
-  Github, 
-  Twitter, 
-  Linkedin, 
-  Youtube, 
-  ArrowRight, 
-  MessageSquare, 
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import {
+  Github,
+  Twitter,
+  Linkedin,
+  Youtube,
+  ArrowRight,
+  MessageSquare,
   Cloud,
   Moon,
   Sun
 } from "lucide-react";
 
 export function Footer() {
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isLight = mounted && (theme === "light" || (theme === "system" && resolvedTheme === "light"));
+  const isDark = mounted && (theme === "dark" || (theme === "system" && resolvedTheme === "dark"));
+
   return (
     <footer className="bg-black text-white pt-20 pb-6 overflow-hidden font-sans border-t border-white/10">
       <div className="mx-auto max-w-7xl px-6">
@@ -119,12 +131,22 @@ export function Footer() {
             </Link>
           </div>
 
-          {/* Theme Toggle (Visual) */}
+          {/* Theme Toggle */}
           <div className="flex items-center bg-white/5 border border-white/10 rounded-sm p-1">
-            <button className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-sm text-xs font-medium text-white hover:bg-white/20 transition-all">
+            <button
+              onClick={() => setTheme("light")}
+              className={`flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-medium transition-all ${
+                isLight ? "bg-white/10 text-white" : "text-white/40 hover:text-white"
+              }`}
+            >
               <Sun className="h-3 w-3" /> Light
             </button>
-            <button className="flex items-center gap-2 px-3 py-1 text-xs font-medium text-white/40 hover:text-white transition-all">
+            <button
+              onClick={() => setTheme("dark")}
+              className={`flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-medium transition-all ${
+                isDark ? "bg-white/10 text-white" : "text-white/40 hover:text-white"
+              }`}
+            >
               <Moon className="h-3 w-3" /> Dark
             </button>
           </div>

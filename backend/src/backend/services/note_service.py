@@ -8,9 +8,11 @@ class NoteService:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_notes(self, user_id: uuid.UUID, category_id: Optional[uuid.UUID] = None) -> List[Note]:
+    def get_notes(self, user_id: uuid.UUID, category_id: Optional[uuid.UUID] = None, uncategorized_only: bool = False) -> List[Note]:
         statement = select(Note).where(Note.user_id == user_id)
-        if category_id:
+        if uncategorized_only:
+            statement = statement.where(Note.category_id == None)
+        elif category_id:
             statement = statement.where(Note.category_id == category_id)
         # Order by index, then created_at
         statement = statement.order_by(Note.order_index, Note.created_at.desc())

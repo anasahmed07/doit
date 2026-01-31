@@ -1,6 +1,5 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
-import { jwt } from "better-auth/plugins";
 import { Pool } from "pg";
 
 const pool = new Pool({
@@ -22,7 +21,7 @@ export const auth = betterAuth({
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
     },
   },
-  plugins: [nextCookies(), jwt()],
+  plugins: [nextCookies()],
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins: [process.env.BETTER_AUTH_URL || "http://localhost:3000"],
   debug: true,

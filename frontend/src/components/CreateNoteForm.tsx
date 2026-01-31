@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Loader2, Image as ImageIcon, X } from "lucide-react";
-import { Note } from "@/lib/types";
+import { useState, useRef, useEffect } from "react";
+import { Loader2, Image as ImageIcon, X, Tag } from "lucide-react";
+import { Note, Category } from "@/lib/types";
 
 interface CreateNoteFormProps {
   categoryId?: string | null;
@@ -14,7 +14,26 @@ export function CreateNoteForm({ categoryId, onSuccess, onCancel }: CreateNoteFo
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(categoryId || null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Fetch categories for the picker
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/categories");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +49,7 @@ export function CreateNoteForm({ categoryId, onSuccess, onCancel }: CreateNoteFo
         },
         body: JSON.stringify({
           content: content,
-          category_id: categoryId,
+          category_id: selectedCategoryId,
         }),
       });
 
@@ -128,6 +147,53 @@ export function CreateNoteForm({ categoryId, onSuccess, onCancel }: CreateNoteFo
              className="hidden"
              onChange={handleFileSelect}
            />
+
+           {/* Category Picker */}
+           <div className="relative">
+             <button
+               type="button"
+               onClick={() => setShowCategoryPicker(!showCategoryPicker)}
+               className="flex items-center gap-2 rounded-none px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+             >
+               <Tag className="h-4 w-4" />
+               {selectedCategoryId
+                 ? categories.find(c => c.id === selectedCategoryId)?.name || "Category"
+                 : "Add Category"}
+             </button>
+
+             {showCategoryPicker && (
+               <div className="absolute left-0 top-full mt-1 z-50 w-48 rounded-md border-2 border-foreground bg-background shadow-hard py-1">
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setSelectedCategoryId(null);
+                     setShowCategoryPicker(false);
+                   }}
+                   className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary transition-colors ${!selectedCategoryId ? 'bg-secondary' : ''}`}
+                 >
+                   <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+                   No Category
+                 </button>
+                 {categories.map((category) => (
+                   <button
+                     key={category.id}
+                     type="button"
+                     onClick={() => {
+                       setSelectedCategoryId(category.id);
+                       setShowCategoryPicker(false);
+                     }}
+                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary transition-colors ${selectedCategoryId === category.id ? 'bg-secondary' : ''}`}
+                   >
+                     <span
+                       className="h-2 w-2 rounded-full"
+                       style={{ backgroundColor: category.color }}
+                     />
+                     {category.name}
+                   </button>
+                 ))}
+               </div>
+             )}
+           </div>
         </div>
 
         <div className="flex gap-3">

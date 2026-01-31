@@ -18,7 +18,11 @@ function DashboardContent() {
   const fetchNotes = useCallback(async () => {
     try {
       setIsLoading(true);
-      const url = categoryId ? `/api/notes?category_id=${categoryId}` : "/api/notes";
+      // If a specific category is selected, filter by that category
+      // Otherwise, show only uncategorized notes (notes without a category)
+      const url = categoryId
+        ? `/api/notes?category_id=${categoryId}`
+        : "/api/notes?uncategorized=true";
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch notes");
       const data = await response.json();
@@ -71,7 +75,7 @@ function DashboardContent() {
       {/* Top Bar */}
       <div className="flex items-center justify-between">
          <h1 className="text-2xl font-black uppercase tracking-tighter">
-            {categoryId ? "Category View" : "Dashboard"}
+            {categoryId ? "Category View" : "Quick Notes"}
          </h1>
          <button
             onClick={() => setIsCreating(!isCreating)}

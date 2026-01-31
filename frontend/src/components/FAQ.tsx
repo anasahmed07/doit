@@ -57,7 +57,7 @@ export function FAQ() {
           </p>
         </div>
 
-        <div className="flex flex-col border-2 border-foreground bg-white shadow-hard">
+        <div className="flex flex-col border-2 border-foreground bg-card shadow-hard">
           {faqs.map((faq, index) => (
             <div 
               key={index} 
