@@ -17,17 +17,20 @@ import {
 } from "lucide-react";
 import { Note, Category } from "@/lib/types";
 
-interface CreateNoteFormProps {
+interface NoteFormProps {
+  initialNote?: Note;
   categoryId?: string | null;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export function CreateNoteForm({ categoryId, onSuccess, onCancel }: CreateNoteFormProps) {
-  const [content, setContent] = useState("");
+export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteFormProps) {
+  const [content, setContent] = useState(initialNote?.content || "");
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(categoryId || null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    initialNote?.category_id || categoryId || null
+  );
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -157,37 +160,56 @@ export function CreateNoteForm({ categoryId, onSuccess, onCancel }: CreateNoteFo
       } else if (e.key === 'i') {
         e.preventDefault();
         insertMarkdown("*", "*", "italic text");
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit(e);
       }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && files.length === 0) return;
+    if (!content.trim() && files.length === 0 && !initialNote) return;
 
     setIsSubmitting(true);
     try {
-      // 1. Create Note
-      const response = await fetch("/api/notes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: content,
-          category_id: selectedCategoryId,
-        }),
-      });
+      let noteId = initialNote?.id;
 
-      if (!response.ok) {
-        throw new Error("Failed to create note");
+      if (initialNote) {
+        // Update existing note
+        const response = await fetch(`/api/notes/${initialNote.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: content,
+            category_id: selectedCategoryId,
+          }),
+        });
+        
+        if (!response.ok) throw new Error("Failed to update note");
+        // We continue to upload new files if any
+      } else {
+        // Create new note
+        const response = await fetch("/api/notes", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: content,
+            category_id: selectedCategoryId,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to create note");
+        const noteData = await response.json();
+        noteId = noteData.id;
       }
 
-      const noteData = await response.json();
-      const noteId = noteData.id;
-
-      // 2. Upload Files
-      if (files.length > 0) {
+      // 2. Upload Files (if any new files)
+      if (files.length > 0 && noteId) {
         await Promise.all(
           files.map(async (file) => {
             const formData = new FormData();
@@ -204,11 +226,14 @@ export function CreateNoteForm({ categoryId, onSuccess, onCancel }: CreateNoteFo
         );
       }
 
-      setContent("");
-      setFiles([]);
+      if (!initialNote) {
+        setContent("");
+        setFiles([]);
+        setSelectedCategoryId(categoryId || null);
+      }
       onSuccess();
     } catch (error) {
-      console.error("Failed to create note:", error);
+      console.error("Failed to save note:", error);
       // Ideally show toast here
     } finally {
       setIsSubmitting(false);
@@ -257,7 +282,22 @@ export function CreateNoteForm({ categoryId, onSuccess, onCancel }: CreateNoteFo
         </p>
       </div>
 
-      {/* File Preview */}
+      {/* Existing Media (ReadOnly for now) */}
+      {initialNote?.media_assets && initialNote.media_assets.length > 0 && (
+         <div className="flex flex-wrap gap-2 pb-2">
+            {initialNote.media_assets.map((asset) => (
+                <div key={asset.id} className="relative flex items-center justify-center border border-border bg-secondary/30 h-16 w-16 overflow-hidden rounded-md">
+                   {asset.mime_type.startsWith("image/") ? (
+                       <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${asset.url}`} alt="attachment" className="h-full w-full object-cover" />
+                   ) : (
+                       <span className="text-[10px] uppercase text-muted-foreground">{asset.mime_type.split("/")[1]}</span>
+                   )}
+                </div>
+            ))}
+         </div>
+      )}
+
+      {/* New File Preview */}
       {files.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {files.map((file, i) => (
@@ -357,7 +397,7 @@ export function CreateNoteForm({ categoryId, onSuccess, onCancel }: CreateNoteFo
             className="flex items-center gap-2 bg-primary px-4 py-2 text-sm font-bold text-white shadow-hard-sm hover:translate-y-px hover:shadow-hard active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting && <Loader2 className="h-3 w-3 animate-spin" />}
-            Save Note
+            {initialNote ? "Update Note" : "Save Note"}
           </button>
         </div>
       </div>

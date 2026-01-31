@@ -5,11 +5,13 @@ import { Loader2, Plus, Layout, Trash2, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Project } from "@/lib/types";
 import { ProjectCreationDialog } from "@/components/ProjectCreationDialog";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const fetchProjects = async () => {
     try {
@@ -32,13 +34,19 @@ export default function ProjectsPage() {
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this project?")) return;
+    setDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
     
     try {
-      await fetch(`/api/projects/${id}`, { method: "DELETE" });
-      setProjects((prev) => prev.filter((p) => p.id !== id));
+      await fetch(`/api/projects/${deleteId}`, { method: "DELETE" });
+      setProjects((prev) => prev.filter((p) => p.id !== deleteId));
     } catch (error) {
       console.error("Failed to delete project", error);
+    } finally {
+      setDeleteId(null);
     }
   };
 
@@ -110,6 +118,16 @@ export default function ProjectsPage() {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onSuccess={fetchProjects}
+      />
+
+      <ConfirmationDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Project"
+        description="Are you sure you want to delete this project? This action cannot be undone."
+        variant="destructive"
+        confirmText="Delete"
       />
     </div>
   );

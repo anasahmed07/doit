@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -21,7 +21,6 @@ import { UserProfile } from "@/components/UserProfile";
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, setTheme, resolvedTheme } = useTheme();
   const [categories, setCategories] = useState<Category[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,12 +29,48 @@ export function Sidebar() {
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
 
+  // Resizable Sidebar State
+  const [width, setWidth] = useState(288); // Default w-72 (18rem * 16)
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  const startResizing = useCallback(() => {
+    setIsResizing(true);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  const resize = useCallback(
+    (mouseMoveEvent: MouseEvent) => {
+      if (isResizing) {
+        const newWidth = mouseMoveEvent.clientX;
+        if (newWidth >= 200 && newWidth <= 480) {
+          setWidth(newWidth);
+        }
+      }
+    },
+    [isResizing]
+  );
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener("mousemove", resize);
+      window.addEventListener("mouseup", stopResizing);
+    } else {
+      window.removeEventListener("mousemove", resize);
+      window.removeEventListener("mouseup", stopResizing);
+    }
+    return () => {
+      window.removeEventListener("mousemove", resize);
+      window.removeEventListener("mouseup", stopResizing);
+    };
+  }, [isResizing, resize, stopResizing]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const isLight = mounted && (theme === "light" || (theme === "system" && resolvedTheme === "light"));
-  const isDark = mounted && (theme === "dark" || (theme === "system" && resolvedTheme === "dark"));
 
   const fetchCategories = async () => {
     try {
@@ -69,7 +104,17 @@ export function Sidebar() {
   }, []);
 
   return (
-    <aside className="flex h-screen w-72 flex-col border-r border-border bg-card">
+    <aside
+      ref={sidebarRef}
+      className="relative flex h-screen flex-col border-r border-border bg-card transition-none"
+      style={{ width: `${width}px` }}
+    >
+      {/* Drag Handle */}
+      <div
+        className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/50 active:bg-primary z-50 transition-colors"
+        onMouseDown={startResizing}
+      />
+
       {/* Header */}
       <div className="flex h-20 items-center px-6 border-b border-border">
         <Link href="/" className="flex items-center gap-3 group">
@@ -190,28 +235,6 @@ export function Sidebar() {
           </div>
         </div>
       </nav>
-
-      {/* Theme Toggle */}
-      <div className="px-4 py-3 border-t border-border">
-        <div className="flex items-center justify-center bg-secondary/50 border border-border rounded-md p-1">
-          <button
-            onClick={() => setTheme("light")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all flex-1 justify-center ${
-              isLight ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Sun className="h-3 w-3" /> Light
-          </button>
-          <button
-            onClick={() => setTheme("dark")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all flex-1 justify-center ${
-              isDark ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Moon className="h-3 w-3" /> Dark
-          </button>
-        </div>
-      </div>
 
       {/* Footer / User Profile */}
       <div className="p-4 border-t border-border">
