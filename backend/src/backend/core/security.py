@@ -1,53 +1,95 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import APIKeyCookie
-from sqlmodel import Session, select
+import logging
+from datetime import datetime
+
+logging.basicConfig(filename='security.log', level=logging.INFO)
+
+from fastapi import Depends, HTTPException, status, Cookie, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlmodel import Session as DbSession, select
 from backend.core.database import get_session
 from backend.core.config import settings
 from backend.models.user import User
-# from jose import jwt, JWTError # Optional: If we were validating JWT locally
-# import httpx # Required if verifying session with Frontend Server
+from backend.models.better_auth import Session as UserSession
+from jose import JWTError, jwt
+from pydantic import BaseModel
 
-# Since we are using "Shared Secret" validation as per plan:
-# We assume the frontend sets a signed cookie or we verify a token against the secret locally.
-# However, Better Auth often uses opaque tokens or its own JWT format.
-# A robust "Shared Secret" approach usually means the Backend trusts the token signed by the Frontend (if JWT)
-# OR calls the Frontend to verify the session.
+class TokenData(BaseModel):
+    sub: str | None = None
 
-# Decision: Assuming Better Auth uses JWT signed with BETTER_AUTH_SECRET.
-# We will verify the signature locally.
-
-from jose import jwt, JWTError
-
-oauth2_scheme = APIKeyCookie(name="better-auth.session_token")
+# auto_error=False allows us to handle the missing header manually (fallback to cookie)
+security = HTTPBearer(auto_error=False)
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    session: Session = Depends(get_session)
+    token_creds: HTTPAuthorizationCredentials | None = Security(security),
+    session_token: str | None = Cookie(alias="better-auth.session_token", default=None),
+    session: DbSession = Depends(get_session)
 ) -> User:
+    
+    token = None
+    if token_creds:
+        token = token_creds.credentials
+    elif session_token:
+        token = session_token
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    if not token:
+        logging.warning("No token provided (neither Bearer header nor cookie)")
+        raise credentials_exception
+
+    logging.info(f"Received token (first 10 chars): {token[:10]}...")
+
+    # 1. Try decoding as JWT (for dev/test tokens)
     try:
-        # Better Auth JWT verification logic
-        # WARNING: Verify the algorithm and key format Better Auth uses.
-        # Often it's HS256 with the secret.
         payload = jwt.decode(token, settings.BETTER_AUTH_SECRET, algorithms=["HS256"])
+        logging.info(f"Decoded JWT payload: {payload}")
+        user_id: str | None = payload.get("sub")
+        if user_id:
+            user = session.get(User, user_id)
+            if user:
+                logging.info(f"User authenticated via JWT: {user.email}")
+                return user
+    except JWTError as e:
+        logging.debug(f"Not a valid JWT: {e}")
+        pass # Not a JWT, fall through to check session token
 
-        # Extract user info. Adjust 'sub' or 'id' based on Better Auth payload structure.
-        user_id: str = payload.get("sub") or payload.get("userId") or payload.get("id")
+    # 2. Check if it's a Better Auth Session Token
+    # Better Auth signs session tokens: "token.signature"
+    # Extract the unsigned token (before the dot) for database lookup
+    unsigned_token = token.split(".")[0] if "." in token else token
+    logging.info(f"Attempting session token lookup in database (unsigned: {unsigned_token[:10]}...)")
 
-        if user_id is None:
-            raise credentials_exception
+    statement = select(UserSession).where(UserSession.token == unsigned_token)
+    result = session.exec(statement).first()
 
-    except JWTError:
-        raise credentials_exception
+    logging.info(f"Session lookup result: {result}")
 
-    user = session.get(User, user_id)
-    if user is None:
-        # Optional: Auto-create user from token info if "Stateless" mode implies it exists
-        # For now, require DB existence (synced via webhook or created on first login)
-        raise credentials_exception
+    if result:
+        # Check expiration
+        # Note: Database stores naive or aware datetime depending on setup.
+        # Better Auth usually uses UTC.
+        # Ensure result.expiresAt is timezone-aware if possible, or compare naive
+        now = datetime.now(result.expiresAt.tzinfo) if result.expiresAt.tzinfo else datetime.utcnow()
 
-    return user
+        logging.info(f"Session found. userId={result.userId}, expiresAt={result.expiresAt}, now={now}")
+
+        if result.expiresAt > now:
+            user = session.get(User, result.userId)
+            logging.info(f"User lookup result: {user}")
+            if user:
+                logging.info(f"User authenticated via session token: {user.email}")
+                return user
+            else:
+                logging.warning(f"Session valid but user not found for userId={result.userId}")
+        else:
+            logging.warning(f"Session expired: expiresAt={result.expiresAt} <= now={now}")
+    else:
+        logging.warning(f"No session found for token: {token[:10]}...")
+
+    # If both fail
+    logging.error("Authentication failed - no valid JWT or session token")
+    raise credentials_exception

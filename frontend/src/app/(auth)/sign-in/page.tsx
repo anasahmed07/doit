@@ -22,7 +22,11 @@ export default function SignInPage() {
     await authClient.signIn.email(
       { email, password },
       {
-        onSuccess: () => {
+        onSuccess: (ctx) => {
+          const authToken = ctx.response.headers.get("set-auth-token");
+          if (authToken) {
+            localStorage.setItem("bearer_token", authToken);
+          }
           router.push("/dashboard");
         },
         onError: (ctx) => {
@@ -42,7 +46,11 @@ export default function SignInPage() {
         callbackURL: "/dashboard",
       },
       {
-        onSuccess: () => {
+        onSuccess: (ctx) => {
+          const authToken = ctx.response.headers.get("set-auth-token");
+          if (authToken) {
+            localStorage.setItem("bearer_token", authToken);
+          }
           router.push("/dashboard");
         },
         onError: (ctx) => {

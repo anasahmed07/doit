@@ -7,8 +7,6 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="Backend for DoIt Full-Stack Productivity App",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc"
 )
 
 # Include Middlewares

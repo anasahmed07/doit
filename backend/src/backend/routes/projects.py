@@ -1,0 +1,163 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session
+from typing import List, Optional
+from backend.core.database import get_session
+from backend.core.security import get_current_user
+from backend.models.user import User
+from backend.models.project import Project, ProjectTask
+from backend.services.project_service import ProjectService
+import uuid
+from pydantic import BaseModel
+from datetime import datetime
+
+router = APIRouter()
+
+# Pydantic models
+class ProjectCreate(BaseModel):
+    name: str
+    framework: str = "KANBAN_FIXED"
+
+class ProjectRead(BaseModel):
+    id: uuid.UUID
+    name: str
+    framework: str
+    created_at: datetime
+
+class ProjectTaskCreate(BaseModel):
+    content: str
+    status: str = "TODO"
+
+class ProjectTaskUpdate(BaseModel):
+    content: Optional[str] = None
+    status: Optional[str] = None
+    order_index: Optional[float] = None
+
+class ProjectTaskRead(BaseModel):
+    id: uuid.UUID
+    project_id: uuid.UUID
+    status: str
+    content: str
+    order_index: float
+    created_at: datetime
+    updated_at: datetime
+
+@router.get("/", response_model=List[ProjectRead])
+def read_projects(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    return service.get_projects(current_user.id)
+
+@router.post("/", response_model=ProjectRead)
+def create_project(
+    project_in: ProjectCreate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    project = Project(
+        user_id=current_user.id,
+        name=project_in.name,
+        framework=project_in.framework
+    )
+    return service.create_project(project)
+
+@router.get("/{project_id}", response_model=ProjectRead)
+def read_project(
+    project_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    project = service.get_project_by_id(project_id)
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
+
+@router.delete("/{project_id}")
+def delete_project(
+    project_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    project = service.get_project_by_id(project_id)
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    service.delete_project(project_id)
+    return {"ok": True}
+
+@router.get("/{project_id}/tasks", response_model=List[ProjectTaskRead])
+def read_project_tasks(
+    project_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    project = service.get_project_by_id(project_id)
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return service.get_project_tasks(project_id)
+
+@router.post("/{project_id}/tasks", response_model=ProjectTaskRead)
+def create_project_task(
+    project_id: uuid.UUID,
+    task_in: ProjectTaskCreate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    project = service.get_project_by_id(project_id)
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    task = ProjectTask(
+        project_id=project_id,
+        content=task_in.content,
+        status=task_in.status
+    )
+    return service.create_project_task(task)
+
+@router.patch("/tasks/{task_id}", response_model=ProjectTaskRead)
+def update_project_task(
+    task_id: uuid.UUID,
+    task_in: ProjectTaskUpdate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    task = service.get_project_task_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Check project ownership
+    project = service.get_project_by_id(task.project_id)
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    return service.update_project_task(
+        task_id, 
+        status=task_in.status, 
+        content=task_in.content, 
+        order_index=task_in.order_index
+    )
+
+@router.delete("/tasks/{task_id}")
+def delete_project_task(
+    task_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    task = service.get_project_task_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Check project ownership
+    project = service.get_project_by_id(task.project_id)
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    service.delete_project_task(task_id)
+    return {"ok": True}

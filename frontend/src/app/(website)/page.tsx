@@ -40,7 +40,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {/* Feature 1 */}
-          <div className="group relative border-2 border-foreground bg-white p-8 shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+          <div className="group relative border-2 border-foreground bg-card p-8 shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
             <div className="mb-6 flex items-start justify-between">
               <div className="flex h-12 w-12 items-center justify-center bg-secondary border border-foreground">
                 <Layers className="h-6 w-6" />
@@ -59,7 +59,7 @@ export default function Home() {
           </div>
 
           {/* Feature 2 */}
-          <div className="group relative border-2 border-foreground bg-white p-8 shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+          <div className="group relative border-2 border-foreground bg-card p-8 shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
             <div className="mb-6 flex items-start justify-between">
               <div className="flex h-12 w-12 items-center justify-center bg-secondary border border-foreground">
                 <Layout className="h-6 w-6" />
@@ -80,7 +80,7 @@ export default function Home() {
           </div>
 
           {/* Feature 3 */}
-          <div className="group relative border-2 border-foreground bg-white p-8 shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+          <div className="group relative border-2 border-foreground bg-card p-8 shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
             <div className="mb-6 flex items-start justify-between">
               <div className="flex h-12 w-12 items-center justify-center bg-secondary border border-foreground">
                 <Grid className="h-6 w-6" />
