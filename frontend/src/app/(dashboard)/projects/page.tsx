@@ -6,30 +6,19 @@ import Link from "next/link";
 import { Project } from "@/lib/types";
 import { ProjectCreationDialog } from "@/components/ProjectCreationDialog";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog";
+import { useProjects } from "@/components/ProjectsContext";
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { projects, isLoading, fetchProjects, removeProject } = useProjects();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const fetchProjects = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch("/api/projects");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-      setProjects(data);
-    } catch (error) {
-      console.error("Failed to fetch projects", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    // Force fetch on mount to ensure we have data if navigating directly
+    // or just rely on the context's check. 
+    // Passing true forces a refresh if you want to ensure it's up to date with server
+    fetchProjects(true);
+  }, [fetchProjects]);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,7 +31,7 @@ export default function ProjectsPage() {
     
     try {
       await fetch(`/api/projects/${deleteId}`, { method: "DELETE" });
-      setProjects((prev) => prev.filter((p) => p.id !== deleteId));
+      removeProject(deleteId); // Update context immediately
     } catch (error) {
       console.error("Failed to delete project", error);
     } finally {
@@ -117,7 +106,7 @@ export default function ProjectsPage() {
       <ProjectCreationDialog 
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        onSuccess={fetchProjects}
+        onSuccess={() => fetchProjects(true)} // Force refresh context on success
       />
 
       <ConfirmationDialog

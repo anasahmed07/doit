@@ -27,7 +27,7 @@ export default function SignInPage() {
           if (authToken) {
             localStorage.setItem("bearer_token", authToken);
           }
-          router.push("/dashboard");
+          router.push("/notes");
         },
         onError: (ctx) => {
           setError(ctx.error.message);
@@ -43,7 +43,7 @@ export default function SignInPage() {
     await authClient.signIn.social(
       {
         provider,
-        callbackURL: "/dashboard",
+        callbackURL: "/notes",
       },
       {
         onSuccess: (ctx) => {
@@ -51,7 +51,7 @@ export default function SignInPage() {
           if (authToken) {
             localStorage.setItem("bearer_token", authToken);
           }
-          router.push("/dashboard");
+          router.push("/notes");
         },
         onError: (ctx) => {
           setError(ctx.error.message);

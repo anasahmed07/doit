@@ -6,6 +6,7 @@ import { Note } from "@/lib/types";
 import { NoteForm } from "./NoteForm";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { formatDistanceToNow } from "date-fns";
 
 interface NoteViewDialogProps {
@@ -15,6 +16,7 @@ interface NoteViewDialogProps {
   onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
   onSuccess: () => void;
+  onToggleTodo?: (note: Note, index: number) => void;
 }
 
 export function NoteViewDialog({
@@ -24,6 +26,7 @@ export function NoteViewDialog({
   onEdit,
   onDelete,
   onSuccess,
+  onToggleTodo,
 }: NoteViewDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -119,8 +122,34 @@ export function NoteViewDialog({
           ) : (
             <div className="space-y-8">
                {/* Markdown Content */}
-               <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter prose-p:leading-relaxed prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+               <div className="prose prose-lg dark:prose-invert max-w-none break-words prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter prose-p:leading-relaxed prose-a:text-primary prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkBreaks]}
+                    components={{
+                      input: ({ checked, disabled, ...props }) => {
+                        return (
+                          <input
+                            type="checkbox"
+                            checked={!!checked}
+                            disabled={false}
+                            onChange={(e) => {
+                              // Calculate index at click time by finding position among all checkboxes
+                              const container = e.currentTarget.closest('.prose');
+                              if (container && note && onToggleTodo) {
+                                const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
+                                const index = Array.from(allCheckboxes).indexOf(e.currentTarget);
+                                if (index !== -1) {
+                                  onToggleTodo(note, index);
+                                }
+                              }
+                            }}
+                            className="mr-2 h-5 w-5 accent-primary cursor-pointer align-middle"
+                            {...props}
+                          />
+                        );
+                      },
+                    }}
+                  >
                     {note!.content || ""}
                   </ReactMarkdown>
                </div>

@@ -110,6 +110,35 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Typography / Prose Overrides */
+.prose {
+  --tw-prose-links: rgb(var(--primary));
+  --tw-prose-invert-links: rgb(var(--primary));
+  --tw-prose-quotes: rgb(var(--muted-foreground));
+}
+
+.prose a {
+  color: rgb(var(--primary)) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.prose a:hover {
+  opacity: 0.8;
+}
+
+.prose ul > li > input[type="checkbox"] {
+  margin: 0 0.5rem 0 0 !important;
+  cursor: pointer;
+}
+
+.prose .task-list-item {
+  list-style-type: none;
+  padding-left: 0;
+}
+
 /* Custom Utilities for Industrial Look */
 @utility shadow-hard {
   box-shadow: 4px 4px 0px 0px rgb(var(--foreground));

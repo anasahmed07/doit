@@ -6,6 +6,7 @@ import { Trash2, Edit2, GripVertical, Image as ImageIcon, X } from "lucide-react
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 interface NoteCardProps {
   note: Note;
@@ -38,12 +39,11 @@ export function NoteCard({
     onToggleTodo(note, index);
   };
 
-  let checkboxIdx = 0;
-
-  // Trim content to 15 lines
+  // Trim content to 35 lines
   const lines = note.content?.split('\n') || [];
-  const isTrimmed = lines.length > 15;
-  const displayContent = isTrimmed ? lines.slice(0, 15).join('\n') : note.content;
+  const MAX_LINES = 35;
+  const isTrimmed = lines.length > MAX_LINES;
+  const displayContent = isTrimmed ? lines.slice(0, MAX_LINES).join('\n') : note.content;
 
   return (
     <>
@@ -97,19 +97,27 @@ export function NoteCard({
           onClick={() => onView?.(note)}
         >
           {note.content && (
-            <div className="relative prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-p:text-sm prose-p:leading-relaxed prose-a:text-primary prose-code:bg-secondary prose-code:px-1 prose-code:rounded prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border prose-li:marker:text-muted-foreground">
+            <div className="relative prose prose-sm dark:prose-invert max-w-none break-words prose-headings:font-bold prose-headings:tracking-tight prose-p:text-sm prose-p:leading-relaxed prose-a:text-primary prose-a:font-bold prose-a:underline prose-code:text-primary prose-code:bg-secondary/50 prose-code:px-1 prose-code:rounded prose-code:font-mono prose-code:before:content-none prose-code:after:content-none prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border prose-blockquote:border-l-2 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-li:marker:text-muted-foreground">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
-                  input: ({ checked, ...props }) => {
-                    const currentIdx = checkboxIdx++;
+                  input: ({ checked, disabled, ...props }) => {
                     return (
                       <input
                         type="checkbox"
                         checked={!!checked}
+                        disabled={false}
                         onChange={(e) => {
                           e.stopPropagation();
-                          handleTodoToggle(currentIdx);
+                          // Calculate index at click time by finding position among all checkboxes
+                          const container = e.currentTarget.closest('.prose');
+                          if (container) {
+                            const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
+                            const index = Array.from(allCheckboxes).indexOf(e.currentTarget);
+                            if (index !== -1) {
+                              handleTodoToggle(index);
+                            }
+                          }
                         }}
                         onClick={(e) => e.stopPropagation()}
                         className="mr-2 h-4 w-4 accent-primary cursor-pointer align-middle"
@@ -121,10 +129,10 @@ export function NoteCard({
               >
                 {displayContent}
               </ReactMarkdown>
-              
+
               {isTrimmed && (
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent flex items-end justify-center">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Click to read more</span>
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background from-30% to-transparent flex items-end justify-center pb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-background/80 px-2 py-0.5 rounded-full shadow-sm">Click to read more</span>
                 </div>
               )}
             </div>
