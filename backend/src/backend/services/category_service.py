@@ -21,6 +21,21 @@ class CategoryService:
     def get_category_by_id(self, category_id: uuid.UUID) -> Optional[Category]:
         return self.session.get(Category, category_id)
 
+    def update_category(self, category_id: uuid.UUID, name: str = None, color: str = None) -> Optional[Category]:
+        category = self.session.get(Category, category_id)
+        if not category:
+            return None
+        
+        if name is not None:
+            category.name = name
+        if color is not None:
+            category.color = color
+            
+        self.session.add(category)
+        self.session.commit()
+        self.session.refresh(category)
+        return category
+
     def delete_category(self, category_id: uuid.UUID):
         category = self.session.get(Category, category_id)
         if category:

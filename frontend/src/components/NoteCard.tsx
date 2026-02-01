@@ -39,12 +39,11 @@ export function NoteCard({
     onToggleTodo(note, index);
   };
 
-  let checkboxIdx = 0;
-
-  // Trim content to 15 lines
+  // Trim content to 35 lines
   const lines = note.content?.split('\n') || [];
-  const isTrimmed = lines.length > 15;
-  const displayContent = isTrimmed ? lines.slice(0, 15).join('\n') : note.content;
+  const MAX_LINES = 35;
+  const isTrimmed = lines.length > MAX_LINES;
+  const displayContent = isTrimmed ? lines.slice(0, MAX_LINES).join('\n') : note.content;
 
   return (
     <>
@@ -102,15 +101,23 @@ export function NoteCard({
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
-                  input: ({ checked, ...props }) => {
-                    const currentIdx = checkboxIdx++;
+                  input: ({ checked, disabled, ...props }) => {
                     return (
                       <input
                         type="checkbox"
                         checked={!!checked}
+                        disabled={false}
                         onChange={(e) => {
                           e.stopPropagation();
-                          handleTodoToggle(currentIdx);
+                          // Calculate index at click time by finding position among all checkboxes
+                          const container = e.currentTarget.closest('.prose');
+                          if (container) {
+                            const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
+                            const index = Array.from(allCheckboxes).indexOf(e.currentTarget);
+                            if (index !== -1) {
+                              handleTodoToggle(index);
+                            }
+                          }
                         }}
                         onClick={(e) => e.stopPropagation()}
                         className="mr-2 h-4 w-4 accent-primary cursor-pointer align-middle"
@@ -122,10 +129,10 @@ export function NoteCard({
               >
                 {displayContent}
               </ReactMarkdown>
-              
+
               {isTrimmed && (
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent flex items-end justify-center">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Click to read more</span>
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background from-30% to-transparent flex items-end justify-center pb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-background/80 px-2 py-0.5 rounded-full shadow-sm">Click to read more</span>
                 </div>
               )}
             </div>

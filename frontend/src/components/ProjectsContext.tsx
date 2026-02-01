@@ -6,9 +6,11 @@ import { Project } from "@/lib/types";
 interface ProjectsContextType {
   projects: Project[];
   isLoading: boolean;
+  isSidebarOpen: boolean;
   fetchProjects: (force?: boolean) => Promise<void>;
   addProject: (project: Project) => void;
   removeProject: (id: string) => void;
+  toggleSidebar: (isOpen?: boolean) => void;
 }
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -17,6 +19,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const fetchProjects = useCallback(async (force = false) => {
     if (hasFetched && !force) return;
@@ -43,14 +46,20 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     setProjects((prev) => prev.filter((p) => p.id !== id));
   }, []);
 
+  const toggleSidebar = useCallback((isOpen?: boolean) => {
+    setIsSidebarOpen((prev) => isOpen ?? !prev);
+  }, []);
+
   return (
     <ProjectsContext.Provider
       value={{
         projects,
         isLoading,
+        isSidebarOpen,
         fetchProjects,
         addProject,
         removeProject,
+        toggleSidebar,
       }}
     >
       {children}

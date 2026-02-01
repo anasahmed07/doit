@@ -23,7 +23,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Note } from "@/lib/types";
 import { NoteCard } from "./NoteCard";
-import { useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 interface DraggableNoteGridProps {
   notes: Note[];
@@ -73,7 +73,7 @@ function SortableNoteItem({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="h-fit break-inside-avoid mb-4">
+    <div ref={setNodeRef} style={style} className="h-fit">
       <NoteCard 
         note={note} 
         onDelete={onDelete} 
@@ -89,11 +89,49 @@ function SortableNoteItem({
 
 export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, onToggleTodo }: DraggableNoteGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [columnCount, setColumnCount] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Determine number of columns based on container width
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateColumns = (width: number) => {
+      // Calculate columns based on available width and minimum card width (approx 300px)
+      const minColWidth = 300;
+      // We subtract gap space roughly: (cols - 1) * 16px. 
+      // Simplified: just use width / minWidth.
+      const cols = Math.max(1, Math.floor(width / minColWidth));
+      setColumnCount(cols);
+    };
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        updateColumns(entry.contentRect.width);
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    
+    // Initial calculation
+    updateColumns(containerRef.current.offsetWidth);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Distribute notes into columns round-robin to maintain 1x1, 1x2, 1x3 order across rows
+  const columns = useMemo(() => {
+    const cols = Array.from({ length: columnCount }, () => [] as Note[]);
+    notes.forEach((note, index) => {
+      cols[index % columnCount].push(note);
+    });
+    return cols;
+  }, [notes, columnCount]);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
         activationConstraint: {
-            distance: 8, // Prevent accidental drags
+            distance: 8,
         },
     }),
     useSensor(KeyboardSensor, {
@@ -128,23 +166,29 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, 
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={notes.map(n => n.id)} strategy={rectSortingStrategy}>
-        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 pb-20 block">
-          {notes.map((note) => (
-            <SortableNoteItem
-              key={note.id}
-              note={note}
-              onDelete={onDelete}
-              onEdit={onEdit}
-              onView={onView}
-              onToggleTodo={onToggleTodo}
-            />
+        <div ref={containerRef} className="flex gap-4 pb-20 items-start w-full">
+          {columns.map((columnNotes, colIdx) => (
+            <div key={colIdx} className="flex-1 flex flex-col gap-4">
+              {columnNotes.map((note) => (
+                <SortableNoteItem
+                  key={note.id}
+                  note={note}
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                  onView={onView}
+                  onToggleTodo={onToggleTodo}
+                />
+              ))}
+            </div>
           ))}
         </div>
       </SortableContext>
       
       <DragOverlay dropAnimation={dropAnimation}>
           {activeNote ? (
-              <NoteCard note={activeNote} onDelete={() => {}} onEdit={() => {}} onView={onView} onToggleTodo={onToggleTodo} isOverlay />
+              <div className="w-full h-full max-w-[400px]">
+                <NoteCard note={activeNote} onDelete={() => {}} onEdit={() => {}} onView={onView} onToggleTodo={onToggleTodo} isOverlay />
+              </div>
           ) : null}
       </DragOverlay>
     </DndContext>

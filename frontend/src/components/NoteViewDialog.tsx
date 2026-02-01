@@ -31,8 +31,6 @@ export function NoteViewDialog({
   const [isEditing, setIsEditing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  let checkboxIdx = 0;
-
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
@@ -125,18 +123,24 @@ export function NoteViewDialog({
             <div className="space-y-8">
                {/* Markdown Content */}
                <div className="prose prose-lg dark:prose-invert max-w-none break-words prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter prose-p:leading-relaxed prose-a:text-primary prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground">
-                  <ReactMarkdown 
+                  <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
                     components={{
-                      input: ({ checked, ...props }) => {
-                        const currentIdx = checkboxIdx++;
+                      input: ({ checked, disabled, ...props }) => {
                         return (
                           <input
                             type="checkbox"
                             checked={!!checked}
-                            onChange={() => {
-                              if (note && onToggleTodo) {
-                                onToggleTodo(note, currentIdx);
+                            disabled={false}
+                            onChange={(e) => {
+                              // Calculate index at click time by finding position among all checkboxes
+                              const container = e.currentTarget.closest('.prose');
+                              if (container && note && onToggleTodo) {
+                                const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
+                                const index = Array.from(allCheckboxes).indexOf(e.currentTarget);
+                                if (index !== -1) {
+                                  onToggleTodo(note, index);
+                                }
                               }
                             }}
                             className="mr-2 h-5 w-5 accent-primary cursor-pointer align-middle"
