@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { UserProfile } from "@/components/UserProfile";
 
@@ -27,11 +26,18 @@ export function Navbar() {
 
         {/* Center: Navigation Links */}
         <nav className="hidden items-center gap-8 md:flex">
-          {["Product", "Solutions", "Learn"].map((item) => (
-            <div key={item} className="group relative flex cursor-pointer items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground">
-              {item}
-              <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />
-            </div>
+          {[
+            { name: "Features", href: "#features" },
+            { name: "Reviews", href: "#reviews" },
+            { name: "FAQ", href: "#faq" }
+          ].map((item) => (
+            <Link 
+              key={item.name} 
+              href={item.href}
+              className="text-sm font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {item.name}
+            </Link>
           ))}
         </nav>
 

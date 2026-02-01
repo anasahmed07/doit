@@ -7,6 +7,7 @@ import { Note } from "@/lib/types";
 import { DraggableNoteGrid } from "@/components/DraggableNoteGrid";
 import { NoteForm } from "@/components/NoteForm";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog";
+import { NoteViewDialog } from "@/components/NoteViewDialog";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -16,6 +17,7 @@ function DashboardContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Keyboard Shortcuts
@@ -27,6 +29,7 @@ function DashboardContent() {
         setIsCreating(true);
         // Ensure we're not in edit mode when starting fresh via shortcut
         setEditingNote(null);
+        setViewingNote(null);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     };
@@ -47,16 +50,22 @@ function DashboardContent() {
       if (!response.ok) throw new Error("Failed to fetch notes");
       const data = await response.json();
       setNotes(data);
+
+      // Update viewing note if it's currently open
+      if (viewingNote) {
+        const updated = data.find((n: Note) => n.id === viewingNote.id);
+        if (updated) setViewingNote(updated);
+      }
     } catch (error) {
       console.error("Failed to fetch notes", error);
     } finally {
       setIsLoading(false);
     }
-  }, [categoryId]);
+  }, [categoryId, viewingNote?.id]);
 
   useEffect(() => {
     fetchNotes();
-  }, [fetchNotes]);
+  }, [categoryId]); // Only re-fetch when category changes, or on manual refresh
 
   const handleReorder = async (newNotes: Note[]) => {
     // Optimistic update
@@ -84,6 +93,7 @@ function DashboardContent() {
     try {
       await fetch(`/api/notes/${deleteId}`, { method: "DELETE" });
       setNotes((prev) => prev.filter((n) => n.id !== deleteId));
+      if (viewingNote?.id === deleteId) setViewingNote(null);
     } catch (error) {
       console.error("Failed to delete note", error);
     } finally {
@@ -95,6 +105,49 @@ function DashboardContent() {
     setEditingNote(note);
     setIsCreating(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleView = (note: Note) => {
+    setViewingNote(note);
+  };
+
+  const handleToggleTodo = async (note: Note, index: number) => {
+    console.log(`Toggling todo at index ${index} for note ${note.id}`);
+    const lines = note.content?.split('\n') || [];
+    let checkboxCount = 0;
+    const newLines = lines.map((line) => {
+      // Match GFM checkbox at start of line: optional whitespace, then list marker, then checkbox
+      const checkboxMatch = line.match(/^(\s*(-|\*|[0-9]+\.)\s+)\[([ xX])\]/);
+      if (checkboxMatch) {
+        if (checkboxCount === index) {
+          const currentStatus = checkboxMatch[3]; // ' ', 'x', or 'X'
+          const isChecked = currentStatus.toLowerCase() === 'x';
+          const newStatus = isChecked ? ' ' : 'x';
+          // Replace only the specific checkbox part
+          line = line.replace(/\[[ xX]\]/, `[${newStatus}]`);
+          console.log(`Changed line from "${checkboxMatch[0]}" to status "${newStatus}"`);
+        }
+        checkboxCount++;
+      }
+      return line;
+    });
+
+    const newContent = newLines.join('\n');
+    
+    // Optimistic update
+    setNotes(prev => prev.map(n => n.id === note.id ? { ...n, content: newContent } : n));
+
+    try {
+      const response = await fetch(`/api/notes/${note.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: newContent }),
+      });
+      if (!response.ok) throw new Error("Failed to sync toggle");
+    } catch (error) {
+      console.error("Failed to toggle todo", error);
+      fetchNotes(); // Revert on error
+    }
   };
 
   const handleCancel = () => {
@@ -161,8 +214,19 @@ function DashboardContent() {
           onReorder={handleReorder}
           onDelete={handleDelete}
           onEdit={handleEdit}
+          onView={handleView}
+          onToggleTodo={handleToggleTodo}
         />
       )}
+
+      <NoteViewDialog
+        note={viewingNote}
+        isOpen={!!viewingNote}
+        onClose={() => setViewingNote(null)}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onSuccess={fetchNotes}
+      />
 
       <ConfirmationDialog
         isOpen={!!deleteId}
