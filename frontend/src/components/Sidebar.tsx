@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -33,17 +34,17 @@ function getContrastColor(hexColor: string) {
   return luminance > 0.5 ? "black" : "white";
 }
 
-export function Sidebar() {
+function SidebarContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentCategoryId = searchParams.get("category");
   const router = useRouter();
-  const { 
-    projects, 
-    isLoading: isProjectsLoading, 
-    fetchProjects, 
-    isSidebarOpen, 
-    toggleSidebar 
+  const {
+    projects,
+    isLoading: isProjectsLoading,
+    fetchProjects,
+    isSidebarOpen,
+    toggleSidebar
   } = useProjects();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,8 +71,11 @@ export function Sidebar() {
     (mouseMoveEvent: MouseEvent) => {
       if (isResizing) {
         const newWidth = mouseMoveEvent.clientX;
-        if (newWidth >= 200 && newWidth <= 480) {
-          setWidth(newWidth);
+        if (isResizing) {
+          const newWidth = mouseMoveEvent.clientX;
+          if (newWidth >= 200 && newWidth <= 480) {
+            setWidth(newWidth);
+          }
         }
       }
     },
@@ -352,5 +356,21 @@ export function Sidebar() {
         />
       </aside>
     </>
+  );
+}
+
+export function Sidebar() {
+  return (
+    <Suspense fallback={
+      <aside className="hidden lg:flex w-72 h-screen border-r border-border bg-card flex-col">
+        <div className="h-20 border-b border-border" />
+        <div className="flex-1 p-4">
+          <div className="h-8 w-3/4 bg-muted/20 animate-pulse rounded mb-4" />
+          <div className="h-8 w-1/2 bg-muted/20 animate-pulse rounded mb-4" />
+        </div>
+      </aside>
+    }>
+      <SidebarContent />
+    </Suspense>
   );
 }
