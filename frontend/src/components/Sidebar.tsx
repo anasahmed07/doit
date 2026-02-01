@@ -17,16 +17,16 @@ import {
 import { Category, Project } from "@/lib/types";
 import { CreateCategoryDialog } from "@/components/CreateCategoryDialog";
 import { UserProfile } from "@/components/UserProfile";
+import { useProjects } from "@/components/ProjectsContext";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { projects, isLoading: isProjectsLoading, fetchProjects } = useProjects();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
-  const [isProjectsOpen, setIsProjectsOpen] = useState(true);
+  const [isProjectsOpen, setIsProjectsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Resizable Sidebar State
@@ -58,13 +58,19 @@ export function Sidebar() {
     if (isResizing) {
       window.addEventListener("mousemove", resize);
       window.addEventListener("mouseup", stopResizing);
+      document.body.style.userSelect = "none";
+      document.body.style.cursor = "col-resize";
     } else {
       window.removeEventListener("mousemove", resize);
       window.removeEventListener("mouseup", stopResizing);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
     }
     return () => {
       window.removeEventListener("mousemove", resize);
       window.removeEventListener("mouseup", stopResizing);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
     };
   }, [isResizing, resize, stopResizing]);
 
@@ -85,35 +91,23 @@ export function Sidebar() {
     }
   };
 
-  const fetchProjects = async () => {
-    try {
-      const response = await fetch("/api/projects");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-      setProjects(data);
-    } catch (err) {
-      console.error("Failed to fetch projects", err);
-    } finally {
-      setIsProjectsLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchCategories();
-    fetchProjects();
   }, []);
 
   return (
     <aside
       ref={sidebarRef}
-      className="relative flex h-screen flex-col border-r border-border bg-card transition-none"
+      className="relative flex h-screen flex-col border-r border-border bg-card transition-none group/sidebar"
       style={{ width: `${width}px` }}
     >
       {/* Drag Handle */}
       <div
-        className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/50 active:bg-primary z-50 transition-colors"
+        className="absolute -right-1 top-0 h-full w-2 cursor-col-resize z-50 flex justify-center hover:bg-primary/10 transition-colors"
         onMouseDown={startResizing}
-      />
+      >
+        <div className="h-full w-[1px] bg-border group-hover/sidebar:bg-primary transition-colors delay-75" />
+      </div>
 
       {/* Header */}
       <div className="flex h-20 items-center px-6 border-b border-border">
@@ -144,6 +138,9 @@ export function Sidebar() {
               <button
                 onClick={() => {
                   router.push("/projects");
+                  if (!isProjectsOpen) {
+                    fetchProjects();
+                  }
                   setIsProjectsOpen(!isProjectsOpen);
                 }}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${

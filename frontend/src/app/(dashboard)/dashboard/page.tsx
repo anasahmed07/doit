@@ -112,20 +112,31 @@ function DashboardContent() {
   };
 
   const handleToggleTodo = async (note: Note, index: number) => {
-    console.log(`Toggling todo at index ${index} for note ${note.id}`);
     const lines = note.content?.split('\n') || [];
     let checkboxCount = 0;
     const newLines = lines.map((line) => {
-      // Match GFM checkbox at start of line: optional whitespace, then list marker, then checkbox
-      const checkboxMatch = line.match(/^(\s*(-|\*|[0-9]+\.)\s+)\[([ xX])\]/);
-      if (checkboxMatch) {
+      // Regex to match GFM task list items:
+      // ^\s*       -> Start of line, optional indentation
+      // ([-+*]|\d+[.)]) -> List marker: -, +, *, or 1., 1)
+      // \s+        -> One or more spaces after marker
+      // \[([ xX]?)\] -> The checkbox: [ ], [x], [X], or []? (empty matches too but GFM needs space inside usually, but let's be lenient)
+      // Actually GFM strict: [ ] or [x].
+      // Group 1: Full prefix before [
+      // Group 2: List marker
+      // Group 3: Checkbox content
+      const checkboxRegex = /^(\s*([-+*]|\d+[.)])\s+)\[([ xX]?)\]/;
+      const match = line.match(checkboxRegex);
+      
+      if (match) {
         if (checkboxCount === index) {
-          const currentStatus = checkboxMatch[3]; // ' ', 'x', or 'X'
+          const currentStatus = match[3] || ' '; 
           const isChecked = currentStatus.toLowerCase() === 'x';
           const newStatus = isChecked ? ' ' : 'x';
-          // Replace only the specific checkbox part
-          line = line.replace(/\[[ xX]\]/, `[${newStatus}]`);
-          console.log(`Changed line from "${checkboxMatch[0]}" to status "${newStatus}"`);
+          
+          // Reconstruct line: Prefix + [newStatus] + rest of line
+          const prefix = match[1];
+          const remainingLine = line.substring(match[0].length);
+          line = `${prefix}[${newStatus}]${remainingLine}`;
         }
         checkboxCount++;
       }
@@ -226,6 +237,7 @@ function DashboardContent() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onSuccess={fetchNotes}
+        onToggleTodo={handleToggleTodo}
       />
 
       <ConfirmationDialog

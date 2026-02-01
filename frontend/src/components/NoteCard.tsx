@@ -6,6 +6,7 @@ import { Trash2, Edit2, GripVertical, Image as ImageIcon, X } from "lucide-react
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 interface NoteCardProps {
   note: Note;
@@ -97,9 +98,9 @@ export function NoteCard({
           onClick={() => onView?.(note)}
         >
           {note.content && (
-            <div className="relative prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-p:text-sm prose-p:leading-relaxed prose-a:text-primary prose-code:bg-secondary prose-code:px-1 prose-code:rounded prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border prose-li:marker:text-muted-foreground">
+            <div className="relative prose prose-sm dark:prose-invert max-w-none break-words prose-headings:font-bold prose-headings:tracking-tight prose-p:text-sm prose-p:leading-relaxed prose-a:text-primary prose-a:font-bold prose-a:underline prose-code:text-primary prose-code:bg-secondary/50 prose-code:px-1 prose-code:rounded prose-code:font-mono prose-code:before:content-none prose-code:after:content-none prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border prose-blockquote:border-l-2 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-li:marker:text-muted-foreground">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                   input: ({ checked, ...props }) => {
                     const currentIdx = checkboxIdx++;
