@@ -17,8 +17,10 @@ export async function proxyRequest(
   // We can also forward all cookies to be safe, or specific ones.
   // But the backend expects "Authorization: Bearer <token>".
 
-  // Attempt to get token from "better-auth.session_token" or "session_token"
-  const token = cookieStore.get("better-auth.session_token")?.value ||
+  // Attempt to get token from cookies
+  // In production (HTTPS), cookies may have "__Secure-" prefix added by the browser
+  const token = cookieStore.get("__Secure-better-auth.session_token")?.value ||
+                cookieStore.get("better-auth.session_token")?.value ||
                 cookieStore.get("session_token")?.value;
 
   // Debug: log all available cookies (names only)
