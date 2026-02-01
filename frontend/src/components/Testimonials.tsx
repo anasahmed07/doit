@@ -61,7 +61,7 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="bg-background py-24 border-b-2 border-foreground">
+    <section id="reviews" className="bg-background py-24 border-b-2 border-foreground">
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-16 text-center">
           <h2 className="text-5xl font-black uppercase tracking-tighter text-foreground md:text-6xl mb-4">

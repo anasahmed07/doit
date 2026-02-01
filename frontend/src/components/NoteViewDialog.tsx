@@ -1,0 +1,162 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { X, Edit2, ArrowLeft, Trash2, GripVertical } from "lucide-react";
+import { Note } from "@/lib/types";
+import { NoteForm } from "./NoteForm";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { formatDistanceToNow } from "date-fns";
+
+interface NoteViewDialogProps {
+  note: Note | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onEdit: (note: Note) => void;
+  onDelete: (id: string) => void;
+  onSuccess: () => void;
+}
+
+export function NoteViewDialog({
+  note,
+  isOpen,
+  onClose,
+  onEdit,
+  onDelete,
+  onSuccess,
+}: NoteViewDialogProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true);
+      setIsEditing(false); // Default to view mode when opening
+    } else {
+      const timer = setTimeout(() => setIsVisible(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!isVisible && !isOpen) return null;
+  if (!note && !isEditing) return null;
+
+  const getAssetUrl = (url: string) => `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${url}`;
+
+  return (
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-200 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        onClick={onClose}
+      />
+
+      {/* Dialog */}
+      <div className={`relative w-full max-w-4xl max-h-[90vh] flex flex-col transform overflow-hidden rounded-none border-4 border-foreground bg-background shadow-hard-lg transition-all duration-300 ${isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-8"}`}>
+        
+        {/* Header */}
+        <div className="flex items-center justify-between border-b-4 border-foreground p-4 bg-secondary/10">
+           <div className="flex items-center gap-4">
+              {isEditing ? (
+                <button 
+                  onClick={() => setIsEditing(false)}
+                  className="flex items-center gap-2 text-sm font-bold uppercase hover:underline"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to View
+                </button>
+              ) : (
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground">
+                    Note Details — {formatDistanceToNow(new Date(note!.created_at), { addSuffix: true })}
+                </span>
+              )}
+           </div>
+           
+           <div className="flex items-center gap-2">
+              {!isEditing && (
+                <>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2 border-2 border-foreground bg-primary px-3 py-1.5 text-xs font-bold text-white shadow-hard-sm hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (note) onDelete(note.id);
+                      onClose();
+                    }}
+                    className="flex items-center gap-2 border-2 border-foreground bg-destructive px-3 py-1.5 text-xs font-bold text-white shadow-hard-sm hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
+                  </button>
+                </>
+              )}
+              <button
+                onClick={onClose}
+                className="ml-2 p-1 border-2 border-foreground bg-background hover:bg-secondary transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+           </div>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar">
+          {isEditing ? (
+            <div className="max-w-2xl mx-auto">
+               <NoteForm 
+                initialNote={note!}
+                onSuccess={() => {
+                  setIsEditing(false);
+                  onSuccess();
+                }}
+                onCancel={() => setIsEditing(false)}
+              />
+            </div>
+          ) : (
+            <div className="space-y-8">
+               {/* Markdown Content */}
+               <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter prose-p:leading-relaxed prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {note!.content || ""}
+                  </ReactMarkdown>
+               </div>
+
+               {/* Media Assets */}
+               {note!.media_assets && note!.media_assets.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t-2 border-foreground/10">
+                     {note!.media_assets.map((asset) => (
+                        <div key={asset.id} className="flex flex-col gap-2 group">
+                           <div className="relative aspect-video w-full overflow-hidden border-2 border-foreground bg-secondary/20 shadow-hard-sm group-hover:shadow-hard transition-all">
+                              {asset.mime_type.startsWith("image/") ? (
+                                  <img 
+                                      src={getAssetUrl(asset.url)} 
+                                      alt="Attachment" 
+                                      className="h-full w-full object-contain"
+                                  />
+                              ) : (
+                                  <div className="flex h-full w-full items-center justify-center font-mono text-sm uppercase font-bold text-muted-foreground">
+                                      {asset.mime_type}
+                                  </div>
+                              )}
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t-4 border-foreground p-4 bg-secondary/5 flex justify-between items-center text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground/60">
+           <span>Created: {new Date(note?.created_at || '').toLocaleString()}</span>
+           <span>Last Updated: {new Date(note?.updated_at || '').toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+  );
+}

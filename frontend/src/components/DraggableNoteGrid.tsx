@@ -30,6 +30,8 @@ interface DraggableNoteGridProps {
   onReorder: (notes: Note[]) => void;
   onDelete: (id: string) => void;
   onEdit: (note: Note) => void;
+  onView: (note: Note) => void;
+  onToggleTodo: (note: Note, index: number) => void;
 }
 
 const dropAnimation: DropAnimation = {
@@ -42,7 +44,19 @@ const dropAnimation: DropAnimation = {
     }),
 };
 
-function SortableNoteItem({ note, onDelete, onEdit }: { note: Note; onDelete: (id: string) => void; onEdit: (note: Note) => void }) {
+function SortableNoteItem({ 
+  note, 
+  onDelete, 
+  onEdit, 
+  onView,
+  onToggleTodo 
+}: { 
+  note: Note; 
+  onDelete: (id: string) => void; 
+  onEdit: (note: Note) => void;
+  onView: (note: Note) => void;
+  onToggleTodo: (note: Note, index: number) => void;
+}) {
   const {
     attributes,
     listeners,
@@ -59,13 +73,21 @@ function SortableNoteItem({ note, onDelete, onEdit }: { note: Note; onDelete: (i
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none h-fit break-inside-avoid mb-4">
-      <NoteCard note={note} onDelete={onDelete} onEdit={onEdit} />
+    <div ref={setNodeRef} style={style} className="h-fit break-inside-avoid mb-4">
+      <NoteCard 
+        note={note} 
+        onDelete={onDelete} 
+        onEdit={onEdit} 
+        onView={onView}
+        onToggleTodo={onToggleTodo} 
+        dragAttributes={attributes}
+        dragListeners={listeners}
+      />
     </div>
   );
 }
 
-export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit }: DraggableNoteGridProps) {
+export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, onToggleTodo }: DraggableNoteGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   
   const sensors = useSensors(
@@ -113,6 +135,8 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit }: Dragga
               note={note}
               onDelete={onDelete}
               onEdit={onEdit}
+              onView={onView}
+              onToggleTodo={onToggleTodo}
             />
           ))}
         </div>
@@ -120,7 +144,7 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit }: Dragga
       
       <DragOverlay dropAnimation={dropAnimation}>
           {activeNote ? (
-              <NoteCard note={activeNote} onDelete={() => {}} onEdit={() => {}} isOverlay />
+              <NoteCard note={activeNote} onDelete={() => {}} onEdit={() => {}} onView={onView} onToggleTodo={onToggleTodo} isOverlay />
           ) : null}
       </DragOverlay>
     </DndContext>
