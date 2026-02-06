@@ -166,9 +166,9 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, 
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={notes.map(n => n.id)} strategy={rectSortingStrategy}>
-        <div ref={containerRef} className="flex gap-4 pb-20 items-start w-full">
+        <div ref={containerRef} className="flex gap-4 pb-20 items-start w-full min-w-0">
           {columns.map((columnNotes, colIdx) => (
-            <div key={colIdx} className="flex-1 flex flex-col gap-4">
+            <div key={colIdx} className="flex-1 flex flex-col gap-4 min-w-0">
               {columnNotes.map((note) => (
                 <SortableNoteItem
                   key={note.id}
