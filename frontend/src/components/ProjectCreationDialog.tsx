@@ -1,22 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
+import { Project } from "@/lib/types";
 
 interface ProjectCreationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (project?: Project) => void;
+  initialProject?: Project;
 }
 
 export function ProjectCreationDialog({
   isOpen,
   onClose,
   onSuccess,
+  initialProject,
 }: ProjectCreationDialogProps) {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEditing = !!initialProject;
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(initialProject?.name || "");
+      setError(null);
+    }
+  }, [isOpen, initialProject]);
 
   if (!isOpen) return null;
 
@@ -28,20 +40,32 @@ export function ProjectCreationDialog({
     setError(null);
 
     try {
-      await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          framework: "KANBAN_FIXED",
-        }),
-      });
+      if (isEditing) {
+        const res = await fetch(`/api/projects/${initialProject.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name.trim() }),
+        });
+        if (!res.ok) throw new Error("Failed to update project");
+        const updated = await res.json();
+        onSuccess(updated);
+      } else {
+        const res = await fetch("/api/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name.trim(),
+            framework: "KANBAN_FIXED",
+          }),
+        });
+        if (!res.ok) throw new Error("Failed to create project");
+        onSuccess();
+      }
       setName("");
-      onSuccess();
       onClose();
     } catch (err) {
-      console.error("Failed to create project", err);
-      setError("Failed to create project. Please try again.");
+      console.error("Failed to save project", err);
+      setError(isEditing ? "Failed to update project." : "Failed to create project.");
     } finally {
       setIsSubmitting(false);
     }
@@ -52,7 +76,7 @@ export function ProjectCreationDialog({
       <div className="w-full max-w-md border-2 border-foreground bg-background p-6 shadow-hard animate-in fade-in zoom-in-95 duration-200">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-black uppercase tracking-tight">
-            New Project
+            {isEditing ? "Edit Project" : "New Project"}
           </h2>
           <button
             onClick={onClose}
@@ -114,7 +138,7 @@ export function ProjectCreationDialog({
               className="flex h-10 items-center justify-center gap-2 border-2 border-foreground bg-primary px-6 text-sm font-bold text-white shadow-hard-sm transition-transform hover:-translate-y-0.5 hover:shadow-hard active:translate-y-0 active:shadow-hard-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Create Project
+              {isEditing ? "Update Project" : "Create Project"}
             </button>
           </div>
         </form>

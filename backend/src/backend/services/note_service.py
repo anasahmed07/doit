@@ -30,11 +30,13 @@ class NoteService:
     def get_note_by_id(self, note_id: uuid.UUID) -> Optional[Note]:
         return self.session.get(Note, note_id)
 
-    def update_note(self, note_id: uuid.UUID, content: Optional[str] = None, category_id: Optional[uuid.UUID] = None) -> Optional[Note]:
+    def update_note(self, note_id: uuid.UUID, title: Optional[str] = None, content: Optional[str] = None, category_id: Optional[uuid.UUID] = None) -> Optional[Note]:
         note = self.session.get(Note, note_id)
         if not note:
             return None
-        
+
+        if title is not None:
+            note.title = title
         if content is not None:
             note.content = content
         if category_id is not None:

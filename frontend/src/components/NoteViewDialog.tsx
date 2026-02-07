@@ -32,6 +32,20 @@ export function NoteViewDialog({
   const [isVisible, setIsVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  // Preserve empty lines: markdown collapses consecutive blank lines into a
+  // single paragraph break. Replace extra blank lines with non-breaking space
+  // paragraphs so they render as visible empty space.
+  const preserveEmptyLines = (text: string) =>
+    text.replace(/\n{2,}/g, (match) => {
+      const n = match.length;
+      if (n === 2) return '\n\n';
+      let result = '\n\n';
+      for (let i = 0; i < n - 2; i++) {
+        result += '\u00A0\n\n';
+      }
+      return result;
+    });
+
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
@@ -123,6 +137,11 @@ export function NoteViewDialog({
             </div>
           ) : (
             <div className="space-y-8">
+               {/* Title */}
+               {note!.title && (
+                 <h1 className="text-2xl font-black tracking-tight">{note!.title}</h1>
+               )}
+
                {/* Media Assets - Moved to top */}
                {note!.media_assets && note!.media_assets.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8 border-b-2 border-foreground/10">
@@ -150,7 +169,7 @@ export function NoteViewDialog({
                )}
 
                {/* Markdown Content */}
-               <div className="prose prose-lg dark:prose-invert max-w-none break-words [overflow-wrap:anywhere] prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter prose-p:leading-relaxed prose-a:text-primary prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground">
+               <div className="prose prose-lg dark:prose-invert max-w-none break-words [overflow-wrap:anywhere] prose-headings:font-black prose-headings:tracking-tighter prose-h1:text-3xl prose-h1:mt-6 prose-h1:mb-3 prose-h2:text-2xl prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-xl prose-h3:mt-4 prose-h3:mb-2 prose-h4:text-lg prose-h4:mt-3 prose-h4:mb-1.5 prose-p:leading-relaxed prose-p:my-2 prose-a:text-primary prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground [&_br]:block [&_br]:content-[''] [&_br]:mt-2">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
                     components={{
@@ -178,7 +197,7 @@ export function NoteViewDialog({
                       },
                     }}
                   >
-                    {note!.content || ""}
+                    {preserveEmptyLines(note!.content || "")}
                   </ReactMarkdown>
                </div>
             </div>

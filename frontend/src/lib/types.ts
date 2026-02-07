@@ -24,6 +24,7 @@ export interface Note {
   id: string;
   user_id?: string; // Optional because API might not return it in all views or it's redundant
   category_id?: string | null;
+  title?: string | null;
   content?: string;
   order_index: number;
   created_at: string;

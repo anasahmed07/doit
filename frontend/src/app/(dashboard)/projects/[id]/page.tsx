@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback, use } from "react";
-import { Loader2, Layout, Plus, ChevronLeft } from "lucide-react";
+import { Loader2, Layout, Plus, ChevronLeft, Edit2 } from "lucide-react";
 import Link from "next/link";
 import { Project, ProjectTask } from "@/lib/types";
 import { KanbanBoard } from "@/components/KanbanBoard";
+import { ProjectCreationDialog } from "@/components/ProjectCreationDialog";
+import { useProjects } from "@/components/ProjectsContext";
 
 interface ProjectDetailPageProps {
   params: Promise<{ id: string }>;
@@ -12,9 +14,11 @@ interface ProjectDetailPageProps {
 
 export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { id } = use(params);
+  const { updateProject: updateProjectCtx } = useProjects();
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -146,6 +150,13 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                     Fixed Kanban Workflow
                 </span>
              </div>
+             <button
+               onClick={() => setIsEditOpen(true)}
+               className="p-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-full transition-colors"
+               title="Edit Project"
+             >
+               <Edit2 className="h-4 w-4" />
+             </button>
            </div>
         </div>
       </div>
@@ -162,6 +173,19 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             />
          </div>
       </div>
+
+      <ProjectCreationDialog
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        initialProject={project || undefined}
+        onSuccess={(updated) => {
+          if (updated) {
+            setProject((prev) => prev ? { ...prev, ...updated } : prev);
+            updateProjectCtx(updated.id, updated);
+          }
+          setIsEditOpen(false);
+        }}
+      />
     </div>
   );
 }

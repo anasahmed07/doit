@@ -14,10 +14,12 @@ router = APIRouter()
 
 # Pydantic models
 class NoteCreate(BaseModel):
+    title: Optional[str] = None
     content: Optional[str] = None
     category_id: Optional[uuid.UUID] = None
 
 class NoteUpdate(BaseModel):
+    title: Optional[str] = None
     content: Optional[str] = None
     category_id: Optional[uuid.UUID] = None
     order_index: Optional[float] = None
@@ -29,6 +31,7 @@ class MediaAssetRead(BaseModel):
 
 class NoteRead(BaseModel):
     id: uuid.UUID
+    title: Optional[str] = None
     content: Optional[str]
     category_id: Optional[uuid.UUID]
     order_index: float
@@ -59,6 +62,7 @@ def read_notes(
         
         result.append(NoteRead(
             id=note.id,
+            title=note.title,
             content=note.content,
             category_id=note.category_id,
             order_index=note.order_index,
@@ -77,12 +81,14 @@ def create_note(
     service = NoteService(session)
     note = Note(
         user_id=current_user.id,
+        title=note_in.title,
         content=note_in.content,
         category_id=note_in.category_id
     )
     created_note = service.create_note(note)
     return NoteRead(
         id=created_note.id,
+        title=created_note.title,
         content=created_note.content,
         category_id=created_note.category_id,
         order_index=created_note.order_index,
@@ -128,7 +134,7 @@ def update_note(
     if note_in.order_index is not None:
         service.update_note_order(note_id, note_in.order_index)
     
-    updated_note = service.update_note(note_id, content=note_in.content, category_id=note_in.category_id)
+    updated_note = service.update_note(note_id, title=note_in.title, content=note_in.content, category_id=note_in.category_id)
     
     # Refetch relationships
     session.refresh(updated_note)
@@ -143,6 +149,7 @@ def update_note(
 
     return NoteRead(
         id=updated_note.id,
+        title=updated_note.title,
         content=updated_note.content,
         category_id=updated_note.category_id,
         order_index=updated_note.order_index,

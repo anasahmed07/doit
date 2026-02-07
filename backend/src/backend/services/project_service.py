@@ -22,6 +22,17 @@ class ProjectService:
     def get_project_by_id(self, project_id: uuid.UUID) -> Optional[Project]:
         return self.session.get(Project, project_id)
 
+    def update_project(self, project_id: uuid.UUID, name: Optional[str] = None) -> Optional[Project]:
+        project = self.session.get(Project, project_id)
+        if not project:
+            return None
+        if name is not None:
+            project.name = name
+        self.session.add(project)
+        self.session.commit()
+        self.session.refresh(project)
+        return project
+
     def delete_project(self, project_id: uuid.UUID) -> bool:
         project = self.session.get(Project, project_id)
         if not project:
