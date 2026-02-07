@@ -51,7 +51,8 @@
       "Bash(npm run dev)",
       "mcp__Neon__list_projects",
       "Bash(dir:*)",
-      "mcp__Neon__run_sql"
+      "mcp__Neon__run_sql",
+      "mcp__Neon__run_sql_transaction"
     ]
   }
 }
