@@ -161,6 +161,7 @@ As a user, I want to ask the chatbot for a summary of my dashboard so that I can
 - Q: Should users be able to delete past conversations? → A: Yes, users can delete individual conversations.
 - Q: Which LLM provider should power the chatbot? → A: Google Gemini 3.5.
 - Q: Where should the MCP server run? → A: Standalone service with direct database access (same DB as backend), deployed on Hugging Face.
+- Q: What package manager for the MCP project? → A: uv (same as backend).
 
 ## Assumptions
 

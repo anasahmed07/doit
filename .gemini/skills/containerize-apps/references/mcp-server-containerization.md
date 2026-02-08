@@ -153,7 +153,7 @@ EXPOSE 8001
 
 # Use /health endpoint (not /mcp)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health').read()" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health').read()" || exit 1
 
 CMD ["python", "-m", "my_mcp_server.server"]
 ```

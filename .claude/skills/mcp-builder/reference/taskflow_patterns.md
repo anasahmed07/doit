@@ -317,7 +317,7 @@ uv run pytest -v
 uv run python -m taskflow_mcp.server
 
 # Test with MCP Inspector
-npx @modelcontextprotocol/inspector http://localhost:8001/mcp
+npx @modelcontextprotocol/inspector http://localhost:8080/mcp
 ```
 
 ---
