@@ -1,6 +1,7 @@
 "use client";
 
 import { Sidebar } from "@/components/Sidebar";
+import { ChatWidget } from "@/components/ChatWidget";
 import { ProjectsProvider, useProjects } from "@/components/ProjectsContext";
 import { Menu } from "lucide-react";
 
@@ -26,6 +27,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       <main className="relative flex-1 overflow-y-auto bg-muted/20">
         {children}
       </main>
+      <ChatWidget />
     </div>
   );
 }

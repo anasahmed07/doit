@@ -12,7 +12,8 @@ import {
   Loader2,
   Sun,
   Moon,
-  FileText
+  FileText,
+  MessageSquare
 } from "lucide-react";
 import { Category, Project } from "@/lib/types";
 import { CategoryDialog } from "@/components/CreateCategoryDialog";
@@ -190,6 +191,19 @@ function SidebarContent() {
               >
                 <Grid className="h-4 w-4" />
                 Dashboard
+              </Link>
+
+              {/* Chat Link */}
+              <Link
+                href="/chat"
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                  pathname === "/chat"
+                    ? "bg-primary/10 text-primary shadow-sm"
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                }`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Chat
               </Link>
 
               {/* Notes Collapsible */}

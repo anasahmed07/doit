@@ -19,6 +19,38 @@ from mcp_service.models.conversation import Conversation, Message
 # --- FastMCP Server ---
 mcp = FastMCP("doit-mcp")
 
+# --- Register MCP Tools ---
+from mcp_service.tools.tasks import list_tasks, create_task, update_task, delete_task
+from mcp_service.tools.notes import list_notes, create_note, update_note, delete_note
+from mcp_service.tools.projects import list_projects, create_project, update_project
+from mcp_service.tools.categories import list_categories, create_category, delete_category
+from mcp_service.tools.dashboard import get_dashboard_summary
+
+# Task tools
+mcp.tool()(list_tasks)
+mcp.tool()(create_task)
+mcp.tool()(update_task)
+mcp.tool()(delete_task)
+
+# Note tools
+mcp.tool()(list_notes)
+mcp.tool()(create_note)
+mcp.tool()(update_note)
+mcp.tool()(delete_note)
+
+# Project tools
+mcp.tool()(list_projects)
+mcp.tool()(create_project)
+mcp.tool()(update_project)
+
+# Category tools
+mcp.tool()(list_categories)
+mcp.tool()(create_category)
+mcp.tool()(delete_category)
+
+# Dashboard tools
+mcp.tool()(get_dashboard_summary)
+
 # --- FastAPI App ---
 app = FastAPI(title="DoIt MCP Service")
 

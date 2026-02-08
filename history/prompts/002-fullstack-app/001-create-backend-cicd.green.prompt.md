@@ -17,14 +17,16 @@ links:
   pr: null
 files_yaml:
   - .github/workflows/deploy-backend.yml
+  - .github/workflows/deploy-mcp.yml
 tests_yaml: []
 ---
 
 ## Summary
-Created a GitHub Actions workflow to deploy the `backend/` directory to Hugging Face Spaces.
+Created GitHub Actions workflows to deploy the `backend/` and `mcp/` directories to separate Hugging Face Spaces.
 
 ## Outcome
-- Created `.github/workflows/deploy-backend.yml`.
-- Configured path filters to trigger only on `backend/**` changes.
-- Used `git subtree split` strategy to push only the backend subdirectory to the remote Space.
-- Provided instructions for setting up `HF_TOKEN` and `HF_BACKEND_SPACE_NAME` secrets.
+- Created `.github/workflows/deploy-backend.yml` for the FastAPI backend.
+- Created `.github/workflows/deploy-mcp.yml` for the standalone MCP service.
+- Configured path filters to trigger only on relevant folder changes.
+- Used `git subtree split` and `--force` push to ensure deployment succeeds even if the remote Spaces have diverged history.
+- Provided instructions for setting up `HF_TOKEN`, `HF_BACKEND_SPACE_NAME` (e.g., anas-ahmed/doit-backend), and `HF_MCP_SPACE_NAME` (e.g., anas-ahmed/doit-mcp) secrets.

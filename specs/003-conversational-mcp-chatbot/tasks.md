@@ -79,25 +79,25 @@
 
 ### MCP Tools
 
-- [ ] T019 [US1] Implement task tools in `mcp/src/mcp_service/tools/tasks.py`:
+- [x] T019 [US1] Implement task tools in `mcp/src/mcp_service/tools/tasks.py`:
   - `list_tasks(project_name?, status?)` — query ProjectTask by user's project, optional status filter, return formatted list
   - `create_task(content, project_name?, priority?, due_date?)` — find/create default project, create ProjectTask, return confirmation
   - `update_task(task_content, project_name?, status?, new_content?, priority?, due_date?)` — find task by content match, update fields, return confirmation
   - `delete_task(task_content, project_name?)` — find and delete task, return confirmation
   - All tools receive user_id via FastMCP context
-- [ ] T020 [US1] Register task tools with FastMCP server in `mcp/src/mcp_service/main.py`
+- [x] T020 [US1] Register task tools with FastMCP server in `mcp/src/mcp_service/main.py`
 
 ### Frontend: Chat UI (MVP)
 
-- [ ] T021 [P] [US1] Add chat TypeScript types to `frontend/src/lib/types.ts`: Conversation, ChatMessage, SSEEvent interfaces per data-model.md
-- [ ] T022 [P] [US1] Create `frontend/src/app/api/chat/route.ts` — POST proxy that extracts session token from cookies, forwards to MCP service `POST /api/chat`, streams SSE response back
-- [ ] T023 [P] [US1] Create `frontend/src/app/api/conversations/route.ts` — GET proxy to MCP service `GET /api/conversations`
-- [ ] T024 [P] [US1] Create `frontend/src/app/api/conversations/[id]/route.ts` — DELETE proxy to MCP service `DELETE /api/conversations/{id}`
-- [ ] T025 [P] [US1] Create `frontend/src/app/api/conversations/[id]/messages/route.ts` — GET proxy to MCP service `GET /api/conversations/{id}/messages`
-- [ ] T026 [US1] Create `frontend/src/components/ChatInput.tsx` — Message input with send button, Enter to send, Shift+Enter for newline, disabled while streaming
-- [ ] T027 [US1] Create `frontend/src/components/ChatMessageList.tsx` — Scrollable message list with user/assistant bubbles, markdown rendering (react-markdown + remark-gfm), auto-scroll to bottom, streaming indicator
-- [ ] T028 [US1] Create `frontend/src/components/ChatPanel.tsx` — Main chat conversation panel composing ChatMessageList + ChatInput, manages SSE streaming connection, parses SSE events, maintains message state
-- [ ] T029 [US1] Create `frontend/src/app/(dashboard)/chat/page.tsx` — Full chat page with ChatPanel, "New conversation" button, responsive layout
+- [x] T021 [P] [US1] Add chat TypeScript types to `frontend/src/lib/types.ts`: Conversation, ChatMessage, SSEEvent interfaces per data-model.md
+- [x] T022 [P] [US1] Create `frontend/src/app/api/chat/route.ts` — POST proxy that extracts session token from cookies, forwards to MCP service `POST /api/chat`, streams SSE response back
+- [x] T023 [P] [US1] Create `frontend/src/app/api/conversations/route.ts` — GET proxy to MCP service `GET /api/conversations`
+- [x] T024 [P] [US1] Create `frontend/src/app/api/conversations/[id]/route.ts` — DELETE proxy to MCP service `DELETE /api/conversations/{id}`
+- [x] T025 [P] [US1] Create `frontend/src/app/api/conversations/[id]/messages/route.ts` — GET proxy to MCP service `GET /api/conversations/{id}/messages`
+- [x] T026 [US1] Create `frontend/src/components/ChatInput.tsx` — Message input with send button, Enter to send, Shift+Enter for newline, disabled while streaming
+- [x] T027 [US1] Create `frontend/src/components/ChatMessageList.tsx` — Scrollable message list with user/assistant bubbles, markdown rendering (react-markdown + remark-gfm), auto-scroll to bottom, streaming indicator
+- [x] T028 [US1] Create `frontend/src/components/ChatPanel.tsx` — Main chat conversation panel composing ChatMessageList + ChatInput, manages SSE streaming connection, parses SSE events, maintains message state
+- [x] T029 [US1] Create `frontend/src/app/(dashboard)/chat/page.tsx` — Full chat page with ChatPanel, "New conversation" button, responsive layout
 
 **Checkpoint**: End-to-end task management via chat works — user can open /chat, type commands, tasks are created/listed/updated/deleted through the MCP tools, responses stream back with markdown formatting
 
@@ -111,13 +111,13 @@
 
 ### MCP Tools
 
-- [ ] T030 [P] [US2] Implement note tools in `mcp/src/mcp_service/tools/notes.py`:
+- [x] T030 [P] [US2] Implement note tools in `mcp/src/mcp_service/tools/notes.py`:
   - `list_notes(category_name?)` — query Note by user_id, optional category filter, return formatted list with title/preview/category
   - `create_note(title?, content?, category_name?)` — create Note, optionally assign category, return confirmation
   - `update_note(note_title, new_title?, new_content?, category_name?)` — find note by title, update fields, return confirmation
   - `delete_note(note_title)` — find and delete note, return confirmation
   - All tools receive user_id via FastMCP context
-- [ ] T031 [US2] Register note tools with FastMCP server in `mcp/src/mcp_service/main.py`
+- [x] T031 [US2] Register note tools with FastMCP server in `mcp/src/mcp_service/main.py`
 
 **Checkpoint**: Notes CRUD via chat works alongside task management
 
@@ -131,10 +131,10 @@
 
 ### Frontend: Conversation Management
 
-- [ ] T032 [US3] Create `frontend/src/components/ConversationList.tsx` — Sidebar/list showing past conversations with titles, ordered by most recent, "New conversation" button, delete button per conversation, click to switch
-- [ ] T033 [US3] Create `frontend/src/components/ChatWidget.tsx` — Floating toggle button (bottom-right corner) + slide-out panel containing ConversationList + ChatPanel. Toggle open/close. Full-screen on mobile. Manages active conversation_id state.
-- [ ] T034 [US3] Modify `frontend/src/app/(dashboard)/layout.tsx` — Add ChatWidget component to the dashboard layout so it appears on all authenticated pages
-- [ ] T035 [US3] Update `frontend/src/app/(dashboard)/chat/page.tsx` — Integrate ConversationList sidebar alongside ChatPanel for the full chat page view (wider layout than widget)
+- [x] T032 [US3] Create `frontend/src/components/ConversationList.tsx` — Sidebar/list showing past conversations with titles, ordered by most recent, "New conversation" button, delete button per conversation, click to switch
+- [x] T033 [US3] Create `frontend/src/components/ChatWidget.tsx` — Floating toggle button (bottom-right corner) + slide-out panel containing ConversationList + ChatPanel. Toggle open/close. Full-screen on mobile. Manages active conversation_id state.
+- [x] T034 [US3] Modify `frontend/src/app/(dashboard)/layout.tsx` — Add ChatWidget component to the dashboard layout so it appears on all authenticated pages
+- [x] T035 [US3] Update `frontend/src/app/(dashboard)/chat/page.tsx` — Integrate ConversationList sidebar alongside ChatPanel for the full chat page view (wider layout than widget)
 
 **Checkpoint**: Chat widget accessible from all dashboard pages, conversation list with history, new/switch/delete conversations all work
 
@@ -148,12 +148,12 @@
 
 ### MCP Tools
 
-- [ ] T036 [P] [US4] Implement project tools in `mcp/src/mcp_service/tools/projects.py`:
+- [x] T036 [P] [US4] Implement project tools in `mcp/src/mcp_service/tools/projects.py`:
   - `list_projects()` — query Project by user_id (owner or member), return with task count breakdown
   - `create_project(name)` — create Project, add user as owner, return confirmation
   - `update_project(project_name, new_name)` — find project, rename, return confirmation
   - All tools receive user_id via FastMCP context
-- [ ] T037 [US4] Register project tools with FastMCP server in `mcp/src/mcp_service/main.py`
+- [x] T037 [US4] Register project tools with FastMCP server in `mcp/src/mcp_service/main.py`
 
 **Checkpoint**: Project management via chat works — creates projects, lists with counts, renames. Task tools already support project_name parameter from US1.
 
@@ -167,12 +167,12 @@
 
 ### MCP Tools
 
-- [ ] T038 [P] [US5] Implement category tools in `mcp/src/mcp_service/tools/categories.py`:
+- [x] T038 [P] [US5] Implement category tools in `mcp/src/mcp_service/tools/categories.py`:
   - `list_categories()` — query Category by user_id, return with name and color
   - `create_category(name, color?)` — create Category, return confirmation
   - `delete_category(category_name)` — find and delete category, return confirmation
   - All tools receive user_id via FastMCP context
-- [ ] T039 [US5] Register category tools with FastMCP server in `mcp/src/mcp_service/main.py`
+- [x] T039 [US5] Register category tools with FastMCP server in `mcp/src/mcp_service/main.py`
 
 **Checkpoint**: Category management via chat works alongside all other tools
 
@@ -186,10 +186,10 @@
 
 ### MCP Tools
 
-- [ ] T040 [P] [US6] Implement dashboard tool in `mcp/src/mcp_service/tools/dashboard.py`:
+- [x] T040 [P] [US6] Implement dashboard tool in `mcp/src/mcp_service/tools/dashboard.py`:
   - `get_dashboard_summary()` — aggregate query: total projects, active tasks (TODO + IN_PROGRESS), completed tasks (DONE), total notes. Return formatted summary.
   - Receives user_id via FastMCP context
-- [ ] T041 [US6] Register dashboard tool with FastMCP server in `mcp/src/mcp_service/main.py`
+- [x] T041 [US6] Register dashboard tool with FastMCP server in `mcp/src/mcp_service/main.py`
 
 **Checkpoint**: All 15 MCP tools operational, full conversational interface complete
 
@@ -199,10 +199,10 @@
 
 **Purpose**: Error handling, mobile polish, and deployment readiness
 
-- [ ] T042 [P] Add graceful error handling in ChatPanel for MCP service unavailability (FR-014) — show user-friendly error message
-- [ ] T043 [P] Add session expiry detection in chat proxy routes — detect 401 from MCP, prompt re-login (FR-014)
-- [ ] T044 [P] Mobile responsiveness for ChatWidget — full-screen panel on small screens (FR-016)
-- [ ] T045 [P] Update agent system prompt in `mcp/src/mcp_service/agent.py` — refine instructions for all 15 tools, edge cases (ambiguous commands, not-found items), friendly tone
+- [x] T042 [P] Add graceful error handling in ChatPanel for MCP service unavailability (FR-014) — show user-friendly error message
+- [x] T043 [P] Add session expiry detection in chat proxy routes — detect 401 from MCP, prompt re-login (FR-014)
+- [x] T044 [P] Mobile responsiveness for ChatWidget — full-screen panel on small screens (FR-016)
+- [x] T045 [P] Update agent system prompt in `mcp/src/mcp_service/agent.py` — refine instructions for all 15 tools, edge cases (ambiguous commands, not-found items), friendly tone
 - [ ] T046 Run quickstart.md validation — verify all setup steps, environment variables, and verification steps work end-to-end
 
 ---
