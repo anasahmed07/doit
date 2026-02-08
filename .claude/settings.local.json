@@ -53,7 +53,10 @@
       "Bash(dir:*)",
       "mcp__Neon__run_sql",
       "mcp__Neon__run_sql_transaction",
-      "Bash(copy:*)"
+      "Bash(copy:*)",
+      "WebFetch(domain:openai.github.io)",
+      "WebFetch(domain:gofastmcp.com)",
+      "WebFetch(domain:www.jlowin.dev)"
     ]
   }
 }
