@@ -19,6 +19,8 @@ class ProjectTask(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     project_id: uuid.UUID = Field(foreign_key="project.id")
     status: str = Field(default="TODO") # Enum: TODO, IN_PROGRESS, DONE
+    priority: str = Field(default="MEDIUM") # Enum: LOW, MEDIUM, HIGH
+    due_date: Optional[datetime] = Field(default=None)
     content: str
     order_index: float = Field(default=0.0)
     assignee_id: Optional[uuid.UUID] = Field(default=None, index=True)  # user.id of assigned member

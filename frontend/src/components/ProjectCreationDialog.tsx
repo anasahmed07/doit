@@ -18,6 +18,7 @@ export function ProjectCreationDialog({
   initialProject,
 }: ProjectCreationDialogProps) {
   const [name, setName] = useState("");
+  const [framework, setFramework] = useState<"KANBAN_FIXED" | "GRID">("KANBAN_FIXED");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +27,7 @@ export function ProjectCreationDialog({
   useEffect(() => {
     if (isOpen) {
       setName(initialProject?.name || "");
+      setFramework((initialProject?.framework as "KANBAN_FIXED" | "GRID") || "KANBAN_FIXED");
       setError(null);
     }
   }, [isOpen, initialProject]);
@@ -44,7 +46,10 @@ export function ProjectCreationDialog({
         const res = await fetch(`/api/projects/${initialProject.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: name.trim() }),
+          body: JSON.stringify({ 
+            name: name.trim(),
+            framework: framework
+          }),
         });
         if (!res.ok) throw new Error("Failed to update project");
         const updated = await res.json();
@@ -55,7 +60,7 @@ export function ProjectCreationDialog({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: name.trim(),
-            framework: "KANBAN_FIXED",
+            framework: framework,
           }),
         });
         if (!res.ok) throw new Error("Failed to create project");
@@ -109,11 +114,35 @@ export function ProjectCreationDialog({
             <label className="text-xs font-mono font-bold uppercase tracking-widest text-muted-foreground">
               Workflow Type
             </label>
-            <div className="border-2 border-foreground/10 bg-secondary/30 p-3">
-               <span className="text-sm font-bold">Fixed Kanban</span>
-               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
-                 TO DO → IN PROGRESS → DONE
-               </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setFramework("KANBAN_FIXED")}
+                className={`flex flex-col text-left border-2 p-3 transition-all ${
+                  framework === "KANBAN_FIXED"
+                    ? "border-primary bg-primary/5 shadow-hard-sm"
+                    : "border-foreground/10 hover:border-foreground/30"
+                }`}
+              >
+                <span className="text-sm font-bold">Fixed Kanban</span>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
+                  TO DO → IN PROGRESS → DONE
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFramework("GRID")}
+                className={`flex flex-col text-left border-2 p-3 transition-all ${
+                  framework === "GRID"
+                    ? "border-primary bg-primary/5 shadow-hard-sm"
+                    : "border-foreground/10 hover:border-foreground/30"
+                }`}
+              >
+                <span className="text-sm font-bold">Task Grid</span>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
+                  Simple Grid of Cards
+                </p>
+              </button>
             </div>
           </div>
 

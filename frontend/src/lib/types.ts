@@ -36,7 +36,7 @@ export interface Project {
   id: string;
   user_id: string;
   name: string;
-  framework: "KANBAN_FIXED";
+  framework: "KANBAN_FIXED" | "GRID";
   created_at: string;
 }
 
@@ -44,6 +44,8 @@ export interface ProjectTask {
   id: string;
   project_id: string;
   status: string; // TODO, IN_PROGRESS, DONE
+  priority: string; // LOW, MEDIUM, HIGH
+  due_date?: string | null;
   content: string;
   order_index: number;
   created_at: string;
