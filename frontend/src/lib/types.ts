@@ -51,3 +51,28 @@ export interface ProjectTask {
   created_at: string;
   updated_at: string;
 }
+
+export interface Conversation {
+  id: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversation_id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}
+
+export interface SSEEvent {
+  type: "text_delta" | "tool_call" | "tool_result" | "done" | "error";
+  content?: string;
+  tool?: string;
+  args?: string;
+  result?: string;
+  conversation_id?: string;
+  message_id?: string;
+}
