@@ -39,16 +39,32 @@ export function NoteCard({
     onToggleTodo(note, index);
   };
 
+  // Preserve empty lines: markdown collapses consecutive blank lines into a
+  // single paragraph break. Replace extra blank lines with non-breaking space
+  // paragraphs so they render as visible empty space.
+  const preserveEmptyLines = (text: string) =>
+    text.replace(/\n{2,}/g, (match) => {
+      const n = match.length; // number of consecutive newlines
+      if (n === 2) return '\n\n'; // standard paragraph break — keep as-is
+      // For each extra blank line beyond the first, insert a &nbsp; paragraph
+      let result = '\n\n';
+      for (let i = 0; i < n - 2; i++) {
+        result += '\u00A0\n\n';
+      }
+      return result;
+    });
+
   // Trim content to 35 lines
   const lines = note.content?.split('\n') || [];
   const MAX_LINES = 35;
   const isTrimmed = lines.length > MAX_LINES;
-  const displayContent = isTrimmed ? lines.slice(0, MAX_LINES).join('\n') : note.content;
+  const rawContent = isTrimmed ? lines.slice(0, MAX_LINES).join('\n') : (note.content || '');
+  const displayContent = preserveEmptyLines(rawContent);
 
   return (
     <>
       <div
-        className={`relative group flex flex-col gap-3 rounded-none border-2 border-foreground bg-background p-4 shadow-hard transition-all ${isOverlay ? "scale-105 rotate-2 shadow-hard-lg z-50 cursor-grabbing" : "hover:-translate-y-1 hover:shadow-hard-lg"}`}
+        className={`relative group flex flex-col gap-3 rounded-none border-2 border-foreground bg-background p-4 shadow-hard transition-all max-w-full min-w-0 overflow-hidden ${isOverlay ? "scale-105 rotate-2 shadow-hard-lg z-50 cursor-grabbing" : "hover:-translate-y-1 hover:shadow-hard-lg"}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -91,13 +107,59 @@ export function NoteCard({
           </div>
         </div>
 
+        {/* Title */}
+        {note.title && (
+          <h3
+            className="text-base font-bold leading-snug tracking-tight cursor-pointer line-clamp-2"
+            onClick={() => onView?.(note)}
+          >
+            {note.title}
+          </h3>
+        )}
+
         {/* Content Area */}
-        <div 
-          className="space-y-3 cursor-pointer"
+        <div
+          className="space-y-3 cursor-pointer overflow-hidden"
           onClick={() => onView?.(note)}
         >
+          {/* Media Grid (Preview) - Moved to top */}
+          {note.media_assets && note.media_assets.length > 0 && (
+            <div 
+              className={`grid gap-2 ${note.media_assets.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {note.media_assets.slice(0, 2).map((asset, idx) => (
+                <div 
+                  key={asset.id} 
+                  className="relative aspect-video w-full overflow-hidden border border-foreground/10 bg-secondary/30 cursor-zoom-in"
+                  onClick={() => asset.mime_type.startsWith("image/") && setPreviewImage(getAssetUrl(asset.url))}
+                >
+                  {asset.mime_type.startsWith("image/") ? (
+                    <div className="relative h-full w-full">
+                      <img 
+                        src={getAssetUrl(asset.url)} 
+                        alt="Note attachment" 
+                        className="h-full w-full object-cover transition-transform hover:scale-105"
+                        loading="lazy"
+                      />
+                      {idx === 1 && note.media_assets.length > 2 && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <span className="text-white font-bold text-lg">+{note.media_assets.length - 2}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                      <span className="text-xs font-mono uppercase">{asset.mime_type.split("/")[1]}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {note.content && (
-            <div className="relative prose prose-sm dark:prose-invert max-w-none break-words prose-headings:font-bold prose-headings:tracking-tight prose-p:text-sm prose-p:leading-relaxed prose-a:text-primary prose-a:font-bold prose-a:underline prose-code:text-primary prose-code:bg-secondary/50 prose-code:px-1 prose-code:rounded prose-code:font-mono prose-code:before:content-none prose-code:after:content-none prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border prose-blockquote:border-l-2 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-li:marker:text-muted-foreground">
+            <div className="relative prose prose-sm dark:prose-invert max-w-none break-words [overflow-wrap:anywhere] [word-break:break-word] prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-xl prose-h1:mt-4 prose-h1:mb-2 prose-h2:text-lg prose-h2:mt-3 prose-h2:mb-1.5 prose-h3:text-base prose-h3:mt-2 prose-h3:mb-1 prose-p:text-sm prose-p:leading-relaxed prose-p:my-1.5 prose-a:text-primary prose-a:font-bold prose-a:underline prose-code:text-primary prose-code:bg-secondary/50 prose-code:px-1 prose-code:rounded prose-code:font-mono prose-code:before:content-none prose-code:after:content-none prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border prose-blockquote:border-l-2 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-li:marker:text-muted-foreground [&_br]:block [&_br]:content-[''] [&_br]:mt-1">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
@@ -135,35 +197,6 @@ export function NoteCard({
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-background/80 px-2 py-0.5 rounded-full shadow-sm">Click to read more</span>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Media Grid (Preview) */}
-          {note.media_assets && note.media_assets.length > 0 && (
-            <div className={`grid gap-2 ${note.media_assets.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
-              {note.media_assets.slice(0, 2).map((asset, idx) => (
-                <div key={asset.id} className="relative aspect-video w-full overflow-hidden border border-foreground/10 bg-secondary/30">
-                  {asset.mime_type.startsWith("image/") ? (
-                    <div className="relative h-full w-full">
-                      <img 
-                        src={getAssetUrl(asset.url)} 
-                        alt="Note attachment" 
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                      {idx === 1 && note.media_assets.length > 2 && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">+{note.media_assets.length - 2}</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                      <span className="text-xs font-mono uppercase">{asset.mime_type.split("/")[1]}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
             </div>
           )}
         </div>

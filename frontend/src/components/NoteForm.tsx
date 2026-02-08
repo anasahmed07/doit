@@ -29,6 +29,7 @@ interface NoteFormProps {
 }
 
 export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteFormProps) {
+  const [title, setTitle] = useState(initialNote?.title || "");
   const [content, setContent] = useState(initialNote?.content || "");
   const [history, setHistory] = useState<string[]>([initialNote?.content || ""]);
   const [historyIndex, setHistoryIndex] = useState(0);
@@ -318,7 +319,7 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && files.length === 0 && !initialNote) return;
+    if (!content.trim() && !title.trim() && files.length === 0 && !initialNote) return;
 
     setIsSubmitting(true);
     try {
@@ -332,11 +333,12 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            title: title || null,
             content: content,
             category_id: selectedCategoryId,
           }),
         });
-        
+
         if (!response.ok) throw new Error("Failed to update note");
         // We continue to upload new files if any
       } else {
@@ -347,6 +349,7 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            title: title || null,
             content: content,
             category_id: selectedCategoryId,
           }),
@@ -376,6 +379,7 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
       }
 
       if (!initialNote) {
+        setTitle("");
         setContent("");
         setHistory([""]); // Reset history
         setHistoryIndex(0);
@@ -403,6 +407,15 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border-2 border-foreground bg-background p-4 shadow-hard">
+      {/* Title Input */}
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Note title (optional)"
+        className="w-full border-b-2 border-input bg-transparent px-1 py-2 text-lg font-bold placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
+      />
+
       {/* Formatting Toolbar */}
       <div className="flex items-center gap-1 pb-2 border-b border-border">
         {formatActions.map((action, index) => (
@@ -544,7 +557,7 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
           </button>
           <button
             type="submit"
-            disabled={isSubmitting || (!content.trim() && files.length === 0)}
+            disabled={isSubmitting || (!content.trim() && !title.trim() && files.length === 0)}
             className="flex items-center gap-2 bg-primary px-4 py-2 text-sm font-bold text-white shadow-hard-sm hover:translate-y-px hover:shadow-hard active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting && <Loader2 className="h-3 w-3 animate-spin" />}

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Category, Project } from "@/lib/types";
 import { CategoryDialog } from "@/components/CreateCategoryDialog";
+import { ProjectCreationDialog } from "@/components/ProjectCreationDialog";
 import { UserProfile } from "@/components/UserProfile";
 import { useProjects } from "@/components/ProjectsContext";
 import { X, Settings2 } from "lucide-react";
@@ -49,6 +50,7 @@ function SidebarContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined);
   const [isProjectsOpen, setIsProjectsOpen] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(true);
@@ -284,29 +286,40 @@ function SidebarContent() {
 
             {/* Projects Group */}
             <div className="space-y-1">
-              <button
-                onClick={() => {
-                  if (!isProjectsOpen) {
-                    fetchProjects();
-                  }
-                  setIsProjectsOpen(!isProjectsOpen);
-                }}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                  pathname.startsWith("/projects")
-                    ? "bg-primary/10 text-primary shadow-sm"
-                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-                }`}
-              >
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between pr-2 group">
+                <button
+                  onClick={() => {
+                    if (!isProjectsOpen) {
+                      fetchProjects();
+                    }
+                    setIsProjectsOpen(!isProjectsOpen);
+                  }}
+                  className={`flex flex-1 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                    pathname.startsWith("/projects")
+                      ? "bg-primary/10 text-primary shadow-sm"
+                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                  }`}
+                >
                   <Layout className="h-4 w-4" />
                   Projects
-                </div>
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform ${
-                    isProjectsOpen ? "" : "-rotate-90"
-                  }`}
-                />
-              </button>
+                  <ChevronDown
+                    className={`h-4 w-4 ml-auto transition-transform ${
+                      isProjectsOpen ? "" : "-rotate-90"
+                    }`}
+                  />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsProjectDialogOpen(true);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all ml-1"
+                  title="Create Project"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              
               {isProjectsOpen && (
                 <div className="ml-4 space-y-1 border-l border-border pl-3">
                   {isProjectsLoading ? (
@@ -353,6 +366,14 @@ function SidebarContent() {
           onClose={() => setIsCategoryDialogOpen(false)}
           onSuccess={fetchCategories}
           initialCategory={editingCategory}
+        />
+
+        <ProjectCreationDialog
+          isOpen={isProjectDialogOpen}
+          onClose={() => setIsProjectDialogOpen(false)}
+          onSuccess={() => {
+            fetchProjects();
+          }}
         />
       </aside>
     </>

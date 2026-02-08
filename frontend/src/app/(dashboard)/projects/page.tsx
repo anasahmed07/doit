@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Plus, Layout, Trash2, ChevronRight } from "lucide-react";
+import { Loader2, Plus, Layout, Trash2, Edit2, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Project } from "@/lib/types";
 import { ProjectCreationDialog } from "@/components/ProjectCreationDialog";
@@ -9,16 +9,20 @@ import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 import { useProjects } from "@/components/ProjectsContext";
 
 export default function ProjectsPage() {
-  const { projects, isLoading, fetchProjects, removeProject } = useProjects();
+  const { projects, isLoading, fetchProjects, updateProject, removeProject } = useProjects();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Force fetch on mount to ensure we have data if navigating directly
-    // or just rely on the context's check. 
-    // Passing true forces a refresh if you want to ensure it's up to date with server
     fetchProjects(true);
   }, [fetchProjects]);
+
+  const handleEdit = (project: Project, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingProject(project);
+  };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -28,10 +32,10 @@ export default function ProjectsPage() {
 
   const confirmDelete = async () => {
     if (!deleteId) return;
-    
+
     try {
       await fetch(`/api/projects/${deleteId}`, { method: "DELETE" });
-      removeProject(deleteId); // Update context immediately
+      removeProject(deleteId);
     } catch (error) {
       console.error("Failed to delete project", error);
     } finally {
@@ -62,7 +66,7 @@ export default function ProjectsPage() {
       ) : projects.length === 0 ? (
         <div className="flex h-64 flex-col items-center justify-center gap-4 border-2 border-dashed border-foreground/20 rounded-lg text-muted-foreground">
             <p className="font-mono text-sm uppercase tracking-widest">No projects found</p>
-            <button 
+            <button
                 onClick={() => setIsCreateOpen(true)}
                 className="text-sm font-bold hover:text-foreground underline"
             >
@@ -86,12 +90,22 @@ export default function ProjectsPage() {
                       Framework: {project.framework}
                    </span>
                 </div>
-                <button 
-                  onClick={(e) => handleDelete(project.id, e)}
-                  className="p-2 text-muted-foreground hover:bg-destructive hover:text-white transition-colors opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => handleEdit(project, e)}
+                    className="p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    title="Edit Project"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(project.id, e)}
+                    className="p-2 text-muted-foreground hover:bg-destructive hover:text-white transition-colors"
+                    title="Delete Project"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between text-sm font-bold text-primary mt-4">
@@ -103,10 +117,22 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      <ProjectCreationDialog 
+      {/* Create Dialog */}
+      <ProjectCreationDialog
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        onSuccess={() => fetchProjects(true)} // Force refresh context on success
+        onSuccess={() => fetchProjects(true)}
+      />
+
+      {/* Edit Dialog */}
+      <ProjectCreationDialog
+        isOpen={!!editingProject}
+        onClose={() => setEditingProject(null)}
+        initialProject={editingProject || undefined}
+        onSuccess={(updated) => {
+          if (updated) updateProject(updated.id, updated);
+          setEditingProject(null);
+        }}
       />
 
       <ConfirmationDialog

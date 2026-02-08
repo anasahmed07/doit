@@ -30,6 +30,21 @@ export function NoteViewDialog({
 }: NoteViewDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Preserve empty lines: markdown collapses consecutive blank lines into a
+  // single paragraph break. Replace extra blank lines with non-breaking space
+  // paragraphs so they render as visible empty space.
+  const preserveEmptyLines = (text: string) =>
+    text.replace(/\n{2,}/g, (match) => {
+      const n = match.length;
+      if (n === 2) return '\n\n';
+      let result = '\n\n';
+      for (let i = 0; i < n - 2; i++) {
+        result += '\u00A0\n\n';
+      }
+      return result;
+    });
 
   useEffect(() => {
     if (isOpen) {
@@ -47,6 +62,7 @@ export function NoteViewDialog({
   const getAssetUrl = (url: string) => `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${url}`;
 
   return (
+    <>
     <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-200 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
       {/* Backdrop */}
       <div 
@@ -121,8 +137,39 @@ export function NoteViewDialog({
             </div>
           ) : (
             <div className="space-y-8">
+               {/* Title */}
+               {note!.title && (
+                 <h1 className="text-2xl font-black tracking-tight">{note!.title}</h1>
+               )}
+
+               {/* Media Assets - Moved to top */}
+               {note!.media_assets && note!.media_assets.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8 border-b-2 border-foreground/10">
+                     {note!.media_assets.map((asset) => (
+                        <div key={asset.id} className="flex flex-col gap-2 group">
+                           <div 
+                            className="relative aspect-video w-full overflow-hidden border-2 border-foreground bg-secondary/20 shadow-hard-sm group-hover:shadow-hard transition-all cursor-zoom-in"
+                            onClick={() => asset.mime_type.startsWith("image/") && setPreviewImage(getAssetUrl(asset.url))}
+                           >
+                              {asset.mime_type.startsWith("image/") ? (
+                                  <img 
+                                      src={getAssetUrl(asset.url)} 
+                                      alt="Attachment" 
+                                      className="h-full w-full object-contain transition-transform group-hover:scale-[1.02]"
+                                  />
+                              ) : (
+                                  <div className="flex h-full w-full items-center justify-center font-mono text-sm uppercase font-bold text-muted-foreground">
+                                      {asset.mime_type}
+                                  </div>
+                              )}
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               )}
+
                {/* Markdown Content */}
-               <div className="prose prose-lg dark:prose-invert max-w-none break-words prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter prose-p:leading-relaxed prose-a:text-primary prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground">
+               <div className="prose prose-lg dark:prose-invert max-w-none break-words [overflow-wrap:anywhere] prose-headings:font-black prose-headings:tracking-tighter prose-h1:text-3xl prose-h1:mt-6 prose-h1:mb-3 prose-h2:text-2xl prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-xl prose-h3:mt-4 prose-h3:mb-2 prose-h4:text-lg prose-h4:mt-3 prose-h4:mb-1.5 prose-p:leading-relaxed prose-p:my-2 prose-a:text-primary prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground [&_br]:block [&_br]:content-[''] [&_br]:mt-2">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
                     components={{
@@ -150,32 +197,9 @@ export function NoteViewDialog({
                       },
                     }}
                   >
-                    {note!.content || ""}
+                    {preserveEmptyLines(note!.content || "")}
                   </ReactMarkdown>
                </div>
-
-               {/* Media Assets */}
-               {note!.media_assets && note!.media_assets.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t-2 border-foreground/10">
-                     {note!.media_assets.map((asset) => (
-                        <div key={asset.id} className="flex flex-col gap-2 group">
-                           <div className="relative aspect-video w-full overflow-hidden border-2 border-foreground bg-secondary/20 shadow-hard-sm group-hover:shadow-hard transition-all">
-                              {asset.mime_type.startsWith("image/") ? (
-                                  <img 
-                                      src={getAssetUrl(asset.url)} 
-                                      alt="Attachment" 
-                                      className="h-full w-full object-contain"
-                                  />
-                              ) : (
-                                  <div className="flex h-full w-full items-center justify-center font-mono text-sm uppercase font-bold text-muted-foreground">
-                                      {asset.mime_type}
-                                  </div>
-                              )}
-                           </div>
-                        </div>
-                     ))}
-                  </div>
-               )}
             </div>
           )}
         </div>
@@ -187,5 +211,28 @@ export function NoteViewDialog({
         </div>
       </div>
     </div>
+
+    {/* Image Preview Modal */}
+    {previewImage && (
+      <div 
+        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+        onClick={() => setPreviewImage(null)}
+      >
+        <div className="relative max-h-[95vh] max-w-[95vw] overflow-hidden rounded-lg shadow-2xl border-2 border-white/20">
+          <button 
+            onClick={() => setPreviewImage(null)}
+            className="absolute right-4 top-4 z-10 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 backdrop-blur-md border border-white/10"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <img 
+            src={previewImage} 
+            alt="Preview" 
+            className="max-h-[95vh] w-auto object-contain"
+          />
+        </div>
+      </div>
+    )}
+    </>
   );
 }

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from backend.core.database import get_session
 from backend.core.security import get_current_user
 from backend.models.user import User
@@ -20,30 +20,31 @@ def get_dashboard_stats(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    # Total Projects
-    projects = session.exec(select(Project).where(Project.user_id == current_user.id)).all()
-    
-    # Tasks
+    total_projects = session.exec(
+        select(func.count(Project.id)).where(Project.user_id == current_user.id)
+    ).one()
+
     active_tasks = session.exec(
-        select(ProjectTask)
+        select(func.count(ProjectTask.id))
         .join(Project)
         .where(Project.user_id == current_user.id)
         .where(ProjectTask.status != "DONE")
-    ).all()
-    
+    ).one()
+
     completed_tasks = session.exec(
-        select(ProjectTask)
+        select(func.count(ProjectTask.id))
         .join(Project)
         .where(Project.user_id == current_user.id)
         .where(ProjectTask.status == "DONE")
-    ).all()
+    ).one()
 
-    # Total Notes
-    notes = session.exec(select(Note).where(Note.user_id == current_user.id)).all()
+    total_notes = session.exec(
+        select(func.count(Note.id)).where(Note.user_id == current_user.id)
+    ).one()
 
     return DashboardStats(
-        total_projects=len(projects),
-        active_tasks=len(active_tasks),
-        completed_tasks=len(completed_tasks),
-        total_notes=len(notes)
+        total_projects=total_projects,
+        active_tasks=active_tasks,
+        completed_tasks=completed_tasks,
+        total_notes=total_notes
     )

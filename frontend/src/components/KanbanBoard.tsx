@@ -25,13 +25,15 @@ import {
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { ProjectTask } from "@/lib/types";
-import { Plus, Trash2, GripVertical, MoreHorizontal, Edit2 } from "lucide-react";
+import { Plus, Trash2, GripVertical, MoreHorizontal, Edit2, Calendar, AlertCircle } from "lucide-react";
 import { ConfirmationDialog } from "./ConfirmationDialog";
+import { TaskDialog } from "./TaskDialog";
+import { formatDistanceToNow, isPast, isToday } from "date-fns";
 
 interface KanbanBoardProps {
   tasks: ProjectTask[];
   onTaskUpdate: (id: string, updates: Partial<ProjectTask>) => void;
-  onAddTask: (content: string, status: string) => void;
+  onAddTask: (content: string, status: string, priority?: string, due_date?: string | null) => void;
   onDeleteTask: (id: string) => void;
   onTasksReorder?: (reorderedTasks: { id: string; order_index: number; status: string }[]) => void;
 }
@@ -61,9 +63,6 @@ function KanbanTaskItem({
   onDelete: (id: string) => void;
   onUpdate?: (id: string, updates: Partial<ProjectTask>) => void;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(task.content);
-
   const {
     attributes,
     listeners,
@@ -77,7 +76,6 @@ function KanbanTaskItem({
       type: "Task",
       task,
     },
-    disabled: isEditing, // Disable drag when editing
   });
 
   const style = {
@@ -86,77 +84,46 @@ function KanbanTaskItem({
     opacity: isDragging ? 0.4 : 1,
   };
 
-  const handleSave = () => {
-    if (editContent.trim() && onUpdate) {
-      onUpdate(task.id, { content: editContent.trim() });
-      setIsEditing(false);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className="relative flex flex-col gap-2 border-2 border-primary bg-background p-4 shadow-hard-sm"
-      >
-        <textarea
-          autoFocus
-          value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
-          className="w-full min-h-[80px] resize-none rounded-none bg-transparent text-sm font-medium focus:outline-none"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSave();
-            }
-            if (e.key === "Escape") {
-              setIsEditing(false);
-              setEditContent(task.content);
-            }
-          }}
-        />
-        <div className="flex justify-end gap-2">
-          <button 
-            onClick={() => {
-              setIsEditing(false);
-              setEditContent(task.content);
-            }}
-            className="text-xs font-bold text-muted-foreground hover:underline"
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={handleSave}
-            className="bg-primary text-primary-foreground px-2 py-1 text-xs font-bold shadow-hard-sm active:translate-y-px"
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const isOverdue = task.due_date && isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date));
+  const isDueToday = task.due_date && isToday(new Date(task.due_date));
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="group relative flex flex-col gap-2 border-2 border-foreground bg-background p-4 shadow-hard-sm hover:translate-y-[-2px] hover:shadow-hard transition-all"
+      className={`group relative flex flex-col gap-2 border-2 bg-background p-3 shadow-hard-sm hover:translate-y-[-2px] hover:shadow-hard transition-all cursor-pointer ${
+        isOverdue && task.status !== 'DONE' ? 'border-destructive/50 bg-destructive/5' : 
+        task.priority === 'HIGH' ? 'border-red-500/20' : 
+        'border-foreground'
+      }`}
+      onClick={() => onUpdate?.(task.id, {})}
     >
-      <div className="flex items-start justify-between">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
-          <GripVertical className="h-4 w-4" />
+      <div className="flex items-start justify-between gap-2">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-0.5">
+          <GripVertical className="h-3.5 w-3.5" />
         </div>
+        
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {task.priority !== 'MEDIUM' && (
+             <div className={`flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${
+                task.priority === 'HIGH' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+             }`}>
+                {task.priority === 'HIGH' && <AlertCircle className="h-2.5 w-2.5" />}
+                {task.priority}
+             </div>
+          )}
+        </div>
+
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsEditing(true);
+              onUpdate?.(task.id, {});
             }}
             className="p-1 text-muted-foreground hover:text-primary"
             title="Edit Task"
           >
-            <Edit2 className="h-3.5 w-3.5" />
+            <Edit2 className="h-3 w-3" />
           </button>
           <button 
             onClick={(e) => {
@@ -166,13 +133,26 @@ function KanbanTaskItem({
             className="p-1 text-muted-foreground hover:text-destructive"
             title="Delete Task"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-3 w-3" />
           </button>
         </div>
       </div>
-      <p className="text-sm font-medium leading-relaxed break-words whitespace-pre-wrap">
+      
+      <p className="text-xs font-bold leading-relaxed break-words whitespace-pre-wrap line-clamp-3">
         {task.content}
       </p>
+
+      {task.due_date && (
+        <div className={`flex items-center gap-1.5 text-[10px] font-bold mt-1 ${
+           task.status === 'DONE' ? 'text-muted-foreground line-through' :
+           isOverdue ? 'text-destructive' :
+           isDueToday ? 'text-yellow-600' :
+           'text-muted-foreground'
+        }`}>
+           <Calendar className="h-3 w-3" />
+           <span>{formatDistanceToNow(new Date(task.due_date), { addSuffix: true })}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -181,22 +161,17 @@ function KanbanColumn({
   id,
   title,
   tasks,
-  onAddTask,
+  onAddTaskClick,
   onDeleteTask,
-  onTaskUpdate
+  onTaskUpdateClick
 }: {
   id: string;
   title: string;
   tasks: ProjectTask[];
-  onAddTask: (content: string, status: string) => void;
+  onAddTaskClick: (status: string) => void;
   onDeleteTask: (id: string) => void;
-  onTaskUpdate: (id: string, updates: Partial<ProjectTask>) => void;
+  onTaskUpdateClick: (id: string) => void;
 }) {
-  const [isAdding, setIsAdding] = useState(false);
-  const [content, setContent] = useState("");
-  const formRef = useRef<HTMLDivElement>(null);
-
-  // Make column droppable
   const { setNodeRef, isOver } = useDroppable({
     id: id,
     data: {
@@ -204,30 +179,6 @@ function KanbanColumn({
       column: id,
     },
   });
-
-  // Handle click outside to close the add form
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (formRef.current && !formRef.current.contains(event.target as Node)) {
-        setIsAdding(false);
-      }
-    }
-
-    if (isAdding) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isAdding]);
-
-  const handleAdd = () => {
-    if (content.trim()) {
-      onAddTask(content.trim(), id);
-      setContent("");
-      setIsAdding(false);
-    }
-  };
 
   return (
     <div
@@ -255,52 +206,20 @@ function KanbanColumn({
                 key={task.id} 
                 task={task} 
                 onDelete={onDeleteTask} 
-                onUpdate={onTaskUpdate}
+                onUpdate={() => onTaskUpdateClick(task.id)}
               />
             ))}
         </SortableContext>
       </div>
 
       <div className="mt-4 flex-shrink-0">
-        {isAdding ? (
-          <div ref={formRef} className="space-y-2 animate-in fade-in duration-200">
-            <textarea
-              autoFocus
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full rounded-none border-2 border-foreground bg-background p-3 text-sm font-medium placeholder:text-muted-foreground/50 focus:outline-none focus:shadow-hard-sm"
-              placeholder="Enter task description..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleAdd();
-                }
-              }}
-            />
-            <div className="flex justify-end gap-2">
-              <button 
-                onClick={() => setIsAdding(false)}
-                className="text-xs font-bold text-muted-foreground hover:underline"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleAdd}
-                className="bg-foreground text-background px-3 py-1.5 text-xs font-bold shadow-hard-sm active:translate-y-px"
-              >
-                Add Task
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-foreground/10 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Add Task
-          </button>
-        )}
+        <button
+          onClick={() => onAddTaskClick(id)}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-foreground/10 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add Task
+        </button>
       </div>
     </div>
   );
@@ -316,8 +235,10 @@ export function KanbanBoard({
   const [activeTask, setActiveTask] = useState<ProjectTask | null>(null);
   const [localTasks, setLocalTasks] = useState<ProjectTask[]>(tasks);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<ProjectTask | undefined>(undefined);
+  const [defaultStatus, setDefaultStatus] = useState<string>("TODO");
 
-  // Keep local tasks in sync with props when tasks array changes
   useEffect(() => {
     setLocalTasks(tasks);
   }, [tasks]);
@@ -333,23 +254,32 @@ export function KanbanBoard({
     })
   );
 
+  const handleAddTaskClick = (status: string) => {
+    setDefaultStatus(status);
+    setEditingTask(undefined);
+    setIsTaskDialogOpen(true);
+  };
+
+  const handleEditTaskClick = (taskId: string) => {
+    const task = localTasks.find(t => t.id === taskId);
+    if (task) {
+      setEditingTask(task);
+      setIsTaskDialogOpen(true);
+    }
+  };
+
+  const handleTaskDialogSuccess = (content: string, status?: string, priority?: string, due_date?: string | null) => {
+    if (editingTask) {
+      onTaskUpdate(editingTask.id, { content, status, priority, due_date });
+    } else {
+      onAddTask(content, status || defaultStatus, priority, due_date);
+    }
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const task = localTasks.find((t) => t.id === active.id);
     if (task) setActiveTask(task);
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id;
-    const overId = over.id;
-
-    if (activeId === overId) return;
-
-    const isActiveTask = active.data.current?.type === "Task";
-    if (!isActiveTask) return;
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -368,36 +298,28 @@ export function KanbanBoard({
       return;
     }
 
-    // Determine target status
     let targetStatus = activeTaskObj.status;
 
-    // Check if dropped on a column
     if (over.data.current?.type === "Column") {
       targetStatus = over.data.current.column;
     } else {
-      // Check if dropped on another task
       const overTask = localTasks.find((t) => t.id === overId);
       if (overTask) {
         targetStatus = overTask.status;
       } else {
-        // Fallback: If overId is a column ID string
         const column = COLUMNS.find((c) => c.id === overId);
         if (column) targetStatus = column.id;
       }
     }
 
-    // Get tasks in the target column
     const columnTasks = localTasks
       .filter((t) => t.status === targetStatus)
       .sort((a, b) => a.order_index - b.order_index);
 
-    // Find position of over task
     const overTaskIndex = columnTasks.findIndex((t) => t.id === overId);
     const activeTaskIndex = columnTasks.findIndex((t) => t.id === activeId);
 
-    // If moving to a different column or reordering within same column
     if (activeTaskObj.status !== targetStatus) {
-      // Moving to different column - add at the end or at over position
       const newOrderIndex =
         overTaskIndex >= 0
           ? columnTasks[overTaskIndex].order_index
@@ -407,10 +329,7 @@ export function KanbanBoard({
 
       onTaskUpdate(activeId, { status: targetStatus, order_index: newOrderIndex });
     } else if (activeId !== overId && overTaskIndex >= 0) {
-      // Reordering within same column
       const newColumnTasks = arrayMove(columnTasks, activeTaskIndex, overTaskIndex);
-
-      // Update local state immediately for visual feedback
       const reorderedTasks = newColumnTasks.map((task, index) => ({
         ...task,
         order_index: index,
@@ -424,7 +343,6 @@ export function KanbanBoard({
         });
       });
 
-      // Notify parent of reorder
       if (onTasksReorder) {
         onTasksReorder(
           reorderedTasks.map((t) => ({
@@ -456,9 +374,9 @@ export function KanbanBoard({
               tasks={localTasks
                 .filter((t) => t.status === column.id)
                 .sort((a, b) => a.order_index - b.order_index)}
-              onAddTask={onAddTask}
+              onAddTaskClick={handleAddTaskClick}
               onDeleteTask={setTaskToDelete}
-              onTaskUpdate={onTaskUpdate}
+              onTaskUpdateClick={handleEditTaskClick}
             />
           ))}
         </div>
@@ -484,6 +402,14 @@ export function KanbanBoard({
         description="Are you sure you want to delete this task? This action cannot be undone."
         variant="destructive"
         confirmText="Delete Task"
+      />
+
+      <TaskDialog
+        isOpen={isTaskDialogOpen}
+        onClose={() => setIsTaskDialogOpen(false)}
+        onSuccess={handleTaskDialogSuccess}
+        initialTask={editingTask}
+        defaultStatus={defaultStatus}
       />
     </>
   );

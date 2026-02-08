@@ -22,6 +22,19 @@ class ProjectService:
     def get_project_by_id(self, project_id: uuid.UUID) -> Optional[Project]:
         return self.session.get(Project, project_id)
 
+    def update_project(self, project_id: uuid.UUID, name: Optional[str] = None, framework: Optional[str] = None) -> Optional[Project]:
+        project = self.session.get(Project, project_id)
+        if not project:
+            return None
+        if name is not None:
+            project.name = name
+        if framework is not None:
+            project.framework = framework
+        self.session.add(project)
+        self.session.commit()
+        self.session.refresh(project)
+        return project
+
     def delete_project(self, project_id: uuid.UUID) -> bool:
         project = self.session.get(Project, project_id)
         if not project:
@@ -44,7 +57,7 @@ class ProjectService:
     def get_project_task_by_id(self, task_id: uuid.UUID) -> Optional[ProjectTask]:
         return self.session.get(ProjectTask, task_id)
 
-    def update_project_task(self, task_id: uuid.UUID, status: Optional[str] = None, content: Optional[str] = None, order_index: Optional[float] = None) -> Optional[ProjectTask]:
+    def update_project_task(self, task_id: uuid.UUID, status: Optional[str] = None, content: Optional[str] = None, order_index: Optional[float] = None, priority: Optional[str] = None, due_date: Optional[datetime] = None) -> Optional[ProjectTask]:
         task = self.session.get(ProjectTask, task_id)
         if not task:
             return None
@@ -55,6 +68,10 @@ class ProjectService:
             task.content = content
         if order_index is not None:
             task.order_index = order_index
+        if priority is not None:
+            task.priority = priority
+        if due_date is not None:
+            task.due_date = due_date
             
         task.updated_at = datetime.utcnow()
         self.session.add(task)

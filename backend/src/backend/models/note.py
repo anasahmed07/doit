@@ -7,6 +7,7 @@ class Note(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(index=True)
     category_id: Optional[uuid.UUID] = Field(default=None, foreign_key="category.id")
+    title: Optional[str] = None
     content: Optional[str] = None # Text content (Markdown)
     order_index: float = Field(default=0.0)
     created_at: datetime = Field(default_factory=datetime.utcnow)

@@ -9,6 +9,7 @@ interface ProjectsContextType {
   isSidebarOpen: boolean;
   fetchProjects: (force?: boolean) => Promise<void>;
   addProject: (project: Project) => void;
+  updateProject: (id: string, updates: Partial<Project>) => void;
   removeProject: (id: string) => void;
   toggleSidebar: (isOpen?: boolean) => void;
 }
@@ -42,6 +43,10 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     setProjects((prev) => [project, ...prev]);
   }, []);
 
+  const updateProject = useCallback((id: string, updates: Partial<Project>) => {
+    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
+  }, []);
+
   const removeProject = useCallback((id: string) => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
   }, []);
@@ -58,6 +63,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
         isSidebarOpen,
         fetchProjects,
         addProject,
+        updateProject,
         removeProject,
         toggleSidebar,
       }}

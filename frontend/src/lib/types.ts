@@ -24,6 +24,7 @@ export interface Note {
   id: string;
   user_id?: string; // Optional because API might not return it in all views or it's redundant
   category_id?: string | null;
+  title?: string | null;
   content?: string;
   order_index: number;
   created_at: string;
@@ -35,7 +36,7 @@ export interface Project {
   id: string;
   user_id: string;
   name: string;
-  framework: "KANBAN_FIXED";
+  framework: "KANBAN_FIXED" | "GRID";
   created_at: string;
 }
 
@@ -43,6 +44,8 @@ export interface ProjectTask {
   id: string;
   project_id: string;
   status: string; // TODO, IN_PROGRESS, DONE
+  priority: string; // LOW, MEDIUM, HIGH
+  due_date?: string | null;
   content: string;
   order_index: number;
   created_at: string;

@@ -17,6 +17,10 @@ class ProjectCreate(BaseModel):
     name: str
     framework: str = "KANBAN_FIXED"
 
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    framework: Optional[str] = None
+
 class ProjectRead(BaseModel):
     id: uuid.UUID
     name: str
@@ -26,11 +30,15 @@ class ProjectRead(BaseModel):
 class ProjectTaskCreate(BaseModel):
     content: str
     status: str = "TODO"
+    priority: str = "MEDIUM"
+    due_date: Optional[datetime] = None
 
 class ProjectTaskUpdate(BaseModel):
     content: Optional[str] = None
     status: Optional[str] = None
     order_index: Optional[float] = None
+    priority: Optional[str] = None
+    due_date: Optional[datetime] = None
 
 class ProjectTaskRead(BaseModel):
     id: uuid.UUID
@@ -38,6 +46,8 @@ class ProjectTaskRead(BaseModel):
     status: str
     content: str
     order_index: float
+    priority: str
+    due_date: Optional[datetime]
     created_at: datetime
     updated_at: datetime
 
@@ -74,6 +84,24 @@ def read_project(
     if not project or project.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
+
+@router.patch("/{project_id}", response_model=ProjectRead)
+def update_project(
+    project_id: uuid.UUID,
+    project_in: ProjectUpdate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    project = service.get_project_by_id(project_id)
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    updated = service.update_project(
+        project_id, 
+        name=project_in.name,
+        framework=project_in.framework
+    )
+    return updated
 
 @router.delete("/{project_id}")
 def delete_project(
@@ -115,7 +143,9 @@ def create_project_task(
     task = ProjectTask(
         project_id=project_id,
         content=task_in.content,
-        status=task_in.status
+        status=task_in.status,
+        priority=task_in.priority,
+        due_date=task_in.due_date
     )
     return service.create_project_task(task)
 
@@ -140,7 +170,9 @@ def update_project_task(
         task_id, 
         status=task_in.status, 
         content=task_in.content, 
-        order_index=task_in.order_index
+        order_index=task_in.order_index,
+        priority=task_in.priority,
+        due_date=task_in.due_date
     )
 
 @router.delete("/tasks/{task_id}")
