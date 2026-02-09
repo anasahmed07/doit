@@ -1,5 +1,5 @@
 [project]
-name = "mcp-service"
+name = "mcp_service"
 version = "0.1.0"
 description = "DoIt MCP Service — Conversational chatbot powered by FastMCP and Gemini"
 readme = "README.md"
@@ -19,6 +19,10 @@ dependencies = [
     "pydantic-settings>=2.6.0",
     "psycopg[binary]>=3.2.0",
 ]
+
+[project.scripts]
+prod = "mcp_service:production"
+dev = "mcp_service:development"
 
 [project.optional-dependencies]
 dev = [
