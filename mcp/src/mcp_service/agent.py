@@ -60,7 +60,7 @@ def create_agent(mcp_server: MCPServerStreamableHttp) -> Agent:
     """Create the DoIt assistant agent with MCP tools."""
     return Agent(
         name="DoIt Assistant",
-        model="gemini-2.5-flash-preview-05-20",
+        model="gemini-3-pro-preview",
         instructions=SYSTEM_PROMPT,
         mcp_servers=[mcp_server],
     )

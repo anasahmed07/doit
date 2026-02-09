@@ -19,7 +19,7 @@ DATABASE_URL=postgresql://...  # Same as backend
 BETTER_AUTH_SECRET=...          # Same as backend (for session validation)
 GEMINI_API_KEY=...              # Google AI API key
 MCP_HOST=0.0.0.0
-MCP_PORT=8001
+MCP_PORT=8080
 ```
 
 ### Frontend additions (`frontend/.env.local`)
@@ -126,8 +126,7 @@ frontend/
 │   │   ├── ChatWidget.tsx        # NEW — Floating chat panel + toggle
 │   │   ├── ChatPanel.tsx         # NEW — Chat conversation UI
 │   │   ├── ChatMessageList.tsx   # NEW — Message list with markdown
-│   │   ├── ChatInput.tsx         # NEW — Message input with send
-│   │   └── ConversationList.tsx  # NEW — Conversation sidebar/list
+│   │   └── ChatInput.tsx         # NEW — Message input with send
 │   └── lib/
 │       └── types.ts              # MODIFIED — Add Conversation, ChatMessage types
 ```

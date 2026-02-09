@@ -1,14 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChatPanel } from "@/components/ChatPanel";
 import { Plus, MessageSquare, Trash2 } from "lucide-react";
 import type { Conversation } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 
-export default function ChatPage() {
+function ChatPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeConversationId = searchParams.get("id");
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
 
   const loadConversations = useCallback(async () => {
@@ -29,13 +33,16 @@ export default function ChatPage() {
     loadConversations();
   }, [loadConversations]);
 
+  const handleSelectConversation = (id: string) => {
+    router.replace(`/chat?id=${id}`, { scroll: false });
+  };
+
   const handleNewConversation = () => {
-    setActiveConversationId(null);
+    router.replace("/chat", { scroll: false });
   };
 
   const handleConversationCreated = (id: string) => {
-    setActiveConversationId(id);
-    // Reload conversation list to show the new one
+    router.replace(`/chat?id=${id}`, { scroll: false });
     loadConversations();
   };
 
@@ -46,7 +53,7 @@ export default function ChatPage() {
       if (res.ok) {
         setConversations((prev) => prev.filter((c) => c.id !== id));
         if (activeConversationId === id) {
-          setActiveConversationId(null);
+          router.replace("/chat", { scroll: false });
         }
       }
     } catch (err) {
@@ -82,7 +89,7 @@ export default function ChatPage() {
             conversations.map((conv) => (
               <button
                 key={conv.id}
-                onClick={() => setActiveConversationId(conv.id)}
+                onClick={() => handleSelectConversation(conv.id)}
                 className={`flex w-full items-center gap-2 border-b border-border px-3 py-2.5 text-left transition-colors hover:bg-muted ${
                   activeConversationId === conv.id
                     ? "bg-muted border-l-2 border-l-primary"
@@ -118,7 +125,9 @@ export default function ChatPage() {
           <select
             value={activeConversationId || ""}
             onChange={(e) =>
-              setActiveConversationId(e.target.value || null)
+              e.target.value
+                ? handleSelectConversation(e.target.value)
+                : handleNewConversation()
             }
             className="flex-1 border border-border bg-background px-2 py-1 text-sm text-foreground"
           >
@@ -138,11 +147,18 @@ export default function ChatPage() {
         </div>
 
         <ChatPanel
-          key={activeConversationId || "new"}
           conversationId={activeConversationId}
           onConversationCreated={handleConversationCreated}
         />
       </div>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="flex h-full items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
+      <ChatPageContent />
+    </Suspense>
   );
 }

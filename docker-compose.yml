@@ -1,15 +1,45 @@
 services:
-  db:
-    image: postgres:15-alpine
-    restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=doit
+  backend:
+    build:
+      context: ./backend
+    command: uv run uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
-      - "5432:5432"
+      - "8000:8000"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src:/app/src
+      - backend_venv:/app/.venv
+    env_file:
+      - ./backend/.env
+
+  mcp:
+    build:
+      context: ./mcp
+    command: uv run uvicorn mcp_service.main:app --host 0.0.0.0 --port 8080 --reload
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./mcp/src:/app/src
+      - mcp_venv:/app/.venv
+    env_file:
+      - ./mcp/.env
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    env_file:
+      - ./frontend/.env.local
+    environment:
+      - HOSTNAME=0.0.0.0
+      - BACKEND_URL=http://backend:8000
+      - MCP_URL=http://mcp:8080
 
 volumes:
-  postgres_data:
+  backend_venv:
+  mcp_venv:
+  frontend_node_modules:

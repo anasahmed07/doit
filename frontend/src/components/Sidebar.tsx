@@ -13,7 +13,8 @@ import {
   Sun,
   Moon,
   FileText,
-  MessageSquare
+  MessageSquare,
+  Trash2
 } from "lucide-react";
 import { Category, Project } from "@/lib/types";
 import { CategoryDialog } from "@/components/CreateCategoryDialog";
@@ -301,12 +302,14 @@ function SidebarContent() {
             {/* Projects Group */}
             <div className="space-y-1">
               <div className="flex items-center justify-between pr-2 group">
-                <button
+                <Link
+                  href="/projects"
                   onClick={() => {
+                    // Ensure it opens when navigating
                     if (!isProjectsOpen) {
                       fetchProjects();
+                      setIsProjectsOpen(true);
                     }
-                    setIsProjectsOpen(!isProjectsOpen);
                   }}
                   className={`flex flex-1 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                     pathname.startsWith("/projects")
@@ -316,22 +319,35 @@ function SidebarContent() {
                 >
                   <Layout className="h-4 w-4" />
                   Projects
-                  <ChevronDown
-                    className={`h-4 w-4 ml-auto transition-transform ${
-                      isProjectsOpen ? "" : "-rotate-90"
-                    }`}
-                  />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsProjectDialogOpen(true);
-                  }}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all ml-1"
-                  title="Create Project"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                </button>
+                </Link>
+                <div className="flex items-center">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!isProjectsOpen) {
+                         fetchProjects();
+                      }
+                      setIsProjectsOpen(!isProjectsOpen);
+                    }}
+                    className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        isProjectsOpen ? "" : "-rotate-90"
+                      }`}
+                    />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsProjectDialogOpen(true);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all ml-1"
+                    title="Create Project"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
               
               {isProjectsOpen && (
@@ -342,18 +358,40 @@ function SidebarContent() {
                     </div>
                   ) : (
                     projects.slice(0, 5).map((project) => (
-                      <Link
-                        key={project.id}
-                        href={`/projects/${project.id}`}
-                        className={`group flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition-all ${
-                          pathname === `/projects/${project.id}`
-                            ? "text-primary"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        <span className="truncate">{project.name}</span>
-                        <ChevronRight className="h-3 w-3 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
-                      </Link>
+                      <div key={project.id} className="group flex items-center justify-between pr-2">
+                        <Link
+                          href={`/projects/${project.id}`}
+                          className={`flex-1 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all ${
+                            pathname === `/projects/${project.id}`
+                              ? "text-primary"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <span className="truncate">{project.name}</span>
+                        </Link>
+                        <button
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            if (confirm("Are you sure you want to delete this project?")) {
+                              try {
+                                const res = await fetch(`/api/projects/${project.id}`, { method: "DELETE" });
+                                if (res.ok) {
+                                  fetchProjects(); // Reload list
+                                  if (pathname === `/projects/${project.id}`) {
+                                    router.push("/projects");
+                                  }
+                                }
+                              } catch (err) {
+                                console.error("Failed to delete project", err);
+                              }
+                            }
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all"
+                          title="Delete Project"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
                     ))
                   )}
                   {projects.length > 5 && (

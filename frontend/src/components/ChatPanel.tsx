@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ChatInput } from "./ChatInput";
 import { ChatMessageList } from "./ChatMessageList";
 import type { ChatMessage, SSEEvent } from "@/lib/types";
@@ -10,25 +10,37 @@ interface ChatPanelProps {
   onConversationCreated?: (id: string) => void;
 }
 
-export function ChatPanel({ conversationId, onConversationCreated }: ChatPanelProps) {
+export function ChatPanel({ conversationId: externalConvId, onConversationCreated }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // Internal conversation ID that only this component controls
+  const [internalConvId, setInternalConvId] = useState<string | null>(externalConvId);
+  const prevExternalId = useRef(externalConvId);
 
-  // Load messages when conversationId changes
+  // Sync from external prop only when it's a genuine navigation change
+  // (user clicked a different conversation in the sidebar)
   useEffect(() => {
-    if (!conversationId) {
+    if (externalConvId !== prevExternalId.current) {
+      prevExternalId.current = externalConvId;
+      setInternalConvId(externalConvId);
       setMessages([]);
-      return;
+      setStreamingContent("");
+      setIsStreaming(false);
     }
+  }, [externalConvId]);
+
+  // Load messages when internalConvId changes (navigation or initial load)
+  useEffect(() => {
+    if (!internalConvId) return;
 
     let cancelled = false;
 
     async function loadMessages() {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/conversations/${conversationId}/messages`);
+        const res = await fetch(`/api/conversations/${internalConvId}/messages`);
         if (res.ok) {
           const data: ChatMessage[] = await res.json();
           if (!cancelled) {
@@ -44,14 +56,14 @@ export function ChatPanel({ conversationId, onConversationCreated }: ChatPanelPr
 
     loadMessages();
     return () => { cancelled = true; };
-  }, [conversationId]);
+  }, [internalConvId]);
 
   const sendMessage = useCallback(
     async (content: string) => {
       // Optimistically add user message
       const tempUserMsg: ChatMessage = {
         id: `temp-${Date.now()}`,
-        conversation_id: conversationId || "",
+        conversation_id: internalConvId || "",
         role: "user",
         content,
         created_at: new Date().toISOString(),
@@ -65,7 +77,7 @@ export function ChatPanel({ conversationId, onConversationCreated }: ChatPanelPr
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            conversation_id: conversationId,
+            conversation_id: internalConvId,
             message: content,
           }),
         });
@@ -108,7 +120,7 @@ export function ChatPanel({ conversationId, onConversationCreated }: ChatPanelPr
                 if (fullAssistantContent.trim()) {
                   const assistantMsg: ChatMessage = {
                     id: event.message_id || `msg-${Date.now()}`,
-                    conversation_id: event.conversation_id || conversationId || "",
+                    conversation_id: event.conversation_id || internalConvId || "",
                     role: "assistant",
                     content: fullAssistantContent,
                     created_at: new Date().toISOString(),
@@ -116,14 +128,16 @@ export function ChatPanel({ conversationId, onConversationCreated }: ChatPanelPr
                   setMessages((prev) => [...prev, assistantMsg]);
                 }
 
-                // Notify parent of new conversation
-                if (event.conversation_id && !conversationId) {
+                // Update internal ID and notify parent (without causing remount)
+                if (event.conversation_id && !internalConvId) {
+                  setInternalConvId(event.conversation_id);
+                  prevExternalId.current = event.conversation_id;
                   onConversationCreated?.(event.conversation_id);
                 }
               } else if (event.type === "error") {
                 const errorMsg: ChatMessage = {
                   id: `error-${Date.now()}`,
-                  conversation_id: conversationId || "",
+                  conversation_id: internalConvId || "",
                   role: "assistant",
                   content: `⚠️ ${event.content || "An error occurred. Please try again."}`,
                   created_at: new Date().toISOString(),
@@ -143,7 +157,7 @@ export function ChatPanel({ conversationId, onConversationCreated }: ChatPanelPr
           : "Failed to connect to the chat service. Please check your connection and try again.";
         const errorMsg: ChatMessage = {
           id: `error-${Date.now()}`,
-          conversation_id: conversationId || "",
+          conversation_id: internalConvId || "",
           role: "assistant",
           content: `⚠️ ${errorContent}`,
           created_at: new Date().toISOString(),
@@ -154,7 +168,7 @@ export function ChatPanel({ conversationId, onConversationCreated }: ChatPanelPr
         setStreamingContent("");
       }
     },
-    [conversationId, onConversationCreated]
+    [internalConvId, onConversationCreated]
   );
 
   return (
