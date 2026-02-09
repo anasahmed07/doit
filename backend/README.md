@@ -9,6 +9,6 @@ short_description: FastAPI Backend for DoIt Full-Stack Productivity App.
 app_port: 8000
 ---
 
-# Supply Guard AI Backend
+# Doit Backend API
 
 FastAPI Backend for DoIt Full-Stack Productivity App.

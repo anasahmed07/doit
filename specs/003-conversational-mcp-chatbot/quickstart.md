@@ -58,7 +58,7 @@ cd backend/ && uv run dev
 
 ### Terminal 2: MCP Service
 ```bash
-cd mcp/ && uvicorn mcp_service.main:app --reload --port 8080
+cd mcp/ && uv run dev
 ```
 
 ### Terminal 3: Frontend (existing)
