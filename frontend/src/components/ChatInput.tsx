@@ -37,24 +37,26 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   };
 
   return (
-    <div className="flex items-end gap-2 border-t border-border bg-card p-3">
-      <textarea
-        ref={textareaRef}
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Type a message..."
-        disabled={disabled}
-        rows={1}
-        className="flex-1 resize-none rounded-none border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none disabled:opacity-50"
-      />
-      <button
-        onClick={handleSubmit}
-        disabled={disabled || !message.trim()}
-        className="flex h-9 w-9 items-center justify-center border border-border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-      >
-        <Send className="h-4 w-4" />
-      </button>
+    <div className="border-t border-border/50 bg-background/50 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/50">
+      <div className="flex items-end gap-2 rounded-2xl border border-border bg-background p-1.5 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+        <textarea
+          ref={textareaRef}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type a message..."
+          disabled={disabled}
+          rows={1}
+          className="flex-1 resize-none bg-transparent px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 max-h-[120px]"
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={disabled || !message.trim()}
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+        >
+          <Send className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }

@@ -203,7 +203,7 @@
 - [x] T043 [P] Add session expiry detection in chat proxy routes — detect 401 from MCP, prompt re-login (FR-014)
 - [x] T044 [P] Mobile responsiveness for ChatWidget — full-screen panel on small screens (FR-016)
 - [x] T045 [P] Update agent system prompt in `mcp/src/mcp_service/agent.py` — refine instructions for all 15 tools, edge cases (ambiguous commands, not-found items), friendly tone
-- [ ] T046 Run quickstart.md validation — verify all setup steps, environment variables, and verification steps work end-to-end
+- [x] T046 Run quickstart.md validation — verify all setup steps, environment variables, and verification steps work end-to-end
 
 ---
 

@@ -52,7 +52,9 @@ mcp.tool()(delete_category)
 mcp.tool()(get_dashboard_summary)
 
 # --- FastAPI App ---
-app = FastAPI(title="DoIt MCP Service")
+# Create MCP ASGI app (default path=/mcp) and wire its lifespan into FastAPI
+mcp_app = mcp.http_app(transport="streamable-http")
+app = FastAPI(title="DoIt MCP Service", lifespan=mcp_app.lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -61,10 +63,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Mount FastMCP on /mcp
-mcp_app = mcp.http_app(transport="streamable-http")
-app.mount("/mcp", mcp_app)
 
 
 # --- Auth Helper ---
@@ -291,3 +289,8 @@ async def delete_conversation(conversation_id: str, request: Request):
         await db.commit()
 
     return {"ok": True}
+
+
+# Mount MCP at root AFTER all API routes so they take precedence.
+# FastMCP's internal route is at /mcp, so requests to /mcp hit it directly.
+app.mount("/", mcp_app)
