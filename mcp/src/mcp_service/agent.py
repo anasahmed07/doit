@@ -101,9 +101,13 @@ async def run_agent_stream(
 
             async for event in result.stream_events():
                 if event.type == "raw_response_event":
-                    # Raw LLM streaming — extract text deltas
                     data = event.data
-                    if hasattr(data, "choices"):
+                    # Responses API format: ResponseTextDeltaEvent has a `delta` str
+                    if hasattr(data, "delta") and isinstance(data.delta, str) and data.delta:
+                        full_response += data.delta
+                        yield {"type": "text_delta", "content": data.delta}
+                    # Chat Completions format fallback: choices[].delta.content
+                    elif hasattr(data, "choices"):
                         for choice in data.choices:
                             if hasattr(choice, "delta") and choice.delta and choice.delta.content:
                                 text = choice.delta.content
@@ -112,7 +116,6 @@ async def run_agent_stream(
                 elif event.type == "run_item_stream_event":
                     if event.name == "tool_called":
                         item = event.item
-                        tool_name = getattr(item, "raw_item", {})
                         if hasattr(item, "raw_item") and hasattr(item.raw_item, "name"):
                             yield {
                                 "type": "tool_call",
