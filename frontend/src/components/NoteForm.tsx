@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import {
   Loader2,
   Image as ImageIcon,
+  Mic,
+  MicOff,
   X,
   Tag,
   Bold,
@@ -17,7 +19,9 @@ import {
   Link2,
   Quote,
   Undo,
-  Redo
+  Redo,
+  AlertCircle,
+  Settings
 } from "lucide-react";
 import { Note, Category } from "@/lib/types";
 
@@ -34,15 +38,90 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
   const [history, setHistory] = useState<string[]>([initialNote?.content || ""]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [files, setFiles] = useState<File[]>([]);
+  const [deletedAssetIds, setDeletedAssetIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     initialNote?.category_id || categoryId || null
   );
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("");
+  const [micError, setMicError] = useState<string | null>(null);
+  const [showDeviceSettings, setShowDeviceSettings] = useState(false);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const historyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchAudioDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter(device => device.kind === 'audioinput');
+      setAudioDevices(audioInputs);
+      if (audioInputs.length > 0 && !selectedAudioDevice) {
+        setSelectedAudioDevice(audioInputs[0].deviceId);
+      }
+    } catch (err) {
+      console.error("Error fetching audio devices:", err);
+    }
+  };
+
+  const startRecording = async () => {
+    setMicError(null);
+    try {
+      const constraints = {
+        audio: selectedAudioDevice ? { deviceId: { exact: selectedAudioDevice } } : true
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      // After getting permission, we can get device labels
+      await fetchAudioDevices();
+
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioFile = new File([audioBlob], `voice-note-${Date.now()}.webm`, {
+          type: "audio/webm",
+        });
+        setFiles((prev) => [...prev, audioFile]);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setShowDeviceSettings(false);
+    } catch (err: any) {
+      console.error("Failed to start recording:", err);
+      if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError' || err.message.includes("Requested device not found")) {
+        setMicError("No microphone found. Please connect one and try again.");
+      } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setMicError("Microphone access denied. Please enable it in your browser settings.");
+      } else {
+        setMicError("Could not access microphone. " + err.message);
+      }
+      setShowDeviceSettings(true);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
 
   useEffect(() => {
     // Fetch categories for the picker
@@ -378,6 +457,20 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
         );
       }
 
+      // 3. Delete Assets (if any marked for deletion)
+      if (deletedAssetIds.length > 0) {
+        await Promise.all(
+          deletedAssetIds.map(async (assetId) => {
+            const deleteResponse = await fetch(`/api/notes/media/${assetId}`, {
+              method: "DELETE",
+            });
+            if (!deleteResponse.ok) {
+              console.error(`Failed to delete asset ${assetId}`);
+            }
+          })
+        );
+      }
+
       if (!initialNote) {
         setTitle("");
         setContent("");
@@ -446,16 +539,25 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
         </p>
       </div>
 
-      {/* Existing Media (ReadOnly for now) */}
+      {/* Existing Media */}
       {initialNote?.media_assets && initialNote.media_assets.length > 0 && (
          <div className="flex flex-wrap gap-2 pb-2">
-            {initialNote.media_assets.map((asset) => (
-                <div key={asset.id} className="relative flex items-center justify-center border border-border bg-secondary/30 h-16 w-16 overflow-hidden rounded-md">
+            {initialNote.media_assets
+              .filter(asset => !deletedAssetIds.includes(asset.id))
+              .map((asset) => (
+                <div key={asset.id} className="relative group flex items-center justify-center border border-border bg-secondary/30 h-16 w-16 overflow-hidden rounded-md">
                    {asset.mime_type.startsWith("image/") ? (
                        <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${asset.url}`} alt="attachment" className="h-full w-full object-cover" />
                    ) : (
                        <span className="text-[10px] uppercase text-muted-foreground">{asset.mime_type.split("/")[1]}</span>
                    )}
+                   <button
+                     type="button"
+                     onClick={() => setDeletedAssetIds(prev => [...prev, asset.id])}
+                     className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-background/80 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                   >
+                     <X className="h-3 w-3" />
+                   </button>
                 </div>
             ))}
          </div>
@@ -497,6 +599,73 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
              className="hidden"
              onChange={handleFileSelect}
            />
+
+           <div className="relative flex items-center">
+             <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`flex items-center gap-2 rounded-none px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                isRecording 
+                  ? "bg-destructive/10 text-destructive animate-pulse" 
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+             >
+               {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+               {isRecording ? "Stop Recording" : "Voice Note"}
+             </button>
+             
+             {audioDevices.length > 1 && !isRecording && (
+               <button
+                 type="button"
+                 onClick={() => setShowDeviceSettings(!showDeviceSettings)}
+                 className="p-1 text-muted-foreground hover:text-foreground"
+                 title="Microphone Settings"
+               >
+                 <Settings className="h-3.5 w-3.5" />
+               </button>
+             )}
+
+             {(showDeviceSettings || micError) && (
+               <div className="absolute left-0 bottom-full mb-2 z-50 w-64 rounded-md border-2 border-foreground bg-background shadow-hard p-3 space-y-2">
+                 <div className="flex items-center justify-between">
+                   <h4 className="text-[10px] font-bold uppercase tracking-wider">Audio Settings</h4>
+                   <button onClick={() => { setShowDeviceSettings(false); setMicError(null); }}>
+                     <X className="h-3 w-3" />
+                   </button>
+                 </div>
+
+                 {micError && (
+                   <div className="flex items-start gap-2 text-destructive bg-destructive/10 p-2 rounded text-[11px]">
+                     <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                     <p>{micError}</p>
+                   </div>
+                 )}
+
+                 <div className="space-y-1">
+                   <label className="text-[9px] font-bold text-muted-foreground uppercase">Microphone</label>
+                   <select
+                     value={selectedAudioDevice}
+                     onChange={(e) => setSelectedAudioDevice(e.target.value)}
+                     className="w-full text-xs bg-secondary border border-border rounded px-2 py-1 focus:outline-none"
+                   >
+                     {audioDevices.length === 0 && <option value="">No microphones found</option>}
+                     {audioDevices.map((device) => (
+                       <option key={device.deviceId} value={device.deviceId}>
+                         {device.label || `Microphone ${device.deviceId.slice(0, 5)}...`}
+                       </option>
+                     ))}
+                   </select>
+                   <button 
+                     type="button"
+                     onClick={fetchAudioDevices}
+                     className="text-[9px] text-primary hover:underline font-bold"
+                   >
+                     Refresh Devices
+                   </button>
+                 </div>
+               </div>
+             )}
+           </div>
 
            {/* Category Picker */}
            <div className="relative">

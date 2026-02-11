@@ -19,6 +19,13 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
     }
   }, [message]);
 
+  // Auto-focus when re-enabled
+  useEffect(() => {
+    if (!disabled && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [disabled]);
+
   const handleSubmit = () => {
     const trimmed = message.trim();
     if (!trimmed || disabled) return;

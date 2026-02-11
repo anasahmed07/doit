@@ -208,3 +208,22 @@ def get_media(
         raise HTTPException(status_code=404, detail="Asset not found")
     
     return Response(content=asset.data, media_type=asset.mime_type)
+
+@router.delete("/media/{asset_id}")
+def delete_media(
+    asset_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = NoteService(session)
+    asset = service.get_media_asset(asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    
+    # Check ownership via the associated note
+    note = service.get_note_by_id(asset.note_id)
+    if not note or note.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this asset")
+    
+    service.delete_media_asset(asset_id)
+    return {"ok": True}

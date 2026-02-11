@@ -1,15 +1,20 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
+
+
+def _utc_now() -> datetime:
+    """Return current UTC time as a naive datetime (matching DB column type)."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class Conversation(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(index=True)
     title: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utc_now)
+    updated_at: datetime = Field(default_factory=_utc_now)
 
     messages: List["Message"] = Relationship(
         back_populates="conversation",
@@ -22,6 +27,6 @@ class Message(SQLModel, table=True):
     conversation_id: uuid.UUID = Field(foreign_key="conversation.id", index=True)
     role: str  # "user" or "assistant"
     content: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utc_now)
 
     conversation: Optional[Conversation] = Relationship(back_populates="messages")

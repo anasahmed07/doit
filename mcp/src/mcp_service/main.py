@@ -1,12 +1,14 @@
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastmcp import FastMCP, Context
+from fastmcp.server.middleware import Middleware, MiddlewareContext
+from fastmcp.server.dependencies import get_http_request
 from pydantic import BaseModel
 from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
@@ -16,8 +18,25 @@ from mcp_service.database import async_session_factory
 from mcp_service.auth import validate_session_token
 from mcp_service.models.conversation import Conversation, Message
 
+
+# --- Auth Middleware for MCP ---
+class UserIdMiddleware(Middleware):
+    """Extract X-User-ID header from HTTP request and inject into MCP context state."""
+
+    async def on_call_tool(self, context, call_next):
+        if context.fastmcp_context:
+            try:
+                request = get_http_request()
+                user_id = request.headers.get("x-user-id")
+                if user_id:
+                    context.fastmcp_context.set_state("user_id", user_id)
+            except RuntimeError:
+                pass
+        return await call_next(context)
+
+
 # --- FastMCP Server ---
-mcp = FastMCP("doit-mcp")
+mcp = FastMCP("doit-mcp", middleware=[UserIdMiddleware()])
 
 # --- Register MCP Tools ---
 from mcp_service.tools.tasks import list_tasks, create_task, update_task, delete_task
@@ -182,7 +201,7 @@ async def chat(request: Request, body: ChatRequest):
                 if not conversation.title:
                     # Use first 50 chars of user message as title
                     conversation.title = body.message[:50] + ("..." if len(body.message) > 50 else "")
-                conversation.updated_at = datetime.utcnow()
+                conversation.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
                 db.add(conversation)
                 await db.commit()
                 await db.refresh(assistant_msg)

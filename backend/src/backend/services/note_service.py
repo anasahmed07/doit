@@ -65,6 +65,14 @@ class NoteService:
 
     def get_media_asset(self, asset_id: uuid.UUID) -> Optional[MediaAsset]:
         return self.session.get(MediaAsset, asset_id)
+
+    def delete_media_asset(self, asset_id: uuid.UUID) -> bool:
+        asset = self.session.get(MediaAsset, asset_id)
+        if not asset:
+            return False
+        self.session.delete(asset)
+        self.session.commit()
+        return True
     
     def update_note_order(self, note_id: uuid.UUID, new_index: float) -> Optional[Note]:
         note = self.session.get(Note, note_id)

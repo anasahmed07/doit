@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import { formatDistanceToNow } from "date-fns";
+import { Pre } from "./MarkdownComponents";
 
 interface NoteViewDialogProps {
   note: Note | null;
@@ -157,6 +158,14 @@ export function NoteViewDialog({
                                       alt="Attachment" 
                                       className="h-full w-full object-contain transition-transform group-hover:scale-[1.02]"
                                   />
+                              ) : asset.mime_type.startsWith("audio/") ? (
+                                  <div className="flex h-full w-full items-center justify-center bg-secondary/30 p-4">
+                                     <audio 
+                                      src={getAssetUrl(asset.url)} 
+                                      controls 
+                                      className="w-full"
+                                     />
+                                  </div>
                               ) : (
                                   <div className="flex h-full w-full items-center justify-center font-mono text-sm uppercase font-bold text-muted-foreground">
                                       {asset.mime_type}
@@ -169,10 +178,11 @@ export function NoteViewDialog({
                )}
 
                {/* Markdown Content */}
-               <div className="prose prose-lg dark:prose-invert max-w-none break-words [overflow-wrap:anywhere] prose-headings:font-black prose-headings:tracking-tighter prose-h1:text-3xl prose-h1:mt-6 prose-h1:mb-3 prose-h2:text-2xl prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-xl prose-h3:mt-4 prose-h3:mb-2 prose-h4:text-lg prose-h4:mt-3 prose-h4:mb-1.5 prose-p:leading-relaxed prose-p:my-2 prose-a:text-primary prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground [&_br]:block [&_br]:content-[''] [&_br]:mt-2">
+               <div className="prose prose-lg dark:prose-invert max-w-none break-words [overflow-wrap:anywhere] prose-headings:font-black prose-headings:tracking-tighter prose-h1:text-3xl prose-h1:mt-6 prose-h1:mb-3 prose-h2:text-2xl prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-xl prose-h3:mt-4 prose-h3:mb-2 prose-h4:text-lg prose-h4:mt-3 prose-h4:mb-1.5 prose-p:leading-relaxed prose-p:my-2 prose-a:text-primary prose-code:text-foreground prose-pre:border-2 prose-pre:border-foreground prose-pre:bg-secondary/20 prose-pre:text-foreground prose-pre:rounded-none prose-img:border-2 prose-img:border-foreground [&_br]:block [&_br]:content-[''] [&_br]:mt-2">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
                     components={{
+                      pre: Pre,
                       input: ({ checked, disabled, ...props }) => {
                         return (
                           <input
