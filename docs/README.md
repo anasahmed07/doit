@@ -1,186 +1,159 @@
-# DoIt - Terminal Task Manager
+# DoIt
 
-![DoIt CLI Interface](../frontend/public/images/doit-cli-screenshot.png)
+> From CLI to full-stack to fully agentic — a productivity platform where you can manage tasks, projects, and notes through a web UI or just by chatting with an AI assistant.
 
-## Overview
+![Python](https://img.shields.io/badge/python-3.13+-blue.svg)
+![TypeScript](https://img.shields.io/badge/typescript-5-blue.svg)
+![Next.js](https://img.shields.io/badge/next.js-16-black.svg)
+![FastAPI](https://img.shields.io/badge/fastapi-0.115-009688.svg)
+![MCP](https://img.shields.io/badge/MCP-FastMCP-purple.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-**DoIt** is a modern, beautiful command-line task management application built with Python 3.13+. It provides an elegant terminal interface for managing your daily tasks with features like smart autocomplete, slash commands, and a polished user experience inspired by modern CLI tools.
+## What is DoIt?
 
-The application offers a lightweight, in-memory task management solution with an intuitive interface that makes task management effortless. Whether you're organizing your daily todos or learning clean code principles in Python, DoIt delivers a fast and beautiful experience directly in your terminal.
+DoIt is a productivity application that combines a traditional web interface with a conversational AI assistant. You can organize your work the classic way — dashboards, Kanban boards, note editors — or skip the clicks entirely and just tell the chatbot what you need. Both interfaces share the same data, so everything stays in sync.
 
-## Key Features
+## Screenshots
 
-### 🎨 Beautiful Terminal UI
-- Rich colors, panels, and formatted output using the Rich library
-- Gradient ASCII art logo with eye-catching design
-- Clean, organized table layouts for task lists
-- Visual status indicators distinguishing completed and pending tasks
+| Dashboard | Kanban Board |
+|:---------:|:------------:|
+| ![Dashboard](../frontend/public/images/Doit%20Dashboard.png) | ![Kanban Board](../frontend/public/images/Doit%20Project%20Kanban%20view.png) |
 
-### ⚡ Smart Autocomplete
-- Tab completion with command templates and placeholders
-- Dropdown command suggestions as you type
-- Intelligent filtering of commands based on input
-- Template insertion for quick command entry
+| Notes Board | Chat Interface |
+|:-----------:|:--------------:|
+| ![Notes Board](../frontend/public/images/Doit%20Notes%20Board.png) | ![Chat Interface](../frontend/public/images/Doit%20Chat%20Interface.png) |
 
-### 💬 Slash Commands
-- Intuitive `/command` syntax for all operations
-- Easy-to-remember command structure
-- Comprehensive command set for full CRUD operations
-- Helpful inline descriptions for each command
+## Architecture
 
-### 🚀 Lightning Fast Performance
-- In-memory storage for instant responses
-- No database overhead or setup required
-- Handles large task lists (1000+) without performance degradation
-- Real-time task statistics in the bottom toolbar
+```
++---------------------------------------------------------+
+|                   Frontend (Next.js 16)                  |
+|   Dashboard  |  Projects  |  Notes  |  Chat UI/Widget   |
++------+-------------+-------------+----------------------+
+       | REST         | REST         | SSE + REST
+       v              v              v
++--------------+              +------------------+
+|   Backend    |              |   MCP Service    |
+|   FastAPI    |              | FastMCP + Gemini |
+|              |              |  Agent + Tools   |
++------+-------+              +--------+---------+
+       |                               |
+       v                               v
++---------------------------------------------------------+
+|              PostgreSQL (Neon Serverless)                |
+|  users | projects | tasks | notes | categories | chat   |
++---------------------------------------------------------+
+```
 
-### 🎯 Interactive Mode
-- Arrow key navigation for task selection
-- Visual task selection interface
-- Interactive prompts for all operations
-- Multi-task creation mode for batch entry
+## Features
 
-## Available Commands
+### Task Management
+- Create, update, delete, and organize tasks across multiple projects
+- Kanban board with drag-and-drop columns (TODO / In Progress / Done)
+- Grid view alternative with priority levels (Low, Medium, High) and due dates
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `/add "<title>" -d "<desc>"` | Add a new task with title and optional description | `/add "Buy milk" -d "2% organic"` |
-| `/add --multi` | Add multiple tasks in one session with guided prompts | `/add --multi` |
-| `/list [filter]` | List all tasks with optional filter (all/pending/completed) | `/list pending` |
-| `/complete [id]` | Toggle task completion status (interactive if no ID provided) | `/complete 1` |
-| `/update <id>` | Update task title and/or description (interactive mode) | `/update 1 -t "New title"` |
-| `/delete <id>` | Delete a task with confirmation prompt | `/delete 1` |
-| `/clear` | Clear screen and show hero screen | `/clear` |
-| `/help` | Display help with all available commands | `/help` |
-| `/quit` or `/exit` | Exit the application | `/quit` |
+### Notes
+- Rich markdown editor with formatting toolbar
+- Image and audio media attachments
+- Category-based organization and filtering
+
+### Projects and Categories
+- Multiple projects with Kanban or Grid framework selection
+- Color-coded categories shared across notes and tasks
+- Dashboard with stats overview
+
+### Conversational AI Chat
+- Full `/chat` page and a floating chat widget accessible from any screen
+- Natural language management — "Add a task called Deploy v3", "Show my notes", "Create a project called Backend Rewrite"
+- 15 MCP tools covering tasks, notes, projects, categories, and dashboard stats
+- Google Gemini agent with per-user authenticated context
+- Real-time SSE streaming with markdown rendering
+- Persistent conversation history with create, switch, and delete support
+
+### Auth and Infrastructure
+- Better Auth with email/password, Google, and GitHub OAuth
+- Docker Compose with three services (backend, mcp, frontend)
+- GitHub Actions CI/CD deploying to Hugging Face Spaces
+- Neon serverless PostgreSQL with Alembic migrations
+
+## Project Structure
+
+```
+doit/
++-- frontend/          # Next.js 16, TypeScript, Tailwind, shadcn/ui
++-- backend/           # FastAPI, SQLAlchemy, Alembic, Better Auth
++-- mcp/               # FastMCP, Gemini agent, MCP tools (Python 3.13+)
++-- doit-cli/          # Original CLI app
++-- specs/             # Feature specs, plans, and task breakdowns
++-- docs/              # Documentation
++-- docker-compose.yml # Full local dev stack
++-- .github/workflows/ # CI/CD pipelines
+```
 
 ## Quick Start
 
-### Installation
+### Prerequisites
+- Docker and Docker Compose
+- Node.js 20+
+- Python 3.13+ with [uv](https://docs.astral.sh/uv/)
+- A [Neon](https://neon.tech) PostgreSQL database
+
+### Run with Docker Compose
 
 ```bash
-# Clone the repository
-git clone https://github.com/anasahmed07/doit.git
-cd doit/doit-cli
+# Copy env files
+cp backend/.env.example backend/.env
+cp mcp/.env.example mcp/.env
+cp frontend/.env.example frontend/.env.local
 
-# Install dependencies (using uv - recommended)
-uv sync
-# Install the applicaation
-uv tool install .
+# Fill in your database URL, auth secrets, and Gemini API key
+
+# Start all services
+docker compose up
 ```
 
-### Running the Application
+The app will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **MCP Service**: http://localhost:8080
+
+### Run services individually
 
 ```bash
-doit
+# Backend
+cd backend && uv sync && uv run dev
+
+# MCP Service
+cd mcp && uv sync && uv run dev
+
+# Frontend
+cd frontend && npm install && npm run dev
 ```
 
-You'll be greeted with the DoIt hero screen showing the ASCII art logo, helpful tips, and current task statistics.
+## Tech Stack
 
-## Usage Examples
-
-### Adding Tasks
-
-```bash
-doit> /add "Buy groceries" -d "Milk, eggs, bread"
-```
-
-The application displays a brief loading spinner and confirms task creation:
-
-```
-╭──────────────────────────────────────────────╮
-│ [✓] Task #1 created: Buy groceries          │
-╰──────────────────────────────────────────────╯
-```
-
-### Listing Tasks
-
-```bash
-doit> /list
-```
-
-Displays all tasks in a beautiful table format with columns for ID, Status, Title, Description, and Creation timestamp.
-
-### Interactive Task Completion
-
-Run `/complete` without an ID to access the interactive selection interface:
-
-```bash
-doit> /complete
-```
-
-Navigate with arrow keys, toggle with Space, and save with Enter.
-
-### Multi-Task Creation
-
-```bash
-doit> /add --multi
-```
-
-Enter multiple tasks one by one, with the application prompting for title and description for each task. Press Ctrl+D (or Ctrl+Z on Windows) when finished.
-
-## Technical Details
-
-### Architecture
-
-- **Clean Code Structure**: Organized into models, services, and storage layers
-- **Type Safety**: Fully typed Python with mypy validation
-- **Comprehensive Testing**: 30/30 tests passing with full coverage
-- **Modern Dependencies**: Built with Rich (terminal UI) and prompt-toolkit (interactive prompts)
-
-### Storage
-
-Tasks are stored in memory during the active session, making the application:
-- Extremely fast with instant response times
-- Zero configuration required
-- Perfect for quick task organization
-- Ideal for learning and prototyping
-
-### Platform Support
-
-DoIt works seamlessly across all major platforms:
-- ✅ **Windows** - Windows Terminal, PowerShell, CMD
-- ✅ **macOS** - Terminal.app, iTerm2, Alacritty
-- ✅ **Linux** - Any terminal with 256-color support
-
-## Design Philosophy
-
-DoIt is built with these core principles:
-
-- **Simplicity First** - Clean, focused interface without bloat
-- **Keyboard-Driven** - Everything accessible via keyboard shortcuts
-- **Beautiful Output** - Modern terminal aesthetics with Rich library
-- **Fast & Lightweight** - In-memory storage for instant responses
-- **Developer-Friendly** - Clean architecture, typed Python, comprehensive tests
-- **Zero Configuration** - Works out of the box, no setup required
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16, TypeScript, Tailwind CSS, shadcn/ui |
+| Backend API | FastAPI, SQLModel, Alembic, Pydantic |
+| MCP Service | FastMCP,Openai agents sdk, Google Gemini, FastAPI (SSE) |
+| Database | PostgreSQL (Neon Serverless) |
+| Auth | Better Auth (email, Google, GitHub OAuth) |
+| CLI | Python, Rich, prompt-toolkit |
+| DevOps | Docker Compose, GitHub Actions, Hugging Face Spaces |
 
 ## Documentation
 
-- **User Guide**: See the main [README.md](../doit-cli/README.md) in the doit-cli folder for detailed usage instructions
-- **Specifications**: Check the [specs](../specs/001-todo-cli-app/) folder for detailed feature specifications and requirements
-- **Development**: Refer to development guides for contributing guidelines
+- [Phase 1 — CLI](phase%201%20-%20doit-cli/) — Terminal task manager with slash commands and smart autocomplete
+- [Phase 2 — Full-Stack Web App](phase%202%20-%20fullstack%20web%20app/phase%202.md) — Next.js + FastAPI web platform with auth, projects, Kanban, and notes
+- [Phase 3 — Conversational AI](phase%203%20-%20conversational%20mcp%20chatbot/phase%203.md) — MCP-powered chatbot with Gemini agent and 15 natural-language tools
 
-## Technology Stack
+## Releases
 
-- **Python 3.13+** - Latest Python features and performance improvements
-- **Rich** - Terminal formatting, colors, and beautiful output
-- **prompt-toolkit** - Interactive prompts and smart autocomplete
-- **pytest** - Comprehensive testing framework
-- **mypy** - Static type checking for code quality
-- **ruff** - Fast linting and code formatting
-
-## Use Cases
-
-- **Daily Task Management** - Quick capture and organization of daily todos
-- **Learning Tool** - Example of clean code principles in Python
-- **Development** - Foundation for building more complex task management systems
-- **Productivity** - Lightweight alternative to heavy task management apps
-- **Prototyping** - Rapid workflow experimentation without database setup
+- [**v3.0.0**](https://github.com/anasahmed07/doit/releases/tag/v3.0.0) — Conversational MCP Chatbot
+- [**v2.0.0**](https://github.com/anasahmed07/doit/releases/tag/v2.0.0) — Full-Stack Web App
+- [**v1.0.0**](https://github.com/anasahmed07/doit/releases/tag/v1.0.0) — CLI Task Manager
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
-
----
-
-**Made with ❤️ and Python 3.13+**
+MIT
