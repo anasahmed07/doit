@@ -1,11 +1,12 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 
 def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    """Return current UTC time as a naive datetime (matching DB column type)."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class Conversation(SQLModel, table=True):

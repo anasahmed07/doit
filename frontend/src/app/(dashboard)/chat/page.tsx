@@ -1,19 +1,23 @@
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ChatPanel } from "@/components/ChatPanel";
 import { Plus, MessageSquare, Trash2 } from "lucide-react";
 import type { Conversation } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 
 function ChatPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const activeConversationId = searchParams.get("id");
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+
+  // Sync activeConversationId with searchParams on mount and navigation
+  useEffect(() => {
+    setActiveConversationId(searchParams.get("id"));
+  }, [searchParams]);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -33,33 +37,50 @@ function ChatPageContent() {
     loadConversations();
   }, [loadConversations]);
 
-  const handleSelectConversation = (id: string) => {
-    router.replace(`/chat?id=${id}`, { scroll: false });
-  };
+  const handleSelectConversation = useCallback((id: string) => {
+    setActiveConversationId(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("id", id);
+    window.history.replaceState(null, "", url.toString());
+  }, []);
 
-  const handleNewConversation = () => {
-    router.replace("/chat", { scroll: false });
-  };
+  const handleNewConversation = useCallback(() => {
+    setActiveConversationId(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("id");
+    window.history.replaceState(null, "", url.toString());
+  }, []);
 
-  const handleConversationCreated = (id: string) => {
-    router.replace(`/chat?id=${id}`, { scroll: false });
+  const handleConversationCreated = useCallback((id: string) => {
+    // Update local state immediately
+    setActiveConversationId(id);
+    
+    // Update URL silently without triggering Next.js navigation/suspense
+    const url = new URL(window.location.href);
+    url.searchParams.set("id", id);
+    window.history.replaceState(null, "", url.toString());
+    
+    // Refresh sidebar list
     loadConversations();
-  };
+  }, [loadConversations]);
 
-  const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteConversation = useCallback(async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       const res = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
       if (res.ok) {
         setConversations((prev) => prev.filter((c) => c.id !== id));
         if (activeConversationId === id) {
-          router.replace("/chat", { scroll: false });
+          setActiveConversationId(null);
+          const url = new URL(window.location.href);
+          url.searchParams.delete("id");
+          window.history.replaceState(null, "", url.toString());
         }
       }
     } catch (err) {
       console.error("Failed to delete conversation:", err);
     }
-  };
+  }, [activeConversationId]);
 
   return (
     <div className="flex h-full">
@@ -149,6 +170,7 @@ function ChatPageContent() {
         <ChatPanel
           conversationId={activeConversationId}
           onConversationCreated={handleConversationCreated}
+          onResponseDone={loadConversations}
         />
       </div>
     </div>

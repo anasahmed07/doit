@@ -201,7 +201,7 @@ async def chat(request: Request, body: ChatRequest):
                 if not conversation.title:
                     # Use first 50 chars of user message as title
                     conversation.title = body.message[:50] + ("..." if len(body.message) > 50 else "")
-                conversation.updated_at = datetime.now(timezone.utc)
+                conversation.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
                 db.add(conversation)
                 await db.commit()
                 await db.refresh(assistant_msg)

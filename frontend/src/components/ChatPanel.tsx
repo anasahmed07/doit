@@ -8,9 +8,14 @@ import type { ChatMessage, SSEEvent } from "@/lib/types";
 interface ChatPanelProps {
   conversationId: string | null;
   onConversationCreated?: (id: string) => void;
+  onResponseDone?: () => void;
 }
 
-export function ChatPanel({ conversationId: externalConvId, onConversationCreated }: ChatPanelProps) {
+export function ChatPanel({ 
+  conversationId: externalConvId, 
+  onConversationCreated,
+  onResponseDone 
+}: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -34,6 +39,11 @@ export function ChatPanel({ conversationId: externalConvId, onConversationCreate
   // Load messages when internalConvId changes (navigation or initial load)
   useEffect(() => {
     if (!internalConvId) return;
+    
+    // If we already have messages (e.g. from just creating the conversation), 
+    // don't reload and trigger a loading state. 
+    // Navigation to a different chat clears messages first, so this is safe.
+    if (messages.length > 0) return;
 
     let cancelled = false;
 
@@ -56,6 +66,7 @@ export function ChatPanel({ conversationId: externalConvId, onConversationCreate
 
     loadMessages();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [internalConvId]);
 
   const sendMessage = useCallback(
@@ -166,9 +177,10 @@ export function ChatPanel({ conversationId: externalConvId, onConversationCreate
       } finally {
         setIsStreaming(false);
         setStreamingContent("");
+        onResponseDone?.();
       }
     },
-    [internalConvId, onConversationCreated]
+    [internalConvId, onConversationCreated, onResponseDone]
   );
 
   return (
