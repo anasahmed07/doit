@@ -1,5 +1,7 @@
 # DoIt
 
+![DoIt Banner](../frontend/public/images/doit%20frontend.png)
+
 > From CLI to full-stack to fully agentic — a productivity platform where you can manage tasks, projects, and notes through a web UI or just by chatting with an AI assistant.
 
 ![Python](https://img.shields.io/badge/python-3.13+-blue.svg)
