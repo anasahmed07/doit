@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doit-frontend
+  labels:
+    app: doit-frontend
+    app.kubernetes.io/part-of: doit
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: doit-frontend
+  template:
+    metadata:
+      labels:
+        app: doit-frontend
+        app.kubernetes.io/part-of: doit
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: doit-frontend-config
+            - secretRef:
+                name: doit-frontend-secret
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3

@@ -84,6 +84,12 @@ app.add_middleware(
 )
 
 
+# --- Health Endpoint ---
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "service": "DoIt MCP"}
+
+
 # --- Auth Helper ---
 async def authenticate(request: Request) -> uuid.UUID:
     """Extract Bearer token and validate, returning user_id."""

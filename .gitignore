@@ -20,3 +20,6 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+
+# Kubernetes / Helm
+helm/doit/values.secret.yaml

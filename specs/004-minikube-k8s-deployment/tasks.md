@@ -19,12 +19,12 @@
 
 **Purpose**: Prepare the existing application for containerization — add missing health endpoint, enable standalone output, create ignore files.
 
-- [ ] T001 Add `/health` endpoint to MCP service in mcp/src/mcp_service/routes/health.py returning `{"status": "ok", "service": "DoIt MCP"}` and register route in mcp/src/mcp_service/main.py
-- [ ] T002 Add `output: "standalone"` to frontend/next.config.ts for production Docker builds
-- [ ] T003 [P] Create frontend/.dockerignore excluding node_modules, .next, .env*, .git
-- [ ] T004 [P] Create backend/.dockerignore excluding .venv, __pycache__, .env*, .git
-- [ ] T005 [P] Create mcp/.dockerignore excluding .venv, __pycache__, .env*, .git
-- [ ] T006 Add `helm/doit/values.secret.yaml` to root .gitignore
+- [x] T001 Add `/health` endpoint to MCP service in mcp/src/mcp_service/routes/health.py returning `{"status": "ok", "service": "DoIt MCP"}` and register route in mcp/src/mcp_service/main.py
+- [x] T002 Add `output: "standalone"` to frontend/next.config.ts for production Docker builds
+- [x] T003 [P] Create frontend/.dockerignore excluding node_modules, .next, .env*, .git
+- [x] T004 [P] Create backend/.dockerignore excluding .venv, __pycache__, .env*, .git
+- [x] T005 [P] Create mcp/.dockerignore excluding .venv, __pycache__, .env*, .git
+- [x] T006 Add `helm/doit/values.secret.yaml` to root .gitignore
 
 **Checkpoint**: All three services have health check capabilities. Frontend configured for standalone build. Docker ignore files prevent bloated contexts.
 
@@ -38,9 +38,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T007 [P] [US2] Write multi-stage Dockerfile for backend in backend/Dockerfile — Stage 1: install deps with uv sync, Stage 2: copy .venv + src, CMD uv run prod, EXPOSE 8000
-- [ ] T008 [P] [US2] Write multi-stage Dockerfile for MCP in mcp/Dockerfile — Stage 1: install deps with uv sync, Stage 2: copy .venv + src, CMD uv run prod, EXPOSE 8080
-- [ ] T009 [P] [US2] Write multi-stage Dockerfile for frontend in frontend/Dockerfile — Stage 1: npm ci (deps), Stage 2: npm run build (builder), Stage 3: copy .next/standalone + static + public, CMD node server.js, EXPOSE 3000
+- [x] T007 [P] [US2] Write multi-stage Dockerfile for backend in backend/Dockerfile — Stage 1: install deps with uv sync, Stage 2: copy .venv + src, CMD uv run prod, EXPOSE 8000
+- [x] T008 [P] [US2] Write multi-stage Dockerfile for MCP in mcp/Dockerfile — Stage 1: install deps with uv sync, Stage 2: copy .venv + src, CMD uv run prod, EXPOSE 8080
+- [x] T009 [P] [US2] Write multi-stage Dockerfile for frontend in frontend/Dockerfile — Stage 1: npm ci (deps), Stage 2: npm run build (builder), Stage 3: copy .next/standalone + static + public, CMD node server.js, EXPOSE 3000
 - [ ] T010 [US2] Verify all three images build successfully with `docker build -t doit-backend:latest ./backend && docker build -t doit-mcp:latest ./mcp && docker build -t doit-frontend:latest ./frontend`
 - [ ] T011 [US2] Verify each image runs and responds — `docker run -p 8000:8000 doit-backend` responds at /health, `docker run -p 8080:8080 doit-mcp` responds at /health, `docker run -p 3000:3000 doit-frontend` serves the app
 
@@ -56,15 +56,15 @@
 
 ### Implementation for User Story 3
 
-- [ ] T012 [US3] Create umbrella chart structure — helm/doit/Chart.yaml with apiVersion v2, name doit, version 0.1.0, appVersion 3.0.0, and dependency declarations for frontend, backend, mcp subcharts
-- [ ] T013 [US3] Create helm/doit/templates/_helpers.tpl with common template helpers (fullname, labels, selectors)
-- [ ] T014 [P] [US3] Create backend subchart — helm/doit/charts/backend/Chart.yaml, helm/doit/charts/backend/templates/deployment.yaml with liveness/readiness probes on /health, helm/doit/charts/backend/templates/service.yaml (ClusterIP port 8000), helm/doit/charts/backend/templates/configmap.yaml, helm/doit/charts/backend/templates/secret.yaml
-- [ ] T015 [P] [US3] Create MCP subchart — helm/doit/charts/mcp/Chart.yaml, helm/doit/charts/mcp/templates/deployment.yaml with liveness/readiness probes on /health, helm/doit/charts/mcp/templates/service.yaml (ClusterIP port 8080), helm/doit/charts/mcp/templates/configmap.yaml, helm/doit/charts/mcp/templates/secret.yaml
-- [ ] T016 [P] [US3] Create frontend subchart — helm/doit/charts/frontend/Chart.yaml, helm/doit/charts/frontend/templates/deployment.yaml with liveness/readiness probes on /, helm/doit/charts/frontend/templates/service.yaml (ClusterIP port 3000), helm/doit/charts/frontend/templates/configmap.yaml, helm/doit/charts/frontend/templates/secret.yaml
-- [ ] T017 [US3] Create shared Ingress template in helm/doit/templates/ingress.yaml with path-based routing — `/` to frontend:3000, `/api` to backend:8000, `/mcp` to mcp:8080, host configurable via values
-- [ ] T018 [US3] Create helm/doit/values.yaml with default configuration — global.ingressHost=doit.local, all service image repos/tags, ports, replica counts, env var mappings for ConfigMaps (CORS_ORIGINS, BACKEND_URL, MCP_URL, NEXT_PUBLIC_API_URL, BETTER_AUTH_URL, NEXT_PUBLIC_BETTER_AUTH_URL)
-- [ ] T019 [US3] Create helm/doit/values.secret.yaml.example with placeholder structure for secrets — global.databaseUrl, global.betterAuthSecret, mcp.geminiApiKey, frontend OAuth credentials
-- [ ] T020 [US3] Create helm/doit/.helmignore to exclude values.secret.yaml, .git, and temp files
+- [x] T012 [US3] Create umbrella chart structure — helm/doit/Chart.yaml with apiVersion v2, name doit, version 0.1.0, appVersion 3.0.0, and dependency declarations for frontend, backend, mcp subcharts
+- [x] T013 [US3] Create helm/doit/templates/_helpers.tpl with common template helpers (fullname, labels, selectors)
+- [x] T014 [P] [US3] Create backend subchart — helm/doit/charts/backend/Chart.yaml, helm/doit/charts/backend/templates/deployment.yaml with liveness/readiness probes on /health, helm/doit/charts/backend/templates/service.yaml (ClusterIP port 8000), helm/doit/charts/backend/templates/configmap.yaml, helm/doit/charts/backend/templates/secret.yaml
+- [x] T015 [P] [US3] Create MCP subchart — helm/doit/charts/mcp/Chart.yaml, helm/doit/charts/mcp/templates/deployment.yaml with liveness/readiness probes on /health, helm/doit/charts/mcp/templates/service.yaml (ClusterIP port 8080), helm/doit/charts/mcp/templates/configmap.yaml, helm/doit/charts/mcp/templates/secret.yaml
+- [x] T016 [P] [US3] Create frontend subchart — helm/doit/charts/frontend/Chart.yaml, helm/doit/charts/frontend/templates/deployment.yaml with liveness/readiness probes on /, helm/doit/charts/frontend/templates/service.yaml (ClusterIP port 3000), helm/doit/charts/frontend/templates/configmap.yaml, helm/doit/charts/frontend/templates/secret.yaml
+- [x] T017 [US3] Create shared Ingress template in helm/doit/templates/ingress.yaml with path-based routing — `/` to frontend:3000, `/api` to backend:8000, `/mcp` to mcp:8080, host configurable via values
+- [x] T018 [US3] Create helm/doit/values.yaml with default configuration — global.ingressHost=doit.local, all service image repos/tags, ports, replica counts, env var mappings for ConfigMaps (CORS_ORIGINS, BACKEND_URL, MCP_URL, NEXT_PUBLIC_API_URL, BETTER_AUTH_URL, NEXT_PUBLIC_BETTER_AUTH_URL)
+- [x] T019 [US3] Create helm/doit/values.secret.yaml.example with placeholder structure for secrets — global.databaseUrl, global.betterAuthSecret, mcp.geminiApiKey, frontend OAuth credentials
+- [x] T020 [US3] Create helm/doit/.helmignore to exclude values.secret.yaml, .git, and temp files
 - [ ] T021 [US3] Validate chart renders correctly — run `helm dependency update ./helm/doit && helm template doit ./helm/doit` and verify valid YAML output for all resources (3 Deployments, 3 Services, 3 ConfigMaps, 3 Secrets, 1 Ingress)
 
 **Checkpoint**: Helm chart renders valid Kubernetes manifests for all services. `helm template` produces correct resources.
@@ -115,9 +115,9 @@
 
 **Purpose**: Documentation, cleanup, and deployment guide finalization.
 
-- [ ] T034 [P] Update docs/README.md — add Phase IV section with local K8s deployment instructions, link to quickstart guide
-- [ ] T035 [P] Create a Phase IV documentation file at docs/phase 4 - local k8s deployment/phase 4.md describing the architecture, Helm chart structure, and deployment workflow
-- [ ] T036 Update CLAUDE.md with Phase IV technologies (Docker, Minikube, Helm, Kubernetes)
+- [x] T034 [P] Update docs/README.md — add Phase IV section with local K8s deployment instructions, link to quickstart guide
+- [x] T035 [P] Create a Phase IV documentation file at docs/phase 4 - local k8s deployment/phase 4.md describing the architecture, Helm chart structure, and deployment workflow
+- [x] T036 Update CLAUDE.md with Phase IV technologies (Docker, Minikube, Helm, Kubernetes)
 - [ ] T037 Verify quickstart.md steps work end-to-end on a fresh Minikube cluster (tear down and redo from step 1)
 
 ---

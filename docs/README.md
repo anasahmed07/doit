@@ -72,6 +72,13 @@ DoIt is a productivity application that combines a traditional web interface wit
 - Real-time SSE streaming with markdown rendering
 - Persistent conversation history with create, switch, and delete support
 
+### Local Kubernetes Deployment
+- Multi-stage Docker builds for all services (optimized image sizes)
+- Umbrella Helm chart with subcharts for frontend, backend, and MCP
+- Minikube deployment with nginx Ingress for path-based routing
+- Health probes (liveness/readiness) on all services
+- Secrets management via gitignored `values.secret.yaml`
+
 ### Auth and Infrastructure
 - Better Auth with email/password, Google, and GitHub OAuth
 - Docker Compose with three services (backend, mcp, frontend)
@@ -85,6 +92,7 @@ doit/
 +-- frontend/          # Next.js 16, TypeScript, Tailwind, shadcn/ui
 +-- backend/           # FastAPI, SQLAlchemy, Alembic, Better Auth
 +-- mcp/               # FastMCP, Gemini agent, MCP tools (Python 3.13+)
++-- helm/doit/         # Umbrella Helm chart with subcharts
 +-- doit-cli/          # Original CLI app
 +-- specs/             # Feature specs, plans, and task breakdowns
 +-- docs/              # Documentation
@@ -132,23 +140,52 @@ cd mcp && uv sync && uv run dev
 cd frontend && npm install && npm run dev
 ```
 
+### Run with Kubernetes (Minikube)
+
+```bash
+# Start Minikube and enable Ingress
+minikube start --cpus=4 --memory=8192 --driver=docker
+minikube addons enable ingress
+
+# Build images inside Minikube
+eval $(minikube docker-env)
+docker build -t doit-backend:latest ./backend
+docker build -t doit-mcp:latest ./mcp
+docker build -t doit-frontend:latest ./frontend
+
+# Configure secrets
+cp helm/doit/values.secret.yaml.example helm/doit/values.secret.yaml
+# Edit values.secret.yaml with your actual DATABASE_URL, BETTER_AUTH_SECRET, GEMINI_API_KEY
+
+# Deploy
+helm dependency update ./helm/doit
+helm install doit ./helm/doit -f ./helm/doit/values.secret.yaml
+
+# Add DNS entry (use minikube ip to get the IP)
+# Add to /etc/hosts: <minikube-ip>  doit.local
+
+# Access at http://doit.local
+```
+
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Next.js 16, TypeScript, Tailwind CSS, shadcn/ui |
 | Backend API | FastAPI, SQLModel, Alembic, Pydantic |
-| MCP Service | FastMCP,Openai agents sdk, Google Gemini, FastAPI (SSE) |
+| MCP Service | FastMCP, Openai agents sdk, Google Gemini, FastAPI (SSE) |
 | Database | PostgreSQL (Neon Serverless) |
 | Auth | Better Auth (email, Google, GitHub OAuth) |
 | CLI | Python, Rich, prompt-toolkit |
 | DevOps | Docker Compose, GitHub Actions, Hugging Face Spaces |
+| Kubernetes | Minikube, Helm 3, nginx Ingress |
 
 ## Documentation
 
 - [Phase 1 — CLI](phase%201%20-%20doit-cli/) — Terminal task manager with slash commands and smart autocomplete
 - [Phase 2 — Full-Stack Web App](phase%202%20-%20fullstack%20web%20app/phase%202.md) — Next.js + FastAPI web platform with auth, projects, Kanban, and notes
 - [Phase 3 — Conversational AI](phase%203%20-%20conversational%20mcp%20chatbot/phase%203.md) — MCP-powered chatbot with Gemini agent and 15 natural-language tools
+- [Phase 4 — Local K8s Deployment](phase%204%20-%20local%20k8s%20deployment/phase%204.md) — Minikube deployment with Helm charts and Ingress routing
 
 ## Releases
 

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: doit-backend
+  labels:
+    app: doit-backend
+    app.kubernetes.io/part-of: doit
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.port }}
+      targetPort: {{ .Values.port }}
+      protocol: TCP
+  selector:
+    app: doit-backend

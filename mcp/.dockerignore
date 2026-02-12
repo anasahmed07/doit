@@ -2,7 +2,12 @@
 __pycache__/
 *.pyc
 .env
-.git/
+.env*
+.git
+.gitignore
 tests/
 *.egg-info/
 .ruff_cache/
+*.md
+.vscode
+.idea

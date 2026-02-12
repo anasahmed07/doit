@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: doit-frontend-config
+  labels:
+    app: doit-frontend
+    app.kubernetes.io/part-of: doit
+data:
+  BETTER_AUTH_URL: {{ .Values.env.betterAuthUrl | quote }}
+  NEXT_PUBLIC_BETTER_AUTH_URL: {{ .Values.env.nextPublicBetterAuthUrl | quote }}
+  NEXT_PUBLIC_API_URL: {{ .Values.env.nextPublicApiUrl | quote }}
+  BACKEND_URL: {{ .Values.env.backendUrl | quote }}
+  MCP_URL: {{ .Values.env.mcpUrl | quote }}
