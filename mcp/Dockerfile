@@ -1,36 +1,23 @@
-# Stage 1: Builder
-FROM python:3.13-slim AS builder
-
-WORKDIR /app
-
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-# Install dependencies first (layer caching)
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-cache
-
-# Copy source
-COPY src/ src/
-
-# Stage 2: Runtime
+# Use Python 3.13 slim image
 FROM python:3.13-slim
 
+# Set working directory
 WORKDIR /app
 
-# Install uv for uv run
+# Install UV
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Copy built artifacts from builder
-COPY --from=builder /app/.venv .venv
-COPY --from=builder /app/src src
-COPY --from=builder /app/pyproject.toml pyproject.toml
+# Copy all files
+COPY . .
 
-ENV PYTHONUNBUFFERED=1
+# Install dependencies using UV
+RUN uv sync --frozen --no-cache
 
+# Expose the port the app runs on (7860 for Hugging Face)
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" || exit 1
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
 
+# Run the application using UV
 CMD ["uv", "run", "prod"]
