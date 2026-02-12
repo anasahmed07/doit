@@ -3,6 +3,12 @@ __pycache__/
 *$py.class
 .venv/
 .env
+.env*
 .pytest_cache/
 .ruff_cache/
 tests/
+.git
+.gitignore
+*.md
+.vscode
+.idea

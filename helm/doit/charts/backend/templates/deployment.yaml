@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doit-backend
+  labels:
+    app: doit-backend
+    app.kubernetes.io/part-of: doit
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: doit-backend
+  template:
+    metadata:
+      labels:
+        app: doit-backend
+        app.kubernetes.io/part-of: doit
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: doit-backend-config
+            - secretRef:
+                name: doit-backend-secret
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3

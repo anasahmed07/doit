@@ -1,0 +1,11 @@
+replicaCount: 1
+
+image:
+  repository: doit-backend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+port: 8000
+
+env:
+  corsOrigins: "http://doit.local"

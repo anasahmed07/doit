@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: doit-mcp-config
+  labels:
+    app: doit-mcp
+    app.kubernetes.io/part-of: doit
+data:
+  MCP_HOST: {{ .Values.env.mcpHost | quote }}
+  MCP_PORT: {{ .Values.env.mcpPort | quote }}

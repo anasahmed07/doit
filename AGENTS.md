@@ -223,3 +223,12 @@ Each subfolder (`frontend/`, `backend/`, `doit-cli/`) contains its own `AGENTS.m
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- Python 3.13+ (MCP service), TypeScript (Frontend) (003-conversational-mcp-chatbot)
+- PostgreSQL (Neon Serverless) — shared database, new `conversation` + `message` tables (003-conversational-mcp-chatbot)
+- Docker, Minikube, Helm 3, Kubernetes, nginx Ingress (004-minikube-k8s-deployment)
+
+## Recent Changes
+- 004-minikube-k8s-deployment: Added Docker multi-stage builds, Helm umbrella chart, Minikube K8s deployment
+- 003-conversational-mcp-chatbot: Added Python 3.13+ (MCP service), TypeScript (Frontend)

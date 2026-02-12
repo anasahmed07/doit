@@ -1,0 +1,44 @@
+global:
+  ingressHost: doit.local
+  databaseUrl: ""
+  betterAuthSecret: ""
+  geminiApiKey: ""
+  googleClientId: ""
+  googleClientSecret: ""
+  githubClientId: ""
+  githubClientSecret: ""
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: doit-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3000
+  env:
+    betterAuthUrl: "http://doit.local"
+    nextPublicBetterAuthUrl: "http://doit.local"
+    nextPublicApiUrl: "http://doit.local/api"
+    backendUrl: "http://doit-backend:8000"
+    mcpUrl: "http://doit-mcp:8080"
+
+backend:
+  replicaCount: 1
+  image:
+    repository: doit-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8000
+  env:
+    corsOrigins: "http://doit.local"
+
+mcp:
+  replicaCount: 1
+  image:
+    repository: doit-mcp
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8080
+  env:
+    mcpHost: "0.0.0.0"
+    mcpPort: "8080"

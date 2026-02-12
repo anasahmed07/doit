@@ -1,0 +1,15 @@
+replicaCount: 1
+
+image:
+  repository: doit-frontend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+port: 3000
+
+env:
+  betterAuthUrl: "http://doit.local"
+  nextPublicBetterAuthUrl: "http://doit.local"
+  nextPublicApiUrl: "http://doit.local/api"
+  backendUrl: "http://doit-backend:8000"
+  mcpUrl: "http://doit-mcp:8080"

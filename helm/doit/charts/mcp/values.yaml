@@ -1,0 +1,12 @@
+replicaCount: 1
+
+image:
+  repository: doit-mcp
+  tag: latest
+  pullPolicy: IfNotPresent
+
+port: 8080
+
+env:
+  mcpHost: "0.0.0.0"
+  mcpPort: "8080"
