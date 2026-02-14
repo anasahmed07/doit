@@ -4,30 +4,30 @@ import Link from "next/link";
 import { ArrowDown } from "lucide-react";
 
 const cards = [
-  { color: "bg-red-500", rotation: "rotate-6", z: "z-10" },
-  { color: "bg-orange-500", rotation: "-rotate-3", z: "z-20" },
-  { color: "bg-amber-500", rotation: "rotate-2", z: "z-30" },
-  { color: "bg-yellow-500", rotation: "rotate-12", z: "z-10" },
-  { color: "bg-lime-500", rotation: "-rotate-6", z: "z-20" },
-  { color: "bg-green-500", rotation: "rotate-3", z: "z-10" },
-  { color: "bg-emerald-500", rotation: "-rotate-12", z: "z-30" },
-  { color: "bg-teal-500", rotation: "rotate-6", z: "z-20" },
-  { color: "bg-cyan-500", rotation: "-rotate-3", z: "z-10" },
-  { color: "bg-sky-500", rotation: "rotate-2", z: "z-30" },
-  { color: "bg-blue-500", rotation: "-rotate-6", z: "z-20" },
-  { color: "bg-indigo-500", rotation: "rotate-3", z: "z-10" },
-  { color: "bg-violet-500", rotation: "-rotate-2", z: "z-30" },
-  { color: "bg-purple-500", rotation: "rotate-6", z: "z-20" },
-  { color: "bg-fuchsia-500", rotation: "-rotate-3", z: "z-10" },
-  { color: "bg-pink-500", rotation: "rotate-2", z: "z-30" },
-  { color: "bg-rose-500", rotation: "-rotate-6", z: "z-20" },
+  { color: "bg-red-500 dark:bg-red-400", rotation: "rotate-6", z: "z-10" },
+  { color: "bg-orange-500 dark:bg-orange-400", rotation: "-rotate-3", z: "z-20" },
+  { color: "bg-amber-500 dark:bg-amber-400", rotation: "rotate-2", z: "z-30" },
+  { color: "bg-yellow-500 dark:bg-yellow-400", rotation: "rotate-12", z: "z-10" },
+  { color: "bg-lime-500 dark:bg-lime-400", rotation: "-rotate-6", z: "z-20" },
+  { color: "bg-green-500 dark:bg-green-400", rotation: "rotate-3", z: "z-10" },
+  { color: "bg-emerald-500 dark:bg-emerald-400", rotation: "-rotate-12", z: "z-30" },
+  { color: "bg-teal-500 dark:bg-teal-400", rotation: "rotate-6", z: "z-20" },
+  { color: "bg-cyan-500 dark:bg-cyan-400", rotation: "-rotate-3", z: "z-10" },
+  { color: "bg-sky-500 dark:bg-sky-400", rotation: "rotate-2", z: "z-30" },
+  { color: "bg-blue-500 dark:bg-blue-400", rotation: "-rotate-6", z: "z-20" },
+  { color: "bg-indigo-500 dark:bg-indigo-400", rotation: "rotate-3", z: "z-10" },
+  { color: "bg-violet-500 dark:bg-violet-400", rotation: "-rotate-2", z: "z-30" },
+  { color: "bg-purple-500 dark:bg-purple-400", rotation: "rotate-6", z: "z-20" },
+  { color: "bg-fuchsia-500 dark:bg-fuchsia-400", rotation: "-rotate-3", z: "z-10" },
+  { color: "bg-pink-500 dark:bg-pink-400", rotation: "rotate-2", z: "z-30" },
+  { color: "bg-rose-500 dark:bg-rose-400", rotation: "-rotate-6", z: "z-20" },
 ];
 
 export function Hero() {
   return (
     <section className="relative w-full overflow-hidden bg-background pt-32 pb-48 border-b-2 border-foreground min-h-[800px] flex items-center">
       {/* Background decoration */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
            style={{
              backgroundImage: 'radial-gradient(#18181b 1px, transparent 1px)',
              backgroundSize: '24px 24px'
@@ -35,14 +35,14 @@ export function Hero() {
       />
 
       {/* Animated Stream of Cards (Now in Background) */}
-      <div className="absolute inset-0 z-0 flex items-center py-20 overflow-visible perspective-1000 pointer-events-none opacity-40">
+      <div className="absolute inset-0 z-0 flex items-center py-20 overflow-visible perspective-1000 pointer-events-none opacity-40 dark:opacity-60">
         {/* The Scrolling Track */}
         <div className="flex w-max animate-scroll-left">
           {/* We duplicate the set of cards multiple times for smooth infinite scroll */}
           {[...cards, ...cards, ...cards, ...cards].map((card, idx) => (
             <div
               key={idx}
-              className={`relative mx-[-30px] h-64 w-48 flex-shrink-0 rounded-2xl border-2 border-white/20 shadow-2xl transition-all ${card.color} ${card.rotation} ${card.z}`}
+              className={`relative mx-[-30px] h-64 w-48 flex-shrink-0 rounded-2xl border-2 border-white/20 dark:border-white/40 shadow-2xl transition-all ${card.color} ${card.rotation} ${card.z}`}
             >
               {/* Internal card details to look like tasks */}
               <div className="p-4 h-full flex flex-col justify-between opacity-60">
