@@ -10,6 +10,8 @@ class Note(SQLModel, table=True):
     title: Optional[str] = None
     content: Optional[str] = None # Text content (Markdown)
     order_index: float = Field(default=0.0)
+    is_archived: bool = Field(default=False)
+    archived_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

@@ -9,7 +9,7 @@ class NoteService:
         self.session = session
 
     def get_notes(self, user_id: uuid.UUID, category_id: Optional[uuid.UUID] = None, uncategorized_only: bool = False) -> List[Note]:
-        statement = select(Note).where(Note.user_id == user_id)
+        statement = select(Note).where(Note.user_id == user_id, Note.is_archived == False)
         if uncategorized_only:
             statement = statement.where(Note.category_id == None)
         elif category_id:
@@ -18,6 +18,38 @@ class NoteService:
         statement = statement.order_by(Note.order_index, Note.created_at.desc())
         results = self.session.exec(statement)
         return results.all()
+
+    def get_archived_notes(self, user_id: uuid.UUID, category_id: Optional[uuid.UUID] = None) -> List[Note]:
+        statement = select(Note).where(Note.user_id == user_id, Note.is_archived == True)
+        if category_id:
+            statement = statement.where(Note.category_id == category_id)
+        statement = statement.order_by(Note.archived_at.desc())
+        results = self.session.exec(statement)
+        return results.all()
+
+    def archive_note(self, note_id: uuid.UUID) -> Optional[Note]:
+        note = self.session.get(Note, note_id)
+        if not note:
+            return None
+        note.is_archived = True
+        note.archived_at = datetime.utcnow()
+        note.updated_at = datetime.utcnow()
+        self.session.add(note)
+        self.session.commit()
+        self.session.refresh(note)
+        return note
+
+    def unarchive_note(self, note_id: uuid.UUID) -> Optional[Note]:
+        note = self.session.get(Note, note_id)
+        if not note:
+            return None
+        note.is_archived = False
+        note.archived_at = None
+        note.updated_at = datetime.utcnow()
+        self.session.add(note)
+        self.session.commit()
+        self.session.refresh(note)
+        return note
 
     def create_note(self, note: Note) -> Note:
         # Auto-calculate order_index if not provided (add to top or bottom)

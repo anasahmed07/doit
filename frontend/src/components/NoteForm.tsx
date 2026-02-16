@@ -24,15 +24,17 @@ import {
   Settings
 } from "lucide-react";
 import { Note, Category } from "@/lib/types";
+import { ConfirmationDialog } from "./ConfirmationDialog";
 
 interface NoteFormProps {
   initialNote?: Note;
   categoryId?: string | null;
   onSuccess: () => void;
   onCancel: () => void;
+  onDelete?: (id: string) => void;
 }
 
-export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteFormProps) {
+export function NoteForm({ initialNote, categoryId, onSuccess, onCancel, onDelete }: NoteFormProps) {
   const [title, setTitle] = useState(initialNote?.title || "");
   const [content, setContent] = useState(initialNote?.content || "");
   const [history, setHistory] = useState<string[]>([initialNote?.content || ""]);
@@ -50,6 +52,7 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("");
   const [micError, setMicError] = useState<string | null>(null);
   const [showDeviceSettings, setShowDeviceSettings] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -396,8 +399,30 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
     }
   };
 
+  const performDelete = async () => {
+    if (!initialNote) return;
+    try {
+      setIsSubmitting(true);
+      await fetch(`/api/notes/${initialNote.id}`, { method: "DELETE" });
+      onDelete?.(initialNote.id);
+      onSuccess();
+    } catch (error) {
+      console.error("Failed to delete note:", error);
+    } finally {
+      setIsSubmitting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if empty on update
+    if (initialNote && !content.trim() && !title.trim() && files.length === 0 && deletedAssetIds.length >= (initialNote.media_assets?.length || 0)) {
+       setShowDeleteConfirm(true);
+       return;
+    }
+
     if (!content.trim() && !title.trim() && files.length === 0 && !initialNote) return;
 
     setIsSubmitting(true);
@@ -498,242 +523,256 @@ export function NoteForm({ initialNote, categoryId, onSuccess, onCancel }: NoteF
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const isFormEmpty = !content.trim() && !title.trim() && files.length === 0;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border-2 border-foreground bg-background p-4 shadow-hard">
-      {/* Title Input */}
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Note title (optional)"
-        className="w-full border-b-2 border-input bg-transparent px-1 py-2 text-lg font-bold placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
-      />
-
-      {/* Formatting Toolbar */}
-      <div className="flex items-center gap-1 pb-2 border-b border-border">
-        {formatActions.map((action, index) => (
-          <button
-            key={index}
-            type="button"
-            onClick={action.action}
-            title={action.title}
-            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            <action.icon className="h-4 w-4" />
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-2">
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => updateContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="What's on your mind? Use the toolbar above for formatting..."
-          className="w-full min-h-[120px] resize-none rounded-none border-2 border-input bg-transparent px-3 py-2 text-sm font-medium placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:shadow-hard-sm font-mono"
-          autoFocus
+    <>
+      <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border-2 border-foreground bg-background p-4 shadow-hard">
+        {/* Title Input */}
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Note title (optional)"
+          className="w-full border-b-2 border-input bg-transparent px-1 py-2 text-lg font-bold placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
         />
-        <p className="text-[10px] text-muted-foreground/60 font-mono">
-          Supports Markdown: **bold**, *italic*, ## heading, - list, - [ ] todo, `code`
-        </p>
-      </div>
 
-      {/* Existing Media */}
-      {initialNote?.media_assets && initialNote.media_assets.length > 0 && (
-         <div className="flex flex-wrap gap-2 pb-2">
-            {initialNote.media_assets
-              .filter(asset => !deletedAssetIds.includes(asset.id))
-              .map((asset) => (
-                <div key={asset.id} className="relative group flex items-center justify-center border border-border bg-secondary/30 h-16 w-16 overflow-hidden rounded-md">
-                   {asset.mime_type.startsWith("image/") ? (
-                       <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${asset.url}`} alt="attachment" className="h-full w-full object-cover" />
-                   ) : (
-                       <span className="text-[10px] uppercase text-muted-foreground">{asset.mime_type.split("/")[1]}</span>
-                   )}
-                   <button
-                     type="button"
-                     onClick={() => setDeletedAssetIds(prev => [...prev, asset.id])}
-                     className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-background/80 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                   >
-                     <X className="h-3 w-3" />
-                   </button>
-                </div>
-            ))}
-         </div>
-      )}
-
-      {/* New File Preview */}
-      {files.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {files.map((file, i) => (
-            <div key={i} className="relative group flex items-center gap-2 rounded-md border border-foreground/20 bg-secondary/50 px-2 py-1 text-xs font-mono">
-              <span className="max-w-[150px] truncate">{file.name}</span>
-              <button
-                type="button"
-                onClick={() => removeFile(i)}
-                className="ml-1 text-muted-foreground hover:text-destructive"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
+        {/* Formatting Toolbar */}
+        <div className="flex items-center gap-1 pb-2 border-b border-border">
+          {formatActions.map((action, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={action.action}
+              title={action.title}
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <action.icon className="h-4 w-4" />
+            </button>
           ))}
         </div>
-      )}
 
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex gap-2">
-           <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 rounded-none px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-           >
-             <ImageIcon className="h-4 w-4" />
-             Add Media
-           </button>
-           <input
-             ref={fileInputRef}
-             type="file"
-             multiple
-             accept="image/*,audio/*"
-             className="hidden"
-             onChange={handleFileSelect}
-           />
+        <div className="space-y-2">
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => updateContent(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="What's on your mind? Use the toolbar above for formatting..."
+            className="w-full min-h-[120px] resize-none rounded-none border-2 border-input bg-transparent px-3 py-2 text-sm font-medium placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:shadow-hard-sm font-mono"
+            autoFocus
+          />
+          <p className="text-[10px] text-muted-foreground/60 font-mono">
+            Supports Markdown: **bold**, *italic*, ## heading, - list, - [ ] todo, `code`
+          </p>
+        </div>
 
-           <div className="relative flex items-center">
+        {/* Existing Media */}
+        {initialNote?.media_assets && initialNote.media_assets.length > 0 && (
+           <div className="flex flex-wrap gap-2 pb-2">
+              {initialNote.media_assets
+                .filter(asset => !deletedAssetIds.includes(asset.id))
+                .map((asset) => (
+                  <div key={asset.id} className="relative group flex items-center justify-center border border-border bg-secondary/30 h-16 w-16 overflow-hidden rounded-md">
+                     {asset.mime_type.startsWith("image/") ? (
+                         <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${asset.url}`} alt="attachment" className="h-full w-full object-cover" />
+                     ) : (
+                         <span className="text-[10px] uppercase text-muted-foreground">{asset.mime_type.split("/")[1]}</span>
+                     )}
+                     <button
+                       type="button"
+                       onClick={() => setDeletedAssetIds(prev => [...prev, asset.id])}
+                       className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-background/80 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                     >
+                       <X className="h-3 w-3" />
+                     </button>
+                  </div>
+              ))}
+           </div>
+        )}
+
+        {/* New File Preview */}
+        {files.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {files.map((file, i) => (
+              <div key={i} className="relative group flex items-center gap-2 rounded-md border border-foreground/20 bg-secondary/50 px-2 py-1 text-xs font-mono">
+                <span className="max-w-[150px] truncate">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(i)}
+                  className="ml-1 text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex gap-2">
              <button
               type="button"
-              onClick={isRecording ? stopRecording : startRecording}
-              className={`flex items-center gap-2 rounded-none px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
-                isRecording 
-                  ? "bg-destructive/10 text-destructive animate-pulse" 
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              }`}
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 rounded-none px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
              >
-               {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-               {isRecording ? "Stop Recording" : "Voice Note"}
+               <ImageIcon className="h-4 w-4" />
+               Add Media
              </button>
-             
-             {audioDevices.length > 1 && !isRecording && (
+             <input
+               ref={fileInputRef}
+               type="file"
+               multiple
+               accept="image/*,audio/*"
+               className="hidden"
+               onChange={handleFileSelect}
+             />
+
+             <div className="relative flex items-center">
                <button
-                 type="button"
-                 onClick={() => setShowDeviceSettings(!showDeviceSettings)}
-                 className="p-1 text-muted-foreground hover:text-foreground"
-                 title="Microphone Settings"
+                type="button"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`flex items-center gap-2 rounded-none px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  isRecording 
+                    ? "bg-destructive/10 text-destructive animate-pulse" 
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
                >
-                 <Settings className="h-3.5 w-3.5" />
+                 {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                 {isRecording ? "Stop Recording" : "Voice Note"}
                </button>
-             )}
-
-             {(showDeviceSettings || micError) && (
-               <div className="absolute left-0 bottom-full mb-2 z-50 w-64 rounded-md border-2 border-foreground bg-background shadow-hard p-3 space-y-2">
-                 <div className="flex items-center justify-between">
-                   <h4 className="text-[10px] font-bold uppercase tracking-wider">Audio Settings</h4>
-                   <button onClick={() => { setShowDeviceSettings(false); setMicError(null); }}>
-                     <X className="h-3 w-3" />
-                   </button>
-                 </div>
-
-                 {micError && (
-                   <div className="flex items-start gap-2 text-destructive bg-destructive/10 p-2 rounded text-[11px]">
-                     <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                     <p>{micError}</p>
-                   </div>
-                 )}
-
-                 <div className="space-y-1">
-                   <label className="text-[9px] font-bold text-muted-foreground uppercase">Microphone</label>
-                   <select
-                     value={selectedAudioDevice}
-                     onChange={(e) => setSelectedAudioDevice(e.target.value)}
-                     className="w-full text-xs bg-secondary border border-border rounded px-2 py-1 focus:outline-none"
-                   >
-                     {audioDevices.length === 0 && <option value="">No microphones found</option>}
-                     {audioDevices.map((device) => (
-                       <option key={device.deviceId} value={device.deviceId}>
-                         {device.label || `Microphone ${device.deviceId.slice(0, 5)}...`}
-                       </option>
-                     ))}
-                   </select>
-                   <button 
-                     type="button"
-                     onClick={fetchAudioDevices}
-                     className="text-[9px] text-primary hover:underline font-bold"
-                   >
-                     Refresh Devices
-                   </button>
-                 </div>
-               </div>
-             )}
-           </div>
-
-           {/* Category Picker */}
-           <div className="relative">
-             <button
-               type="button"
-               onClick={() => setShowCategoryPicker(!showCategoryPicker)}
-               className="flex items-center gap-2 rounded-none px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-             >
-               <Tag className="h-4 w-4" />
-               {selectedCategoryId
-                 ? categories.find(c => c.id === selectedCategoryId)?.name || "Category"
-                 : "Add Category"}
-             </button>
-
-             {showCategoryPicker && (
-               <div className="absolute left-0 top-full mt-1 z-50 w-48 rounded-md border-2 border-foreground bg-background shadow-hard py-1">
+               
+               {audioDevices.length > 1 && !isRecording && (
                  <button
                    type="button"
-                   onClick={() => {
-                     setSelectedCategoryId(null);
-                     setShowCategoryPicker(false);
-                   }}
-                   className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary transition-colors ${!selectedCategoryId ? 'bg-secondary' : ''}`}
+                   onClick={() => setShowDeviceSettings(!showDeviceSettings)}
+                   className="p-1 text-muted-foreground hover:text-foreground"
+                   title="Microphone Settings"
                  >
-                   <span className="h-2 w-2 rounded-full bg-muted-foreground" />
-                   No Category
+                   <Settings className="h-3.5 w-3.5" />
                  </button>
-                 {categories.map((category) => (
+               )}
+
+               {(showDeviceSettings || micError) && (
+                 <div className="absolute left-0 bottom-full mb-2 z-50 w-64 rounded-md border-2 border-foreground bg-background shadow-hard p-3 space-y-2">
+                   <div className="flex items-center justify-between">
+                     <h4 className="text-[10px] font-bold uppercase tracking-wider">Audio Settings</h4>
+                     <button onClick={() => { setShowDeviceSettings(false); setMicError(null); }}>
+                       <X className="h-3 w-3" />
+                     </button>
+                   </div>
+
+                   {micError && (
+                     <div className="flex items-start gap-2 text-destructive bg-destructive/10 p-2 rounded text-[11px]">
+                       <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                       <p>{micError}</p>
+                     </div>
+                   )}
+
+                   <div className="space-y-1">
+                     <label className="text-[9px] font-bold text-muted-foreground uppercase">Microphone</label>
+                     <select
+                       value={selectedAudioDevice}
+                       onChange={(e) => setSelectedAudioDevice(e.target.value)}
+                       className="w-full text-xs bg-secondary border border-border rounded px-2 py-1 focus:outline-none"
+                     >
+                       {audioDevices.length === 0 && <option value="">No microphones found</option>}
+                       {audioDevices.map((device) => (
+                         <option key={device.deviceId} value={device.deviceId}>
+                           {device.label || `Microphone ${device.deviceId.slice(0, 5)}...`}
+                         </option>
+                       ))}
+                     </select>
+                     <button 
+                       type="button"
+                       onClick={fetchAudioDevices}
+                       className="text-[9px] text-primary hover:underline font-bold"
+                     >
+                       Refresh Devices
+                     </button>
+                   </div>
+                 </div>
+               )}
+             </div>
+
+             {/* Category Picker */}
+             <div className="relative">
+               <button
+                 type="button"
+                 onClick={() => setShowCategoryPicker(!showCategoryPicker)}
+                 className="flex items-center gap-2 rounded-none px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+               >
+                 <Tag className="h-4 w-4" />
+                 {selectedCategoryId
+                   ? categories.find(c => c.id === selectedCategoryId)?.name || "Category"
+                   : "Add Category"}
+               </button>
+
+               {showCategoryPicker && (
+                 <div className="absolute left-0 top-full mt-1 z-50 w-48 rounded-md border-2 border-foreground bg-background shadow-hard py-1">
                    <button
-                     key={category.id}
                      type="button"
                      onClick={() => {
-                       setSelectedCategoryId(category.id);
+                       setSelectedCategoryId(null);
                        setShowCategoryPicker(false);
                      }}
-                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary transition-colors ${selectedCategoryId === category.id ? 'bg-secondary' : ''}`}
+                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary transition-colors ${!selectedCategoryId ? 'bg-secondary' : ''}`}
                    >
-                     <span
-                       className="h-2 w-2 rounded-full"
-                       style={{ backgroundColor: category.color }}
-                     />
-                     {category.name}
+                     <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+                     No Category
                    </button>
-                 ))}
-               </div>
-             )}
-           </div>
-        </div>
+                   {categories.map((category) => (
+                     <button
+                       key={category.id}
+                       type="button"
+                       onClick={() => {
+                         setSelectedCategoryId(category.id);
+                         setShowCategoryPicker(false);
+                       }}
+                       className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary transition-colors ${selectedCategoryId === category.id ? 'bg-secondary' : ''}`}
+                     >
+                       <span
+                         className="h-2 w-2 rounded-full"
+                         style={{ backgroundColor: category.color }}
+                       />
+                       {category.name}
+                     </button>
+                   ))}
+                 </div>
+               )}
+             </div>
+          </div>
 
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="text-sm font-bold text-muted-foreground hover:underline"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting || (!content.trim() && !title.trim() && files.length === 0)}
-            className="flex items-center gap-2 bg-primary px-4 py-2 text-sm font-bold text-white shadow-hard-sm hover:translate-y-px hover:shadow-hard active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting && <Loader2 className="h-3 w-3 animate-spin" />}
-            {initialNote ? "Update Note" : "Save Note"}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="text-sm font-bold text-muted-foreground hover:underline"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || (isFormEmpty && !initialNote)}
+              className="flex items-center gap-2 bg-primary px-4 py-2 text-sm font-bold text-white shadow-hard-sm hover:translate-y-px hover:shadow-hard active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting && <Loader2 className="h-3 w-3 animate-spin" />}
+              {initialNote ? "Update Note" : "Save Note"}
+            </button>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+
+      <ConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={performDelete}
+        title="Delete Note"
+        description="This note is now empty. Would you like to delete it?"
+        variant="destructive"
+        confirmText="Delete"
+      />
+    </>
   );
 }

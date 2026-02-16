@@ -98,13 +98,15 @@ export default function ProjectsPage() {
                   >
                     <Edit2 className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={(e) => handleDelete(project.id, e)}
-                    className="p-2 text-muted-foreground hover:bg-destructive hover:text-white transition-colors"
-                    title="Delete Project"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {!project.is_default && (
+                    <button
+                      onClick={(e) => handleDelete(project.id, e)}
+                      className="p-2 text-muted-foreground hover:bg-destructive hover:text-white transition-colors"
+                      title="Delete Project"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 

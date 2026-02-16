@@ -25,7 +25,7 @@ import {
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { ProjectTask } from "@/lib/types";
-import { Plus, Trash2, GripVertical, MoreHorizontal, Edit2, Calendar, AlertCircle } from "lucide-react";
+import { Plus, Trash2, GripVertical, MoreHorizontal, Edit2, Calendar, AlertCircle, Archive } from "lucide-react";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { TaskDialog } from "./TaskDialog";
 import { formatDistanceToNow, isPast, isToday } from "date-fns";
@@ -36,6 +36,7 @@ interface KanbanBoardProps {
   onAddTask: (content: string, status: string, priority?: string, due_date?: string | null) => void;
   onDeleteTask: (id: string) => void;
   onTasksReorder?: (reorderedTasks: { id: string; order_index: number; status: string }[]) => void;
+  onArchiveTask?: (id: string) => void;
 }
 
 const COLUMNS = [
@@ -54,12 +55,12 @@ const dropAnimation: DropAnimation = {
   }),
 };
 
-function KanbanTaskItem({ 
-  task, 
+function KanbanTaskItem({
+  task,
   onDelete,
   onUpdate
-}: { 
-  task: ProjectTask; 
+}: {
+  task: ProjectTask;
   onDelete: (id: string) => void;
   onUpdate?: (id: string, updates: Partial<ProjectTask>) => void;
 }) {
@@ -70,7 +71,7 @@ function KanbanTaskItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ 
+  } = useSortable({
     id: task.id,
     data: {
       type: "Task",
@@ -92,8 +93,8 @@ function KanbanTaskItem({
       ref={setNodeRef}
       style={style}
       className={`group relative flex flex-col gap-2 border-2 bg-background p-3 shadow-hard-sm hover:translate-y-[-2px] hover:shadow-hard transition-all cursor-pointer ${
-        isOverdue && task.status !== 'DONE' ? 'border-destructive/50 bg-destructive/5' : 
-        task.priority === 'HIGH' ? 'border-red-500/20' : 
+        isOverdue && task.status !== 'DONE' ? 'border-destructive/50 bg-destructive/5' :
+        task.priority === 'HIGH' ? 'border-red-500/20' :
         'border-foreground'
       }`}
       onClick={() => onUpdate?.(task.id, {})}
@@ -102,7 +103,7 @@ function KanbanTaskItem({
         <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-0.5">
           <GripVertical className="h-3.5 w-3.5" />
         </div>
-        
+
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {task.priority !== 'MEDIUM' && (
              <div className={`flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${
@@ -125,7 +126,7 @@ function KanbanTaskItem({
           >
             <Edit2 className="h-3 w-3" />
           </button>
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(task.id);
@@ -137,7 +138,7 @@ function KanbanTaskItem({
           </button>
         </div>
       </div>
-      
+
       <p className="text-xs font-bold leading-relaxed break-words whitespace-pre-wrap line-clamp-3">
         {task.content}
       </p>
@@ -202,10 +203,10 @@ function KanbanColumn({
       <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1 custom-scrollbar">
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
             {tasks.map((task) => (
-              <KanbanTaskItem 
-                key={task.id} 
-                task={task} 
-                onDelete={onDeleteTask} 
+              <KanbanTaskItem
+                key={task.id}
+                task={task}
+                onDelete={onDeleteTask}
                 onUpdate={() => onTaskUpdateClick(task.id)}
               />
             ))}
@@ -225,12 +226,49 @@ function KanbanColumn({
   );
 }
 
+function ArchiveDropZone({ isDragging }: { isDragging: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: "ARCHIVE",
+    data: {
+      type: "Archive",
+    },
+  });
+
+  if (!isDragging) return null;
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="fixed right-0 top-0 h-full w-16 z-40 pointer-events-auto"
+    >
+      {/* Subtle edge glow - gradient that fades from right edge inward */}
+      <div
+        className={`absolute inset-0 transition-opacity duration-500 ${
+          isOver ? "opacity-100" : "opacity-40"
+        }`}
+        style={{
+          background: isOver
+            ? "linear-gradient(to left, rgba(249,115,22,0.25) 0%, rgba(249,115,22,0.08) 40%, transparent 100%)"
+            : "linear-gradient(to left, rgba(249,115,22,0.1) 0%, transparent 60%)",
+        }}
+      />
+      {/* Small icon hint only when hovering */}
+      <div className={`absolute right-2 top-1/2 -translate-y-1/2 transition-all duration-300 ${
+        isOver ? "opacity-80 scale-100" : "opacity-0 scale-90"
+      }`}>
+        <Archive className="h-4 w-4 text-orange-500" />
+      </div>
+    </div>
+  );
+}
+
 export function KanbanBoard({
   tasks,
   onTaskUpdate,
   onAddTask,
   onDeleteTask,
-  onTasksReorder
+  onTasksReorder,
+  onArchiveTask
 }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<ProjectTask | null>(null);
   const [localTasks, setLocalTasks] = useState<ProjectTask[]>(tasks);
@@ -238,6 +276,7 @@ export function KanbanBoard({
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ProjectTask | undefined>(undefined);
   const [defaultStatus, setDefaultStatus] = useState<string>("TODO");
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     setLocalTasks(tasks);
@@ -279,11 +318,16 @@ export function KanbanBoard({
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const task = localTasks.find((t) => t.id === active.id);
-    if (task) setActiveTask(task);
+    if (task) {
+      setActiveTask(task);
+      setIsDragging(true);
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setIsDragging(false);
+
     if (!over) {
       setActiveTask(null);
       return;
@@ -291,6 +335,16 @@ export function KanbanBoard({
 
     const activeId = active.id as string;
     const overId = over.id as string;
+
+    // Handle archive drop
+    if (overId === "ARCHIVE" || over.data.current?.type === "Archive") {
+      if (onArchiveTask) {
+        onArchiveTask(activeId);
+        setLocalTasks((prev) => prev.filter((t) => t.id !== activeId));
+      }
+      setActiveTask(null);
+      return;
+    }
 
     const activeTaskObj = localTasks.find((t) => t.id === activeId);
     if (!activeTaskObj) {
@@ -380,6 +434,8 @@ export function KanbanBoard({
             />
           ))}
         </div>
+
+        <ArchiveDropZone isDragging={isDragging} />
 
         <DragOverlay dropAnimation={dropAnimation}>
           {activeTask ? (

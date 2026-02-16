@@ -8,6 +8,7 @@ class Project(SQLModel, table=True):
     user_id: uuid.UUID = Field(index=True)
     name: str
     framework: str = Field(default="KANBAN_FIXED") # Enum: KANBAN_FIXED
+    is_default: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     tasks: List["ProjectTask"] = Relationship(back_populates="project", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
@@ -24,6 +25,8 @@ class ProjectTask(SQLModel, table=True):
     content: str
     order_index: float = Field(default=0.0)
     assignee_id: Optional[uuid.UUID] = Field(default=None, index=True)  # user.id of assigned member
+    is_archived: bool = Field(default=False)
+    archived_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
