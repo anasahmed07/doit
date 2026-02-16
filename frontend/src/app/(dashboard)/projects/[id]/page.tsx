@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback, use } from "react";
-import { Loader2, Layout, Plus, ChevronLeft, Edit2, Grid, Trash2 } from "lucide-react";
+import { Loader2, Layout, Plus, ChevronLeft, Edit2, Grid, Trash2, Archive } from "lucide-react";
 import Link from "next/link";
 import { Project, ProjectTask } from "@/lib/types";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { ProjectCreationDialog } from "@/components/ProjectCreationDialog";
 import { TaskDialog } from "@/components/TaskDialog";
+import { ArchivePanel } from "@/components/ArchivePanel";
 import { useProjects } from "@/components/ProjectsContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -22,7 +23,7 @@ function TaskCard({
   onEdit: (task: ProjectTask) => void;
 }) {
   return (
-    <div 
+    <div
       className="group relative flex flex-col gap-4 border-2 border-foreground bg-background p-5 shadow-hard-sm hover:translate-y-[-4px] hover:shadow-hard transition-all h-full cursor-pointer"
       onClick={() => onEdit(task)}
     >
@@ -86,6 +87,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ProjectTask | undefined>(undefined);
   const [defaultStatus, setDefaultStatus] = useState<string>("TODO");
+  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -117,7 +119,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const toggleView = async (mode: 'kanban' | 'grid') => {
     if (!project) return;
     const framework = mode === 'grid' ? 'GRID' : 'KANBAN_FIXED';
-    
+
     // Optimistic update
     setViewMode(mode);
     setProject(prev => prev ? { ...prev, framework } : prev);
@@ -141,10 +143,10 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
 
   const handleTaskUpdate = async (taskId: string, updates: Partial<ProjectTask>) => {
     // Optimistic update
-    setTasks((prev) => 
+    setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t))
     );
-    
+
     try {
       await fetch(`/api/projects/tasks/${taskId}`, {
         method: "PATCH",
@@ -181,6 +183,24 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     } catch (error) {
       console.error("Failed to delete task", error);
     }
+  };
+
+  const handleArchiveTask = async (taskId: string) => {
+    // Optimistic: remove from board
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+
+    try {
+      await fetch(`/api/projects/tasks/${taskId}/archive`, {
+        method: "PATCH",
+      });
+    } catch (error) {
+      console.error("Failed to archive task", error);
+      fetchData(); // Revert
+    }
+  };
+
+  const handleRestoreTask = (task: ProjectTask) => {
+    setTasks((prev) => [...prev, task]);
   };
 
   const handleTasksReorder = async (
@@ -248,30 +268,41 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                <Edit2 className="h-4 w-4" />
              </button>
            </div>
-           
-           <div className="flex items-center bg-secondary/50 rounded-lg p-1 border border-border">
+
+           <div className="flex items-center gap-3">
               <button
-                onClick={() => toggleView('kanban')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  viewMode === 'kanban' 
-                    ? 'bg-background shadow-sm text-foreground' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                onClick={() => setIsArchiveOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border border-border text-muted-foreground hover:text-orange-500 hover:border-orange-500/30 hover:bg-orange-500/5 transition-all"
+                title="View archived tasks"
               >
-                <Layout className="h-3.5 w-3.5" />
-                Board
+                <Archive className="h-3.5 w-3.5" />
+                Archive
               </button>
-              <button
-                onClick={() => toggleView('grid')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  viewMode === 'grid' 
-                    ? 'bg-background shadow-sm text-foreground' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Grid className="h-3.5 w-3.5" />
-                Cards
-              </button>
+
+              <div className="flex items-center bg-secondary/50 rounded-lg p-1 border border-border">
+                <button
+                  onClick={() => toggleView('kanban')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                    viewMode === 'kanban'
+                      ? 'bg-background shadow-sm text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Layout className="h-3.5 w-3.5" />
+                  Board
+                </button>
+                <button
+                  onClick={() => toggleView('grid')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                    viewMode === 'grid'
+                      ? 'bg-background shadow-sm text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Grid className="h-3.5 w-3.5" />
+                  Cards
+                </button>
+              </div>
            </div>
         </div>
       </div>
@@ -286,6 +317,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 onAddTask={handleAddTask}
                 onDeleteTask={handleDeleteTask}
                 onTasksReorder={handleTasksReorder}
+                onArchiveTask={handleArchiveTask}
               />
             ) : (
               <div className="space-y-6">
@@ -350,8 +382,16 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             handleAddTask(content, status || defaultStatus, priority, due_date);
           }
         }}
+        onDelete={handleDeleteTask}
         initialTask={editingTask}
         defaultStatus={defaultStatus}
+      />
+
+      <ArchivePanel
+        isOpen={isArchiveOpen}
+        onClose={() => setIsArchiveOpen(false)}
+        projectId={id}
+        onRestore={handleRestoreTask}
       />
     </div>
   );

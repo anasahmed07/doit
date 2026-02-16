@@ -35,6 +35,8 @@ class NoteRead(BaseModel):
     content: Optional[str]
     category_id: Optional[uuid.UUID]
     order_index: float
+    is_archived: bool = False
+    archived_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     media_assets: List[MediaAssetRead] = []
@@ -66,6 +68,8 @@ def read_notes(
             content=note.content,
             category_id=note.category_id,
             order_index=note.order_index,
+            is_archived=note.is_archived,
+            archived_at=note.archived_at,
             created_at=note.created_at,
             updated_at=note.updated_at,
             media_assets=assets
@@ -92,6 +96,8 @@ def create_note(
         content=created_note.content,
         category_id=created_note.category_id,
         order_index=created_note.order_index,
+        is_archived=created_note.is_archived,
+        archived_at=created_note.archived_at,
         created_at=created_note.created_at,
         updated_at=created_note.updated_at,
         media_assets=[]
@@ -116,6 +122,109 @@ def reorder_notes(
     
     session.commit()
     return {"ok": True}
+
+@router.get("/archived", response_model=List[NoteRead])
+def read_archived_notes(
+    category_id: Optional[uuid.UUID] = None,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = NoteService(session)
+    notes = service.get_archived_notes(current_user.id, category_id)
+
+    result = []
+    for note in notes:
+        assets = []
+        for asset in note.media_assets:
+            assets.append(MediaAssetRead(
+                id=asset.id,
+                mime_type=asset.mime_type,
+                url=f"/api/v1/notes/media/{asset.id}"
+            ))
+
+        result.append(NoteRead(
+            id=note.id,
+            title=note.title,
+            content=note.content,
+            category_id=note.category_id,
+            order_index=note.order_index,
+            is_archived=note.is_archived,
+            archived_at=note.archived_at,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+            media_assets=assets
+        ))
+    return result
+
+@router.patch("/{note_id}/archive", response_model=NoteRead)
+def archive_note(
+    note_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = NoteService(session)
+    existing_note = service.get_note_by_id(note_id)
+    if not existing_note or existing_note.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    archived = service.archive_note(note_id)
+    session.refresh(archived)
+
+    assets = []
+    for asset in archived.media_assets:
+        assets.append(MediaAssetRead(
+            id=asset.id,
+            mime_type=asset.mime_type,
+            url=f"/api/v1/notes/media/{asset.id}"
+        ))
+
+    return NoteRead(
+        id=archived.id,
+        title=archived.title,
+        content=archived.content,
+        category_id=archived.category_id,
+        order_index=archived.order_index,
+        is_archived=archived.is_archived,
+        archived_at=archived.archived_at,
+        created_at=archived.created_at,
+        updated_at=archived.updated_at,
+        media_assets=assets
+    )
+
+@router.patch("/{note_id}/unarchive", response_model=NoteRead)
+def unarchive_note(
+    note_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = NoteService(session)
+    existing_note = service.get_note_by_id(note_id)
+    if not existing_note or existing_note.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    unarchived = service.unarchive_note(note_id)
+    session.refresh(unarchived)
+
+    assets = []
+    for asset in unarchived.media_assets:
+        assets.append(MediaAssetRead(
+            id=asset.id,
+            mime_type=asset.mime_type,
+            url=f"/api/v1/notes/media/{asset.id}"
+        ))
+
+    return NoteRead(
+        id=unarchived.id,
+        title=unarchived.title,
+        content=unarchived.content,
+        category_id=unarchived.category_id,
+        order_index=unarchived.order_index,
+        is_archived=unarchived.is_archived,
+        archived_at=unarchived.archived_at,
+        created_at=unarchived.created_at,
+        updated_at=unarchived.updated_at,
+        media_assets=assets
+    )
 
 @router.patch("/{note_id}", response_model=NoteRead)
 def update_note(
@@ -153,6 +262,8 @@ def update_note(
         content=updated_note.content,
         category_id=updated_note.category_id,
         order_index=updated_note.order_index,
+        is_archived=updated_note.is_archived,
+        archived_at=updated_note.archived_at,
         created_at=updated_note.created_at,
         updated_at=updated_note.updated_at,
         media_assets=assets

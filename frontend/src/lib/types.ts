@@ -27,6 +27,8 @@ export interface Note {
   title?: string | null;
   content?: string;
   order_index: number;
+  is_archived?: boolean;
+  archived_at?: string | null;
   created_at: string;
   updated_at: string;
   media_assets: MediaAsset[];
@@ -37,6 +39,7 @@ export interface Project {
   user_id: string;
   name: string;
   framework: "KANBAN_FIXED" | "GRID";
+  is_default: boolean;
   created_at: string;
 }
 
@@ -48,8 +51,21 @@ export interface ProjectTask {
   due_date?: string | null;
   content: string;
   order_index: number;
+  is_archived: boolean;
+  archived_at?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: "overdue" | "due_soon" | "task_assigned" | "project_invitation" | "invitation_accepted";
+  title: string;
+  message: string;
+  reference_id?: string | null;
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface Conversation {

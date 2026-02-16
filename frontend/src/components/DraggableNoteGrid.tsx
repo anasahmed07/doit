@@ -20,10 +20,12 @@ import {
   rectSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { Note } from "@/lib/types";
 import { NoteCard } from "./NoteCard";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { Archive } from "lucide-react";
 
 interface DraggableNoteGridProps {
   notes: Note[];
@@ -32,6 +34,7 @@ interface DraggableNoteGridProps {
   onEdit: (note: Note) => void;
   onView: (note: Note) => void;
   onToggleTodo: (note: Note, index: number) => void;
+  onArchive?: (id: string) => void;
 }
 
 const dropAnimation: DropAnimation = {
@@ -44,18 +47,20 @@ const dropAnimation: DropAnimation = {
     }),
 };
 
-function SortableNoteItem({ 
-  note, 
-  onDelete, 
-  onEdit, 
+function SortableNoteItem({
+  note,
+  onDelete,
+  onEdit,
   onView,
-  onToggleTodo 
-}: { 
-  note: Note; 
-  onDelete: (id: string) => void; 
+  onToggleTodo,
+  onArchive
+}: {
+  note: Note;
+  onDelete: (id: string) => void;
   onEdit: (note: Note) => void;
   onView: (note: Note) => void;
   onToggleTodo: (note: Note, index: number) => void;
+  onArchive?: (id: string) => void;
 }) {
   const {
     attributes,
@@ -67,19 +72,20 @@ function SortableNoteItem({
   } = useSortable({ id: note.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
   };
 
   return (
     <div ref={setNodeRef} style={style} className="h-fit">
-      <NoteCard 
-        note={note} 
-        onDelete={onDelete} 
-        onEdit={onEdit} 
+      <NoteCard
+        note={note}
+        onDelete={onDelete}
+        onEdit={onEdit}
         onView={onView}
-        onToggleTodo={onToggleTodo} 
+        onToggleTodo={onToggleTodo}
+        onArchive={onArchive}
         dragAttributes={attributes}
         dragListeners={listeners}
       />
@@ -87,8 +93,42 @@ function SortableNoteItem({
   );
 }
 
-export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, onToggleTodo }: DraggableNoteGridProps) {
+function NoteArchiveDropZone({ isDragging }: { isDragging: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: "NOTE_ARCHIVE",
+    data: {
+      type: "Archive",
+    },
+  });
+
+  if (!isDragging) return null;
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="fixed right-0 top-0 h-full w-3 z-40 pointer-events-auto"
+    >
+      {/* Visible glow extends further than the narrow hit zone */}
+      <div
+        className={`absolute top-0 right-0 h-full w-12 transition-opacity duration-500 pointer-events-none ${
+          isOver ? "opacity-100" : "opacity-0"
+        }`}
+        style={{
+          background: "linear-gradient(to left, rgba(249,115,22,0.3) 0%, rgba(249,115,22,0.08) 50%, transparent 100%)",
+        }}
+      />
+      <div className={`absolute right-1 top-1/2 -translate-y-1/2 transition-all duration-300 pointer-events-none ${
+        isOver ? "opacity-80 scale-100" : "opacity-0 scale-90"
+      }`}>
+        <Archive className="h-3.5 w-3.5 text-orange-500" />
+      </div>
+    </div>
+  );
+}
+
+export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, onToggleTodo, onArchive }: DraggableNoteGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [columnCount, setColumnCount] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -99,7 +139,7 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, 
     const updateColumns = (width: number) => {
       // Calculate columns based on available width and minimum card width (approx 300px)
       const minColWidth = 300;
-      // We subtract gap space roughly: (cols - 1) * 16px. 
+      // We subtract gap space roughly: (cols - 1) * 16px.
       // Simplified: just use width / minWidth.
       const cols = Math.max(1, Math.floor(width / minColWidth));
       setColumnCount(cols);
@@ -112,7 +152,7 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, 
     });
 
     resizeObserver.observe(containerRef.current);
-    
+
     // Initial calculation
     updateColumns(containerRef.current.offsetWidth);
 
@@ -127,7 +167,7 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, 
     });
     return cols;
   }, [notes, columnCount]);
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
         activationConstraint: {
@@ -141,15 +181,33 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, 
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    setIsDragging(true);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setIsDragging(false);
 
-    if (over && active.id !== over.id) {
+    if (!over) {
+      setActiveId(null);
+      return;
+    }
+
+    const overId = over.id as string;
+
+    // Handle archive drop
+    if (overId === "NOTE_ARCHIVE" || over.data.current?.type === "Archive") {
+      if (onArchive) {
+        onArchive(active.id as string);
+      }
+      setActiveId(null);
+      return;
+    }
+
+    if (active.id !== over.id) {
       const oldIndex = notes.findIndex((note) => note.id === active.id);
       const newIndex = notes.findIndex((note) => note.id === over.id);
-      
+
       const newOrder = arrayMove(notes, oldIndex, newIndex);
       onReorder(newOrder);
     }
@@ -177,13 +235,16 @@ export function DraggableNoteGrid({ notes, onReorder, onDelete, onEdit, onView, 
                   onEdit={onEdit}
                   onView={onView}
                   onToggleTodo={onToggleTodo}
+                  onArchive={onArchive}
                 />
               ))}
             </div>
           ))}
         </div>
       </SortableContext>
-      
+
+      <NoteArchiveDropZone isDragging={isDragging} />
+
       <DragOverlay dropAnimation={dropAnimation}>
           {activeNote ? (
               <div className="w-full h-full max-w-[400px]">

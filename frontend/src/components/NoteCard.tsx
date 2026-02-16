@@ -2,7 +2,7 @@
 
 import { Note } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
-import { Trash2, Edit2, GripVertical, Image as ImageIcon, X } from "lucide-react";
+import { Trash2, Edit2, GripVertical, Image as ImageIcon, X, Archive } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -16,17 +16,19 @@ interface NoteCardProps {
   onEdit: (note: Note) => void;
   onView?: (note: Note) => void;
   onToggleTodo?: (note: Note, index: number) => void;
+  onArchive?: (id: string) => void;
   isOverlay?: boolean;
   dragAttributes?: any;
   dragListeners?: any;
 }
 
 export function NoteCard({
-  note, 
-  onDelete, 
-  onEdit, 
+  note,
+  onDelete,
+  onEdit,
   onView,
-  onToggleTodo, 
+  onToggleTodo,
+  onArchive,
   isOverlay = false,
   dragAttributes,
   dragListeners
@@ -96,6 +98,18 @@ export function NoteCard({
             >
               <Edit2 className="h-3.5 w-3.5" />
             </button>
+            {onArchive && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onArchive(note.id);
+                }}
+                className="p-1.5 text-muted-foreground hover:bg-orange-500/10 hover:text-orange-500"
+                title="Archive Note"
+              >
+                <Archive className="h-3.5 w-3.5" />
+              </button>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
