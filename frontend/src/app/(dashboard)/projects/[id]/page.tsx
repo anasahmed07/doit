@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useState, useCallback, use } from "react";
-import { Loader2, Layout, Plus, ChevronLeft, Edit2, Grid, Trash2, Archive } from "lucide-react";
+import { Loader2, Layout, Plus, ChevronLeft, Edit2, Grid, Trash2, Archive, Users } from "lucide-react";
 import Link from "next/link";
 import { Project, ProjectTask } from "@/lib/types";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { ProjectCreationDialog } from "@/components/ProjectCreationDialog";
 import { TaskDialog } from "@/components/TaskDialog";
 import { ArchivePanel } from "@/components/ArchivePanel";
+import { ProjectMembersPanel } from "@/components/ProjectMembersPanel";
+import { authClient } from "@/lib/auth-client";
 import { useProjects } from "@/components/ProjectsContext";
+import { getSocket } from "@/lib/socket";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
@@ -88,6 +91,8 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const [editingTask, setEditingTask] = useState<ProjectTask | undefined>(undefined);
   const [defaultStatus, setDefaultStatus] = useState<string>("TODO");
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   const fetchData = useCallback(async () => {
     try {
@@ -115,6 +120,65 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const { data } = await authClient.getSession();
+        if (data?.user?.id) setCurrentUserId(data.user.id);
+      } catch {
+        // silently ignore
+      }
+    };
+    fetchSession();
+  }, []);
+
+  // Realtime: Socket.IO connection for live task updates
+  useEffect(() => {
+    const socket = getSocket();
+
+    const refreshTasks = async () => {
+      try {
+        const res = await fetch(`/api/projects/${id}/tasks`);
+        if (res.ok) setTasks(await res.json());
+      } catch {
+        // silently ignore
+      }
+    };
+
+    const joinRoom = () => {
+      socket.emit("join_project", { project_id: id });
+    };
+
+    // Connect if not already connected
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    // Join room once connected (or immediately if already connected)
+    if (socket.connected) {
+      joinRoom();
+    }
+    // Also join on connect/reconnect events
+    socket.on("connect", joinRoom);
+
+    socket.on("task:created", refreshTasks);
+    socket.on("task:updated", refreshTasks);
+    socket.on("task:deleted", refreshTasks);
+    socket.on("task:archived", refreshTasks);
+    socket.on("task:unarchived", refreshTasks);
+
+    return () => {
+      socket.emit("leave_project", { project_id: id });
+      socket.off("connect", joinRoom);
+      socket.off("task:created", refreshTasks);
+      socket.off("task:updated", refreshTasks);
+      socket.off("task:deleted", refreshTasks);
+      socket.off("task:archived", refreshTasks);
+      socket.off("task:unarchived", refreshTasks);
+      // Don't disconnect — the singleton socket stays alive for the next page
+    };
+  }, [id]);
 
   const toggleView = async (mode: 'kanban' | 'grid') => {
     if (!project) return;
@@ -159,12 +223,12 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     }
   };
 
-  const handleAddTask = async (content: string, status: string, priority?: string, due_date?: string | null) => {
+  const handleAddTask = async (content: string, status: string, priority?: string, due_date?: string | null, assignee_id?: string | null) => {
     try {
       const response = await fetch(`/api/projects/${id}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, status, priority, due_date }),
+        body: JSON.stringify({ content, status, priority, due_date, assignee_id }),
       });
 
       if (!response.ok) throw new Error("Failed to add task");
@@ -270,6 +334,17 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
            </div>
 
            <div className="flex items-center gap-3">
+              {!project.is_default && (
+                <button
+                  onClick={() => setIsMembersOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border border-border text-muted-foreground hover:text-purple-500 hover:border-purple-500/30 hover:bg-purple-500/5 transition-all"
+                  title="View project members"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  Members
+                </button>
+              )}
+
               <button
                 onClick={() => setIsArchiveOpen(true)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border border-border text-muted-foreground hover:text-orange-500 hover:border-orange-500/30 hover:bg-orange-500/5 transition-all"
@@ -318,6 +393,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 onDeleteTask={handleDeleteTask}
                 onTasksReorder={handleTasksReorder}
                 onArchiveTask={handleArchiveTask}
+                projectId={id}
               />
             ) : (
               <div className="space-y-6">
@@ -375,16 +451,17 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
       <TaskDialog
         isOpen={isTaskDialogOpen}
         onClose={() => setIsTaskDialogOpen(false)}
-        onSuccess={(content, status, priority, due_date) => {
+        onSuccess={(content, status, priority, due_date, assignee_id) => {
           if (editingTask) {
-            handleTaskUpdate(editingTask.id, { content, status, priority, due_date });
+            handleTaskUpdate(editingTask.id, { content, status, priority, due_date, assignee_id });
           } else {
-            handleAddTask(content, status || defaultStatus, priority, due_date);
+            handleAddTask(content, status || defaultStatus, priority, due_date, assignee_id);
           }
         }}
         onDelete={handleDeleteTask}
         initialTask={editingTask}
         defaultStatus={defaultStatus}
+        projectId={id}
       />
 
       <ArchivePanel
@@ -392,6 +469,14 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         onClose={() => setIsArchiveOpen(false)}
         projectId={id}
         onRestore={handleRestoreTask}
+      />
+
+      <ProjectMembersPanel
+        isOpen={isMembersOpen}
+        onClose={() => setIsMembersOpen(false)}
+        projectId={id}
+        projectOwnerId={project.user_id}
+        currentUserId={currentUserId}
       />
     </div>
   );

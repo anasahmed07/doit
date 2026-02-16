@@ -33,10 +33,11 @@ import { formatDistanceToNow, isPast, isToday } from "date-fns";
 interface KanbanBoardProps {
   tasks: ProjectTask[];
   onTaskUpdate: (id: string, updates: Partial<ProjectTask>) => void;
-  onAddTask: (content: string, status: string, priority?: string, due_date?: string | null) => void;
+  onAddTask: (content: string, status: string, priority?: string, due_date?: string | null, assignee_id?: string | null) => void;
   onDeleteTask: (id: string) => void;
   onTasksReorder?: (reorderedTasks: { id: string; order_index: number; status: string }[]) => void;
   onArchiveTask?: (id: string) => void;
+  projectId?: string;
 }
 
 const COLUMNS = [
@@ -268,7 +269,8 @@ export function KanbanBoard({
   onAddTask,
   onDeleteTask,
   onTasksReorder,
-  onArchiveTask
+  onArchiveTask,
+  projectId
 }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<ProjectTask | null>(null);
   const [localTasks, setLocalTasks] = useState<ProjectTask[]>(tasks);
@@ -307,11 +309,11 @@ export function KanbanBoard({
     }
   };
 
-  const handleTaskDialogSuccess = (content: string, status?: string, priority?: string, due_date?: string | null) => {
+  const handleTaskDialogSuccess = (content: string, status?: string, priority?: string, due_date?: string | null, assignee_id?: string | null) => {
     if (editingTask) {
-      onTaskUpdate(editingTask.id, { content, status, priority, due_date });
+      onTaskUpdate(editingTask.id, { content, status, priority, due_date, assignee_id });
     } else {
-      onAddTask(content, status || defaultStatus, priority, due_date);
+      onAddTask(content, status || defaultStatus, priority, due_date, assignee_id);
     }
   };
 
@@ -466,6 +468,7 @@ export function KanbanBoard({
         onSuccess={handleTaskDialogSuccess}
         initialTask={editingTask}
         defaultStatus={defaultStatus}
+        projectId={projectId}
       />
     </>
   );

@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 from typing import List, Optional, Any
 import uuid
-from backend.models.project import Project, ProjectTask
+from backend.models.project import Project, ProjectTask, ProjectMember
 from backend.models.notification import Notification
 from datetime import datetime
 
@@ -29,9 +29,34 @@ class ProjectService:
 
     def get_projects(self, user_id: uuid.UUID) -> List[Project]:
         self.ensure_default_project(user_id)
-        statement = select(Project).where(Project.user_id == user_id).order_by(Project.created_at.desc())
+        statement = select(Project).where(Project.user_id == user_id).order_by(Project.is_default.desc(), Project.created_at.desc())
         results = self.session.exec(statement)
         return results.all()
+
+    def get_collaboration_projects(self, user_id: uuid.UUID) -> List[Project]:
+        """Get projects where the user is a member but not the owner."""
+        statement = (
+            select(Project)
+            .join(ProjectMember, ProjectMember.project_id == Project.id)
+            .where(ProjectMember.user_id == user_id, Project.user_id != user_id)
+            .order_by(Project.created_at.desc())
+        )
+        return self.session.exec(statement).all()
+
+    def can_access_project(self, project_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+        """Check if user is the owner or a member of the project."""
+        project = self.get_project_by_id(project_id)
+        if not project:
+            return False
+        if project.user_id == user_id:
+            return True
+        member = self.session.exec(
+            select(ProjectMember).where(
+                ProjectMember.project_id == project_id,
+                ProjectMember.user_id == user_id,
+            )
+        ).first()
+        return member is not None
 
     def create_project(self, project: Project) -> Project:
         self.session.add(project)

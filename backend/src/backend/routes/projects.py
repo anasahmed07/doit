@@ -9,6 +9,7 @@ from backend.services.project_service import ProjectService
 import uuid
 from pydantic import BaseModel
 from datetime import datetime
+from backend.core.socketio import emit_task_event
 
 router = APIRouter()
 
@@ -23,6 +24,7 @@ class ProjectUpdate(BaseModel):
 
 class ProjectRead(BaseModel):
     id: uuid.UUID
+    user_id: uuid.UUID
     name: str
     framework: str
     is_default: bool
@@ -33,6 +35,7 @@ class ProjectTaskCreate(BaseModel):
     status: str = "TODO"
     priority: str = "MEDIUM"
     due_date: Optional[datetime] = None
+    assignee_id: Optional[uuid.UUID] = None
 
 class ProjectTaskUpdate(BaseModel):
     content: Optional[str] = None
@@ -64,6 +67,14 @@ def read_projects(
     service = ProjectService(session)
     return service.get_projects(current_user.id)
 
+@router.get("/collaborations", response_model=List[ProjectRead])
+def read_collaboration_projects(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    service = ProjectService(session)
+    return service.get_collaboration_projects(current_user.id)
+
 @router.post("/", response_model=ProjectRead)
 def create_project(
     project_in: ProjectCreate,
@@ -86,7 +97,7 @@ def read_project(
 ):
     service = ProjectService(session)
     project = service.get_project_by_id(project_id)
-    if not project or project.user_id != current_user.id:
+    if not project or not service.can_access_project(project_id, current_user.id):
         raise HTTPException(status_code=404, detail="Project not found")
     return project
 
@@ -130,8 +141,7 @@ def read_project_tasks(
     session: Session = Depends(get_session)
 ):
     service = ProjectService(session)
-    project = service.get_project_by_id(project_id)
-    if not project or project.user_id != current_user.id:
+    if not service.can_access_project(project_id, current_user.id):
         raise HTTPException(status_code=404, detail="Project not found")
     return service.get_project_tasks(project_id)
 
@@ -142,8 +152,7 @@ def read_archived_tasks(
     session: Session = Depends(get_session)
 ):
     service = ProjectService(session)
-    project = service.get_project_by_id(project_id)
-    if not project or project.user_id != current_user.id:
+    if not service.can_access_project(project_id, current_user.id):
         raise HTTPException(status_code=404, detail="Project not found")
     return service.get_archived_tasks(project_id)
 
@@ -155,8 +164,7 @@ def create_project_task(
     session: Session = Depends(get_session)
 ):
     service = ProjectService(session)
-    project = service.get_project_by_id(project_id)
-    if not project or project.user_id != current_user.id:
+    if not service.can_access_project(project_id, current_user.id):
         raise HTTPException(status_code=404, detail="Project not found")
 
     task = ProjectTask(
@@ -164,9 +172,26 @@ def create_project_task(
         content=task_in.content,
         status=task_in.status,
         priority=task_in.priority,
-        due_date=task_in.due_date
+        due_date=task_in.due_date,
+        assignee_id=task_in.assignee_id,
     )
-    return service.create_project_task(task)
+    created = service.create_project_task(task)
+
+    # Send notification if assigned
+    if task_in.assignee_id:
+        from backend.models.notification import Notification
+        notification = Notification(
+            user_id=task_in.assignee_id,
+            type="task_assigned",
+            title="Task assigned to you",
+            message=f'You were assigned to "{task_in.content}".',
+            reference_id=created.id,
+        )
+        session.add(notification)
+        session.commit()
+
+    emit_task_event(str(project_id), "task:created", {"task_id": str(created.id)})
+    return created
 
 @router.patch("/tasks/{task_id}", response_model=ProjectTaskRead)
 def update_project_task(
@@ -180,14 +205,12 @@ def update_project_task(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    # Check project ownership
-    project = service.get_project_by_id(task.project_id)
-    if not project or project.user_id != current_user.id:
+    if not service.can_access_project(task.project_id, current_user.id):
         raise HTTPException(status_code=404, detail="Project not found")
 
     # Use model_fields_set to know which fields were explicitly provided
     fields_set = task_in.model_fields_set
-    return service.update_project_task(
+    updated = service.update_project_task(
         task_id,
         status=task_in.status if "status" in fields_set else None,
         content=task_in.content if "content" in fields_set else None,
@@ -196,6 +219,9 @@ def update_project_task(
         due_date=task_in.due_date if "due_date" in fields_set else ...,
         assignee_id=task_in.assignee_id if "assignee_id" in fields_set else ...,
     )
+    if updated:
+        emit_task_event(str(task.project_id), "task:updated", {"task_id": str(task_id)})
+    return updated
 
 @router.patch("/tasks/{task_id}/archive", response_model=ProjectTaskRead)
 def archive_task(
@@ -207,12 +233,13 @@ def archive_task(
     task = service.get_project_task_by_id(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-
-    project = service.get_project_by_id(task.project_id)
-    if not project or project.user_id != current_user.id:
+    if not service.can_access_project(task.project_id, current_user.id):
         raise HTTPException(status_code=404, detail="Project not found")
 
-    return service.archive_task(task_id)
+    project_id = str(task.project_id)
+    result = service.archive_task(task_id)
+    emit_task_event(project_id, "task:archived", {"task_id": str(task_id)})
+    return result
 
 @router.patch("/tasks/{task_id}/unarchive", response_model=ProjectTaskRead)
 def unarchive_task(
@@ -224,12 +251,13 @@ def unarchive_task(
     task = service.get_project_task_by_id(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-
-    project = service.get_project_by_id(task.project_id)
-    if not project or project.user_id != current_user.id:
+    if not service.can_access_project(task.project_id, current_user.id):
         raise HTTPException(status_code=404, detail="Project not found")
 
-    return service.unarchive_task(task_id)
+    project_id = str(task.project_id)
+    result = service.unarchive_task(task_id)
+    emit_task_event(project_id, "task:unarchived", {"task_id": str(task_id)})
+    return result
 
 @router.delete("/tasks/{task_id}")
 def delete_project_task(
@@ -242,10 +270,10 @@ def delete_project_task(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    # Check project ownership
-    project = service.get_project_by_id(task.project_id)
-    if not project or project.user_id != current_user.id:
+    if not service.can_access_project(task.project_id, current_user.id):
         raise HTTPException(status_code=404, detail="Project not found")
 
+    project_id = str(task.project_id)
     service.delete_project_task(task_id)
+    emit_task_event(project_id, "task:deleted", {"task_id": str(task_id)})
     return {"ok": True}
