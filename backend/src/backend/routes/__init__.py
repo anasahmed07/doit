@@ -5,6 +5,7 @@ from backend.routes.categories import router as categories_router
 from backend.routes.projects import router as projects_router
 from backend.routes.dashboard import router as dashboard_router
 from backend.routes.notifications import router as notifications_router
+from backend.routes.invitations import router as invitations_router
 
 root_router = APIRouter()
 
@@ -23,3 +24,4 @@ def include_routes(app: FastAPI):
     app.include_router(projects_router, prefix=f"{settings.API_PREFIX}/projects", tags=["projects"])
     app.include_router(dashboard_router, prefix=f"{settings.API_PREFIX}/dashboard", tags=["dashboard"])
     app.include_router(notifications_router, prefix=f"{settings.API_PREFIX}/notifications", tags=["notifications"])
+    app.include_router(invitations_router, prefix=f"{settings.API_PREFIX}/invitations", tags=["invitations"])

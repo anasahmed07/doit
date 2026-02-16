@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Bell, AlertCircle, Clock, UserPlus, Mail, Loader2, CheckCheck } from "lucide-react";
+import { X, Bell, AlertCircle, Clock, UserPlus, Mail, Loader2, CheckCheck, Check, XCircle } from "lucide-react";
 import { Notification } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 
@@ -21,6 +21,7 @@ const typeConfig: Record<string, { icon: typeof AlertCircle; color: string; bg: 
 export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -61,6 +62,25 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     } catch {
       // silently ignore
+    }
+  };
+
+  const handleInvitationResponse = async (
+    notificationId: string,
+    referenceId: string,
+    action: "accept" | "decline"
+  ) => {
+    setRespondingId(referenceId);
+    try {
+      const res = await fetch(`/api/invitations/${referenceId}/${action}`, {
+        method: "PATCH",
+      });
+      if (!res.ok) throw new Error(`Failed to ${action} invitation`);
+      await markAsRead(notificationId);
+    } catch (error) {
+      console.error(`Failed to ${action} invitation`, error);
+    } finally {
+      setRespondingId(null);
     }
   };
 
@@ -153,6 +173,46 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                       <p className="text-[10px] text-muted-foreground/60 mt-1">
                         {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                       </p>
+                      {notification.type === "project_invitation" &&
+                        !notification.is_read &&
+                        notification.reference_id && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleInvitationResponse(
+                                  notification.id,
+                                  notification.reference_id!,
+                                  "accept"
+                                );
+                              }}
+                              disabled={respondingId === notification.reference_id}
+                              className="flex items-center gap-1 px-3 py-1 text-[10px] font-black uppercase tracking-wider border-2 border-foreground bg-primary text-white shadow-hard-sm hover:-translate-y-0.5 hover:shadow-hard active:translate-y-0 transition-all disabled:opacity-50"
+                            >
+                              {respondingId === notification.reference_id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Check className="h-3 w-3" />
+                              )}
+                              Accept
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleInvitationResponse(
+                                  notification.id,
+                                  notification.reference_id!,
+                                  "decline"
+                                );
+                              }}
+                              disabled={respondingId === notification.reference_id}
+                              className="flex items-center gap-1 px-3 py-1 text-[10px] font-black uppercase tracking-wider border-2 border-foreground/30 text-muted-foreground hover:border-foreground/60 transition-all disabled:opacity-50"
+                            >
+                              <XCircle className="h-3 w-3" />
+                              Decline
+                            </button>
+                          </div>
+                        )}
                     </div>
                     {!notification.is_read && (
                       <div className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1" />

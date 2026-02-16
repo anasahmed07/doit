@@ -51,6 +51,7 @@ export interface ProjectTask {
   due_date?: string | null;
   content: string;
   order_index: number;
+  assignee_id?: string | null;
   is_archived: boolean;
   archived_at?: string | null;
   created_at: string;
@@ -66,6 +67,31 @@ export interface Notification {
   reference_id?: string | null;
   is_read: boolean;
   created_at: string;
+}
+
+export interface ProjectInvitation {
+  id: string;
+  project_id: string;
+  inviter_id: string;
+  invitee_id: string;
+  status: "pending" | "accepted" | "declined";
+  created_at: string;
+  resolved_at?: string | null;
+  project_name?: string | null;
+  inviter_name?: string | null;
+  invitee_name?: string | null;
+  invitee_email?: string | null;
+}
+
+export interface ProjectMember {
+  id: string;
+  project_id: string;
+  user_id: string;
+  role: "owner" | "member";
+  joined_at: string;
+  user_name: string;
+  user_email: string;
+  user_image?: string | null;
 }
 
 export interface Conversation {

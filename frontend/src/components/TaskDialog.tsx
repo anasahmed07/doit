@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Loader2, Calendar, AlertCircle } from "lucide-react";
-import { ProjectTask } from "@/lib/types";
+import { X, Loader2, Calendar, AlertCircle, UserCircle } from "lucide-react";
+import { ProjectTask, ProjectMember } from "@/lib/types";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 
 interface TaskDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (content: string, status?: string, priority?: string, due_date?: string | null) => void;
+  onSuccess: (content: string, status?: string, priority?: string, due_date?: string | null, assignee_id?: string | null) => void;
   onDelete?: (id: string) => void;
   initialTask?: ProjectTask;
   defaultStatus?: string;
+  projectId?: string;
 }
 
 export function TaskDialog({
@@ -21,11 +22,14 @@ export function TaskDialog({
   onDelete,
   initialTask,
   defaultStatus = "TODO",
+  projectId,
 }: TaskDialogProps) {
   const [content, setContent] = useState("");
   const [status, setStatus] = useState(defaultStatus);
   const [priority, setPriority] = useState("MEDIUM");
   const [dueDate, setDueDate] = useState("");
+  const [assigneeId, setAssigneeId] = useState<string>("");
+  const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -36,13 +40,31 @@ export function TaskDialog({
       setContent(initialTask?.content || "");
       setStatus(initialTask?.status || defaultStatus);
       setPriority(initialTask?.priority || "MEDIUM");
-      // Format datetime-local input: YYYY-MM-DDTHH:MM
-      const dateStr = initialTask?.due_date 
-        ? new Date(initialTask.due_date).toISOString().slice(0, 16) 
+      const dateStr = initialTask?.due_date
+        ? new Date(initialTask.due_date).toISOString().slice(0, 16)
         : "";
       setDueDate(dateStr);
+      setAssigneeId(initialTask?.assignee_id || "");
     }
   }, [isOpen, initialTask, defaultStatus]);
+
+  useEffect(() => {
+    if (isOpen && projectId) {
+      fetchMembers();
+    }
+  }, [isOpen, projectId]);
+
+  const fetchMembers = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`/api/invitations/project/${projectId}/members`);
+      if (res.ok) {
+        setMembers(await res.json());
+      }
+    } catch {
+      // silently ignore
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -62,7 +84,7 @@ export function TaskDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isEditing && !content.trim()) {
       setShowDeleteConfirm(true);
       return;
@@ -72,9 +94,9 @@ export function TaskDialog({
 
     setIsSubmitting(true);
     try {
-      // Ensure due date is sent as ISO string or null
       const formattedDueDate = dueDate ? new Date(dueDate).toISOString() : null;
-      await onSuccess(content.trim(), status, priority, formattedDueDate);
+      const formattedAssignee = assigneeId || null;
+      await onSuccess(content.trim(), status, priority, formattedDueDate, formattedAssignee);
       setContent("");
       onClose();
     } catch (err) {
@@ -176,6 +198,27 @@ export function TaskDialog({
                 </div>
               </div>
             </div>
+
+            {members.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-xs font-mono font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                  <UserCircle className="h-3.5 w-3.5" />
+                  Assign To
+                </label>
+                <select
+                  value={assigneeId}
+                  onChange={(e) => setAssigneeId(e.target.value)}
+                  className="w-full rounded-none border-2 border-input bg-transparent px-3 py-2 text-xs font-bold focus:border-primary focus:outline-none"
+                >
+                  <option value="">Unassigned</option>
+                  {members.map((m) => (
+                    <option key={m.user_id} value={m.user_id}>
+                      {m.user_name} ({m.user_email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <button
