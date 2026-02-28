@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     description: "The modern way to organize your tasks & projects with multimedia support, Kanban workflows, and a unified workspace.",
     images: [
       {
-        url: "/images/doit frontend.png",
+        url: "/images/doit-frontend.png",
         width: 1200,
         height: 630,
         alt: "DOIT Dashboard Screenshot"
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "DOIT - Modern Task & Project Management",
     description: "The modern way to organize your tasks & projects with multimedia support, Kanban workflows, and a unified workspace.",
-    images: ["/images/doit frontend.png"],
+    images: ["/images/doit-frontend.png"],
     creator: "@anas_shaikh"
   },
   robots: {
