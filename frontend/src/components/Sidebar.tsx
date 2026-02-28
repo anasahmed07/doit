@@ -14,14 +14,15 @@ import {
   Moon,
   FileText,
   MessageSquare,
-  Trash2
+  Trash2,
+  Menu
 } from "lucide-react";
 import { Category, Project } from "@/lib/types";
 import { CategoryDialog } from "@/components/CreateCategoryDialog";
 import { ProjectCreationDialog } from "@/components/ProjectCreationDialog";
 import { UserProfile } from "@/components/UserProfile";
 import { useProjects } from "@/components/ProjectsContext";
-import { X, Settings2 } from "lucide-react";
+import { X, Settings2, PanelLeftOpen } from "lucide-react";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 import { NotificationBell } from "@/components/NotificationBell";
 import { NotificationPanel } from "@/components/NotificationPanel";
@@ -68,27 +69,51 @@ function SidebarContent() {
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
 
+  // Initialize width from localStorage
+  useEffect(() => {
+    const savedWidth = localStorage.getItem("sidebarWidth");
+    if (savedWidth) {
+      const parsedWidth = parseInt(savedWidth);
+      if (parsedWidth >= 240 && parsedWidth <= 480) {
+        setWidth(parsedWidth);
+      }
+    }
+  }, []);
+
   const startResizing = useCallback(() => {
     setIsResizing(true);
   }, []);
 
   const stopResizing = useCallback(() => {
     setIsResizing(false);
-  }, []);
+    localStorage.setItem("sidebarWidth", width.toString());
+  }, [width]);
 
   const resize = useCallback(
     (mouseMoveEvent: MouseEvent) => {
       if (isResizing) {
         const newWidth = mouseMoveEvent.clientX;
-        if (isResizing) {
-          const newWidth = mouseMoveEvent.clientX;
-          if (newWidth >= 200 && newWidth <= 480) {
+        
+        // Collapse snap logic
+        if (newWidth < 120) {
+          toggleSidebar(false);
+          setIsResizing(false);
+        } else if (newWidth >= 120) {
+          // Re-open if dragging back out
+          if (!isSidebarOpen && newWidth > 200) {
+            toggleSidebar(true);
+          }
+          
+          // Clamp width
+          if (newWidth >= 240 && newWidth <= 480) {
             setWidth(newWidth);
+          } else if (newWidth < 240 && isSidebarOpen) {
+            setWidth(240);
           }
         }
       }
     },
-    [isResizing]
+    [isResizing, isSidebarOpen, toggleSidebar]
   );
 
   useEffect(() => {
@@ -166,12 +191,25 @@ function SidebarContent() {
         />
       )}
 
+      {/* Reappear Button (Desktop only) */}
+      {!isSidebarOpen && mounted && (
+        <button
+          onClick={() => toggleSidebar(true)}
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-[70] hidden lg:flex h-12 w-6 items-center justify-center rounded-r-xl border-y-2 border-r-2 border-foreground bg-background shadow-hard hover:w-8 transition-all group"
+          title="Open Sidebar"
+        >
+          <PanelLeftOpen className="h-4 w-4 group-hover:scale-110 transition-transform" />
+        </button>
+      )}
+
       <aside
         ref={sidebarRef}
-        className={`fixed inset-y-0 left-0 z-[60] flex h-screen flex-col border-r border-border bg-card transition-transform lg:static lg:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } group/sidebar`}
-        style={{ width: `${width}px` }}
+        className={`fixed inset-y-0 left-0 z-[60] flex h-screen flex-col border-r border-border bg-card lg:static ${
+          isSidebarOpen 
+            ? "translate-x-0 opacity-100 overflow-visible" 
+            : "-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:border-none overflow-hidden"
+        } group/sidebar ${!isResizing ? "transition-all duration-300" : ""}`}
+        style={{ width: isSidebarOpen ? `${width}px` : undefined }}
       >
         {/* Drag Handle (Desktop only) */}
         <div
@@ -182,23 +220,17 @@ function SidebarContent() {
         </div>
 
         {/* Header */}
-        <div className="flex h-20 items-center justify-between px-6 border-b border-border">
+        <div className="flex h-20 items-center justify-between px-6 border-b border-border min-w-[240px]">
           <Link href="/" className="flex items-center gap-3 group">
             <span className="font-pixel text-xl font-bold tracking-tighter uppercase group-hover:scale-105 transition-transform">DOIT</span>
           </Link>
           <div className="flex items-center gap-1">
             <NotificationBell onClick={() => setIsNotificationPanelOpen(true)} />
-            <button
-              onClick={() => toggleSidebar(false)}
-              className="p-2 text-muted-foreground hover:text-foreground lg:hidden"
-            >
-              <X className="h-5 w-5" />
-            </button>
           </div>
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex-1 overflow-y-auto px-4 py-8 space-y-10">
+        <nav className="flex-1 overflow-y-auto px-4 py-8 space-y-10 min-w-[240px]">
           <div className="space-y-3">
             <h3 className="px-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
               Main Menu
@@ -299,26 +331,26 @@ function SidebarContent() {
                     </div>
 
                     {/* Indented Categories */}
-                    <div className="space-y-1 border-l border-border pl-3 ml-1">
+                    <div className="space-y-1 border-l border-border pl-3 ml-1 pr-2">
                       {isLoading ? (
                         <div className="flex items-center py-2 text-muted-foreground">
                           <Loader2 className="h-3 w-3 animate-spin" />
                         </div>
                       ) : categories.map((category) => (
-                        <div key={category.id} className="group flex items-center gap-1">
+                        <div key={category.id} className="group flex items-center gap-1 min-w-0 w-full">
                           <Link
                             href={`/notes?category=${category.id}`}
                             style={{ 
                               backgroundColor: category.color,
                               color: getContrastColor(category.color)
                             }}
-                            className={`flex-1 flex items-center justify-between rounded-md px-3 py-1.5 text-xs font-bold transition-all hover:opacity-90 hover:translate-x-1 ${
+                            className={`flex-1 flex items-center justify-between rounded-md px-3 py-1.5 text-xs font-bold transition-all hover:opacity-90 hover:translate-x-1 min-w-0 ${
                               currentCategoryId === category.id
                                 ? "ring-2 ring-foreground ring-offset-1"
                                 : ""
                             }`}
                           >
-                            <span className="truncate">{category.name}</span>
+                            <span className="truncate w-full">{category.name}</span>
                           </Link>
                           <button
                             onClick={(e) => {
@@ -326,7 +358,7 @@ function SidebarContent() {
                               setEditingCategory(category);
                               setIsCategoryDialogOpen(true);
                             }}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 text-muted-foreground hover:text-foreground transition-opacity"
+                            className="opacity-0 group-hover:opacity-100 p-1.5 text-muted-foreground hover:text-foreground transition-opacity shrink-0"
                             title="Edit Category"
                           >
                             <Settings2 className="h-3 w-3" />
@@ -382,7 +414,7 @@ function SidebarContent() {
                       e.preventDefault();
                       setIsProjectDialogOpen(true);
                     }}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all ml-1"
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all ml-1"
                     title="Create Project"
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -439,7 +471,7 @@ function SidebarContent() {
         </nav>
 
         {/* Footer / User Profile */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border min-w-[240px]">
            <UserProfile />
         </div>
       </aside>

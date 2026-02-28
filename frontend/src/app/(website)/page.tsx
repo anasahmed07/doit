@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import Link from "next/link";
 import { Hero } from "@/components/Hero";
 import { Testimonials } from "@/components/Testimonials";
@@ -10,6 +11,11 @@ import {
   Move,
   Grid
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "DOIT - Modern Task & Project Management",
+  description: "DOIT is the modern workspace for high-velocity teams. Features multimedia notes, Kanban project management, and an AI-powered chat assistant.",
+};
 
 export default function Home() {
   return (

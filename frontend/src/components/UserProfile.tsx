@@ -164,7 +164,7 @@ export function UserProfile({ minimal = false }: UserProfileProps) {
       </div>
 
       {isDropdownOpen && (
-        <div className="absolute bottom-full right-4 mb-2 w-56 rounded-none border-2 border-foreground bg-background shadow-hard z-50 py-1">
+        <div className="absolute bottom-full left-4 mb-2 w-56 rounded-none border-2 border-foreground bg-background shadow-hard z-50 py-1">
            <div className="px-4 py-3 border-b-2 border-foreground bg-secondary/20">
               <p className="text-sm font-bold leading-none">{user?.name}</p>
               <p className="text-[10px] font-mono leading-none text-muted-foreground mt-1.5 truncate">{user?.email}</p>
