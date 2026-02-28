@@ -1,4 +1,4 @@
-![DoIt Banner](../frontend/public/images/doit%20frontend.png)
+![DoIt Banner](../frontend/public/images/doit-frontend.png)
 
 > From CLI to full-stack to fully agentic — a productivity platform where you can manage tasks, projects, and notes through a web UI or just by chatting with an AI assistant.
 
