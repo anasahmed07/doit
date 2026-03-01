@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
 
-export async function proxy(request: NextRequest) {
-  const sessionCookie = getSessionCookie(request);
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthRoute = pathname === "/sign-in" || pathname === "/sign-up";
   const isPublicRoute = pathname === "/" || isAuthRoute;
 
-  if (sessionCookie) {
+  // Better Auth sets the session as "better-auth.session_token" (dev)
+  // or "__Secure-better-auth.session_token" (production/HTTPS)
+  const hasSession =
+    request.cookies.has("better-auth.session_token") ||
+    request.cookies.has("__Secure-better-auth.session_token");
+
+  if (hasSession) {
     if (isAuthRoute) {
-      return NextResponse.redirect(new URL("/notes", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     return NextResponse.next();
   }

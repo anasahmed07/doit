@@ -120,7 +120,7 @@ export default function Home() {
             Join the workspace designed for clarity, speed, and execution. No clutter, just tools.
           </p>
           <Link
-            href="/signup"
+            href="/sign-up"
             className="mt-4 flex h-16 min-w-[200px] items-center justify-center border-2 border-white bg-white px-8 text-xl font-bold text-accent shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] transition-transform hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] active:translate-y-0 active:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
           >
             Get Started Now
