@@ -30,7 +30,7 @@ backend:
     pullPolicy: IfNotPresent
   port: 8000
   env:
-    corsOrigins: "http://doit.local"
+    corsOrigins: '["http://doit.local"]'
 
 mcp:
   replicaCount: 1
